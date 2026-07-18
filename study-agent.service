@@ -1,0 +1,29 @@
+# User-level systemd unit. Install:
+#   mkdir -p ~/.config/systemd/user
+#   cp ~/study-agent/study-agent.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now study-agent
+#   loginctl enable-linger $USER        # keep running when logged out (already on)
+# Logs: journalctl --user -u study-agent -f
+
+[Unit]
+Description=Study Agent - daily mastery-roadmap plan, auto-shift schedule, Claude recaps
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=PYTHONUNBUFFERED=1
+WorkingDirectory=%h/study-agent
+EnvironmentFile=%h/study-agent/.env
+ExecStart=%h/study-agent/.venv/bin/python %h/study-agent/study_agent.py
+Restart=on-failure
+RestartSec=30
+# hardening
+MemoryMax=200M
+ProtectSystem=strict
+ReadWritePaths=%h/study-agent %h/Desktop/Jayanth-Vault
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target
