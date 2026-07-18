@@ -35,6 +35,7 @@ import re
 import subprocess
 import sys
 import time
+import traceback
 import datetime as dt
 import requests
 
@@ -86,11 +87,12 @@ WEEKS = max((u["week"] for u in PLAN), default=0)
 
 
 def load_state():
+    s = {"done": {}, "flags": {}, "paused": False,
+         "skipped_today": None, "partials": {}, "last_done": None}
     if os.path.exists(STATE_PATH):
         with open(STATE_PATH) as f:
-            return json.load(f)
-    return {"done": {}, "flags": {}, "paused": False,
-            "skipped_today": None, "partials": {}, "last_done": None}
+            s.update(json.load(f))  # a state.json from an older version may lack keys
+    return s
 
 
 def save_state(s):
@@ -106,10 +108,22 @@ STATE = load_state()
 def tg(method, **params):
     try:
         r = requests.post(f"{API}/{method}", json=params, timeout=POLL_TIMEOUT + 10)
-        return r.json()
-    except requests.RequestException as e:
+        data = r.json()
+    except (requests.RequestException, ValueError) as e:
         print(f"[tg] {method} failed: {e}", file=sys.stderr)
         return {}
+    if not data.get("ok"):
+        code = data.get("error_code")
+        print(f"[tg] {method} -> {code}: {data.get('description')}", file=sys.stderr)
+        if code == 409:
+            print("[tg] 409 Conflict: another process is polling this bot token "
+                  "(a second copy of study_agent running?) or a webhook is set "
+                  "(clear with .../deleteWebhook). This instance receives NOTHING "
+                  "until that is resolved.", file=sys.stderr)
+        elif code == 401:
+            print("[tg] 401 Unauthorized: STUDY_BOT_TOKEN is wrong or was "
+                  "regenerated in @BotFather.", file=sys.stderr)
+    return data
 
 
 def _strip_md(text):
@@ -362,10 +376,15 @@ def do_skip(uid):
 
 
 def handle_callback(cb):
-    action, uid = cb["data"].split(":")
-    uid = int(uid)
     tg("answerCallbackQuery", callback_query_id=cb["id"])
-    {"done": do_done, "partial": do_partial, "skip": do_skip}[action](uid)
+    action, _, uid = cb.get("data", "").partition(":")
+    fn = {"done": do_done, "partial": do_partial, "skip": do_skip}.get(action)
+    if fn is None or not uid.isdigit() or int(uid) not in BY_ID:
+        # e.g. a button from a message sent under an older plan.json
+        send("That button belongs to an old message — use /today for the current "
+             "assignment, then /done, /partial or /skip.")
+        return
+    fn(int(uid))
 
 
 def status(day=None):
@@ -534,6 +553,12 @@ def hhmm(s):
 
 def main():
     print(f"study-agent up · {TOTAL} units · done={len(STATE['done'])} · model={CLAUDE_MODEL}")
+    me = tg("getMe")
+    if me.get("ok"):
+        print(f"study-agent polling as @{me['result'].get('username')}")
+    else:
+        print("[tg] getMe failed at startup — see error above; will keep retrying.",
+              file=sys.stderr)
     offset = 0
     rh, rm = hhmm(REMIND_TIME)
     vh, vm = hhmm(REVIEW_TIME)
@@ -552,12 +577,22 @@ def main():
                 evening(today)
         resp = tg("getUpdates", offset=offset, timeout=POLL_TIMEOUT,
                   allowed_updates=["message", "callback_query"])
+        if not resp.get("ok"):
+            time.sleep(5)  # network down or 401/409 — don't busy-spin
+            continue
         for upd in resp.get("result", []):
             offset = upd["update_id"] + 1
-            if "callback_query" in upd:
-                handle_callback(upd["callback_query"])
-            elif "message" in upd and str(upd["message"]["chat"]["id"]) == str(CHAT_ID):
-                handle_message(upd["message"].get("text", ""), dt.date.today())
+            # One bad update must not kill the bot: a crash here would restart the
+            # process, Telegram would redeliver the same update (offset unconfirmed),
+            # and the service would crash-loop forever, answering nothing.
+            try:
+                if "callback_query" in upd:
+                    handle_callback(upd["callback_query"])
+                elif "message" in upd and str(upd["message"]["chat"]["id"]) == str(CHAT_ID):
+                    handle_message(upd["message"].get("text", ""), dt.date.today())
+            except Exception:
+                print(f"[update] error handling update {upd.get('update_id')}:\n"
+                      f"{traceback.format_exc()}", file=sys.stderr)
 
 
 if __name__ == "__main__":

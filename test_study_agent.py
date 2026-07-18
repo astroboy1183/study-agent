@@ -134,6 +134,28 @@ def test_partial_moves_effort_not_daycount():
     assert "▒" in sa.render_progress_block(dt.date(2026, 7, 20))
 
 
+def test_old_state_file_gains_missing_keys():
+    import json
+    path = os.environ["STATE_PATH"]
+    with open(path, "w") as f:
+        json.dump({"done": {"1": {"date": "x", "status": "done"}}}, f)  # pre-"flags" era
+    s = sa.load_state()
+    os.remove(path)
+    assert s["flags"] == {} and s["partials"] == {} and s["paused"] is False
+    assert s["done"]["1"]["status"] == "done"
+
+
+def test_stale_callback_button_is_survived():
+    reset(); sent.clear()
+    # button from a message sent under an old plan.json: unknown unit id
+    sa.handle_callback({"id": "cb1", "data": f"done:{sa.TOTAL + 999}"})
+    assert str(sa.TOTAL + 999) not in sa.STATE["done"]
+    # and garbage callback data doesn't raise either
+    sa.handle_callback({"id": "cb2", "data": "??"})
+    sa.handle_callback({"id": "cb3"})
+    assert any(c[0] == "sendMessage" for c in sent)  # user got a pointer to /today
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for fn in fns:
