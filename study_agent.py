@@ -509,6 +509,21 @@ def publish_progress(reason):
         git_autopush(f"progress: {reason} ({len(STATE['done'])}/{TOTAL})")
 
 # ---------------------------------------------------------------- router ---
+COMMANDS = [
+    ("today", "Today's assignment"),
+    ("done", "Mark done + get the study brief"),
+    ("partial", "Did part of it — carries over"),
+    ("skip", "Skip today (no evening nag)"),
+    ("summary", "Re-send the last study brief"),
+    ("status", "Progress + any catch-up backlog"),
+    ("pause", "Silence daily messages"),
+    ("resume", "Resume daily messages"),
+    ("help", "Show this command list"),
+]
+HELP_TEXT = ("*Study agent — commands*\n\n"
+             + "\n".join(f"/{c} — {d}" for c, d in COMMANDS))
+
+
 def handle_message(text, day):
     low = text.strip().lower()
     if low.startswith("/today"):
@@ -541,7 +556,7 @@ def handle_message(text, day):
         STATE["paused"] = False; save_state(STATE)
         send("▶️ Resumed. The pointer waited for you — that's the whole design.")
     elif low.startswith("/help") or low.startswith("/start"):
-        send(__doc__.split("Commands (in Telegram):")[1])
+        send(HELP_TEXT)
     else:
         send("Not a command I know — /help for the list.")
 
@@ -559,6 +574,7 @@ def main():
     else:
         print("[tg] getMe failed at startup — see error above; will keep retrying.",
               file=sys.stderr)
+    tg("setMyCommands", commands=[{"command": c, "description": d} for c, d in COMMANDS])
     offset = 0
     rh, rm = hhmm(REMIND_TIME)
     vh, vm = hhmm(REVIEW_TIME)
