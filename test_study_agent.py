@@ -22,6 +22,7 @@ spec.loader.exec_module(sa)
 sent = []
 sa.tg = lambda method, **p: (sent.append((method, p)) or {"ok": True, "result": []})
 sa.publish_progress = lambda *a, **k: None  # tests must never write README or push to git
+sa.push_vault = lambda *a, **k: None        # tests must never touch the vault repo
 
 MON, SAT, SUN = dt.date(2026, 7, 20), dt.date(2026, 7, 25), dt.date(2026, 7, 26)
 

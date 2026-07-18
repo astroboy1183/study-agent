@@ -54,6 +54,7 @@ SUMMARY_CACHE = os.path.join(BASE_DIR, "summaries")           # local cache of b
 # Optional Obsidian vault integration:
 VAULT_LOG = os.environ.get("VAULT_LOG", "")                  # append-only study log
 VAULT_SUMMARIES = os.environ.get("VAULT_SUMMARIES", "")     # folder for brief notes
+VAULT_REPO = os.environ.get("VAULT_REPO", "")              # vault git repo root; if set, push it on /done
 
 REMIND_TIME = os.environ.get("REMIND_TIME", "07:30")         # morning assignment
 REVIEW_TIME = os.environ.get("REVIEW_TIME", "21:30")         # evening review
@@ -357,6 +358,7 @@ def do_done(uid):
     send(f"✅ Day {uid} done. Here's your recap to read ↓")
     deliver_summary(BY_ID[uid])
     publish_progress(f"day {uid} done")
+    push_vault(uid)
 
 
 def do_partial(uid):
@@ -502,6 +504,27 @@ def git_autopush(msg):
         subprocess.run(["git", "-C", REPO_DIR, "push", "-q"], check=True, timeout=60)
     except (subprocess.SubprocessError, OSError) as e:
         print(f"[git] autopush failed (kept local): {e}", file=sys.stderr)
+
+
+def push_vault(uid):
+    """After a day is completed, commit the vault (today's brief + anything you
+    wrote) to its own PRIVATE git repo and push. Respects the vault's .gitignore
+    (Obsidian workspace churn is already excluded). Never raises — a failed push
+    just stays local until the next completed day syncs it."""
+    if not (GIT_AUTOPUSH and VAULT_REPO):
+        return
+    u = BY_ID[uid]
+    try:
+        subprocess.run(["git", "-C", VAULT_REPO, "add", "-A"], check=True, timeout=30)
+        r = subprocess.run(
+            ["git", "-C", VAULT_REPO, "commit", "-m",
+             f"study: Day {uid} completed — {u['title']}"],
+            capture_output=True, timeout=30)
+        if r.returncode != 0 and b"nothing to commit" in (r.stdout + r.stderr):
+            return
+        subprocess.run(["git", "-C", VAULT_REPO, "push", "-q"], check=True, timeout=60)
+    except (subprocess.SubprocessError, OSError) as e:
+        print(f"[vault-git] push failed (kept local): {e}", file=sys.stderr)
 
 
 def publish_progress(reason):
