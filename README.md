@@ -13,18 +13,19 @@ itself automatically.
   sends it to Telegram (chunked) and saves it to my Obsidian vault, then
   updates the progress board in this README and pushes it here.
 
-### The schedule is a pointer, not a calendar
-The plan is 336 ordered units (43 content weeks + 5 catch-up / deep-dive weeks).
-The agent serves the next *unfinished* one that fits the real day of week —
-**weekdays → theory, Saturday → build, Sunday → consolidate** — so builds always
-land on weekends however much the rest slips.
+### Pure day-of-week + pointer — no dates
+The plan is 336 ordered units (43 content weeks + 5 catch-up / deep-dive weeks),
+served by **day of week**, never by calendar date:
 
-- **Partial** → the unit stays in the queue; the leftover carries to the next
-  matching slot.
-- **Skip / miss** → the pointer doesn't advance; the whole plan shifts forward
-  a day. You can't fall "behind" — the plan slides with you.
+- **Weekdays → theory.** Builds and consolidations never appear on a weekday.
+- **Saturday → the week's build** — unless weekday theory was missed, in which
+  case the missed topic is served first and the build slides to Sunday.
+- **Sunday → consolidation** — or any still-unfinished theory/build first.
 
-`plan.json` nominal dates are used only to report drift in `/status`.
+Miss a day and nothing is lost: the backlog **cascades forward** into the next
+available slots (a missed Friday overflows into Saturday, Saturday into Sunday).
+Builds stay weekend work; only theory overflows into the weekend. **Partial** →
+the leftover carries over. `/status` shows how many earlier topics you still owe.
 
 ## Commands
 `/today` · `/done` · `/partial` · `/skip` · `/summary` · `/status` ·

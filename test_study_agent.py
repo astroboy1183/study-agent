@@ -42,17 +42,41 @@ def test_plan_integrity():
         assert [u["type"] for u in wk] == ["theory"] * 5 + ["build", "consolidate"]
 
 
-def test_weekday_routing():
-    reset(); assert sa.next_unit_for(MON)["type"] == "theory"
-    reset(); assert sa.next_unit_for(SAT)["type"] == "build"
-
-
-def test_sunday_build_before_consolidate():
-    reset(); assert sa.next_unit_for(SUN)["type"] == "build"
+def test_weekday_serves_theory_never_build():
     reset()
-    for b in [x for x in sa.PLAN if x["type"] == "build"]:
-        sa.STATE["done"][str(b["id"])] = {"date": "x", "status": "done"}
-    assert sa.next_unit_for(SUN)["type"] == "consolidate"
+    assert sa.next_unit_for(MON)["type"] == "theory"
+    # even with all of week 1's theory done, a weekday never serves the build
+    for i in range(1, 6):
+        sa.STATE["done"][str(i)] = {"date": "x", "status": "done"}
+    nxt = sa.next_unit_for(MON)
+    assert nxt is None or nxt["type"] == "theory"
+
+
+def test_saturday_serves_build_when_theory_current():
+    reset()
+    for i in range(1, 6):  # week 1 theory done
+        sa.STATE["done"][str(i)] = {"date": "x", "status": "done"}
+    u = sa.next_unit_for(SAT)
+    assert u["type"] == "build" and u["id"] == 6
+
+
+def test_missed_theory_overflows_into_saturday():
+    reset()
+    for i in range(1, 5):  # did Mon-Thu, missed Friday's theory (id 5)
+        sa.STATE["done"][str(i)] = {"date": "x", "status": "done"}
+    u = sa.next_unit_for(SAT)
+    assert u["type"] == "theory" and u["id"] == 5  # Friday's topic overflows to Sat
+
+
+def test_sunday_catches_up_anything_before_consolidate():
+    reset()
+    for i in range(1, 5):  # missed Friday theory (5) and the build (6)
+        sa.STATE["done"][str(i)] = {"date": "x", "status": "done"}
+    assert sa.next_unit_for(SUN)["id"] == 5       # missed theory first
+    sa.STATE["done"]["5"] = {"date": "x", "status": "done"}
+    assert sa.next_unit_for(SUN)["id"] == 6       # then the build
+    sa.STATE["done"]["6"] = {"date": "x", "status": "done"}
+    assert sa.next_unit_for(SUN)["id"] == 7       # then consolidate
 
 
 def test_pointer_advances_on_done():

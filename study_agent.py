@@ -173,37 +173,55 @@ def pending():
 
 
 def next_unit_for(day: dt.date):
-    """Pick the next pending unit for the real day of week. Weekdays serve
-    theory; Sat serves build; Sun serves consolidate (or an unfinished earlier
-    build first — consolidating a week you didn't build is theater)."""
+    """Serve the day-appropriate pending unit, cascading any backlog forward so
+    nothing is ever lost and no day-slot is wasted. `pending()` is oldest-first
+    and within every week the order is theory → build → consolidate, so:
+
+      Mon-Fri : oldest pending THEORY. Builds/consolidations never appear on a
+                weekday — they stay on the weekend.
+      Saturday: oldest pending theory-or-build. If weekday theory was missed it
+                is older in the queue than this week's build, so it gets served
+                FIRST (Friday's topic overflows into Saturday); otherwise the
+                build. The build slides to Sunday if Saturday fills up.
+      Sunday  : the oldest pending unit, whatever it is — catch up any missed
+                theory or build before the week's consolidation.
+
+    So builds/consolidations remain weekend work, but missed weekday theory
+    overflows into the weekend instead of stalling until next week."""
     p = pending()
     if not p:
         return None
-    theory = [u for u in p if u["type"] == "theory"]
-    build = [u for u in p if u["type"] == "build"]
-    cons = [u for u in p if u["type"] == "consolidate"]
     wd = day.weekday()
-    if wd <= 4:  # Mon-Fri
-        return (theory or build or cons or [None])[0]
-    if wd == 5:  # Sat
-        return (build or cons or theory or [None])[0]
-    # Sun
-    if build and cons and build[0]["week"] <= cons[0]["week"]:
-        return build[0]
-    return (cons or build or theory or [None])[0]
+    if wd <= 4:  # Mon-Fri: theory only
+        theory = [u for u in p if u["type"] == "theory"]
+        return theory[0] if theory else None
+    if wd == 5:  # Sat: overdue theory first, else the build
+        tb = [u for u in p if u["type"] in ("theory", "build")]
+        return tb[0] if tb else p[0]
+    return p[0]  # Sun: catch up anything still pending, then consolidate
+
+
+def caught_up_message():
+    """Shown when there is no unit to serve today (weekday theory exhausted, or
+    the whole plan is done)."""
+    if pending():
+        return ("✅ You're caught up on theory — this week's build is weekend "
+                "work, so nothing new for a weekday. Rest the brain; I'll have "
+                "the build ready Saturday.")
+    return f"\U0001F389 *Plan complete.* All {TOTAL} days done. Take the victory lap."
 
 
 def fmt_unit(u, day=None):
+    # The dow label tells you which day-slot the topic belongs to — handy when a
+    # missed Friday theory is being served on a Saturday (it still reads "Fri").
+    carry = ""
+    if day is not None and u["dow"] != day.weekday() and u["type"] == "theory":
+        carry = f"  _(catching up {DOW[u['dow']]}'s topic)_"
     head = (f"{ICON[u['type']]} *Day {u['id']}/{TOTAL} · Week {u['week']} · "
-            f"{DOW[u['dow']]}-type · ~{EFFORT[u['type']]}*\n"
+            f"{DOW[u['dow']]}-type · ~{EFFORT[u['type']]}*{carry}\n"
             f"*{u['title']}*\n\n{u['text']}")
     if u["type"] == "consolidate" and u.get("mastery"):
         head += f"\n\n\U0001F3AF *Mastery check (answer aloud):* {u['mastery']}"
-    if day is not None:
-        nominal = dt.date.fromisoformat(u["nominal_date"])
-        drift = (day - nominal).days
-        if drift > 0:
-            head += f"\n\n_⏳ {drift} days behind nominal — fine; the plan shifts with you._"
     return head
 
 # ------------------------------------------------------------- summaries ---
@@ -299,9 +317,10 @@ def mark(uid, status):
 def morning(day):
     u = next_unit_for(day)
     if u is None:
-        send(f"\U0001F389 *Plan complete.* All {TOTAL} days done. Take the victory lap.")
+        send(caught_up_message())
         return
-    send(f"☀️ *Good morning. Today's study:*\n\n{fmt_unit(u, day)}"
+    kind = "weekend" if day.weekday() >= 5 else "weekday"
+    send(f"☀️ *Good morning — {DOW[day.weekday()]} ({kind} plan):*\n\n{fmt_unit(u, day)}"
          "\n\n_Finished: /done · part of it: /partial · busy day: /skip_")
 
 
@@ -349,19 +368,22 @@ def handle_callback(cb):
     {"done": do_done, "partial": do_partial, "skip": do_skip}[action](uid)
 
 
-def status(day):
+def status(day=None):
     done = len(STATE["done"])
     p = pending()
     cur_week = p[0]["week"] if p else WEEKS
-    nominal_start = dt.date.fromisoformat(PLAN[0]["nominal_date"])
-    nominal_day = (day - nominal_start).days + 1
-    behind = max(0, nominal_day - done - 1)
     builds_left = len([u for u in p if u["type"] == "build"])
+    # "backlog" = pending units that sit BEHIND your furthest completed unit —
+    # i.e. things you skipped and still owe. No dates involved.
+    frontier = max((int(k) for k in STATE["done"]), default=0)
+    backlog = len([u for u in p if u["id"] < frontier])
     bar_n = round(done / TOTAL * 20)
     bar = "▓" * bar_n + "░" * (20 - bar_n)
+    catch = ("No backlog — you're current ✅" if backlog == 0 else
+             f"{backlog} earlier topic(s) to catch up — they surface first on the "
+             f"next matching day (theory on weekdays/Sat, anything on Sun).")
     send(f"\U0001F4CA *Progress*\n{bar} {done}/{TOTAL} days ({done/TOTAL*100:.0f}%)\n"
-         f"Current: Week {cur_week}/{WEEKS} · pending builds: {builds_left}\n"
-         f"{'On pace ✅' if behind == 0 else f'{behind} days behind nominal — fine; the plan shifts with you.'}")
+         f"Current: Week {cur_week}/{WEEKS} · pending builds: {builds_left}\n{catch}")
 
 # -------------------------------------------------------------- progress ---
 def _streak(today):
@@ -472,7 +494,7 @@ def handle_message(text, day):
     low = text.strip().lower()
     if low.startswith("/today"):
         u = next_unit_for(day)
-        send(fmt_unit(u, day) if u else "All done \U0001F389")
+        send(fmt_unit(u, day) if u else caught_up_message())
     elif low.startswith("/done"):
         u = next_unit_for(day)
         if u:
