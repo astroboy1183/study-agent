@@ -1,0 +1,25 @@
+{
+  // study-agent — Telegram webhook + dashboard + cron sends, all on one Worker.
+  // Deploy:  cd cloud && npx wrangler deploy
+  // The plan (../plan.json) is bundled at build time; mutable state lives in KV.
+  "name": "study-agent",
+  "main": "worker.js",
+  "compatibility_date": "2026-07-08",
+  "workers_dev": true,
+  "triggers": {
+    // 02:00 UTC = 07:30 IST morning assignment; 16:00 UTC = 21:30 IST evening check
+    "crons": ["0 2 * * *", "0 16 * * *"]
+  },
+  "kv_namespaces": [
+    // id filled in by `wrangler kv namespace create STUDY` (see README)
+    { "binding": "STUDY", "id": "f4f2878ac9bc4bd49a7200d957b46728" }
+  ],
+  "vars": {
+    "MODEL": "claude-sonnet-5",
+    "SUMMARY_MAX_TOKENS": "4000",
+    "REPO": "astroboy1183/study-agent"
+  },
+  "observability": { "enabled": true }
+  // Secrets (wrangler secret put): STUDY_BOT_TOKEN, STUDY_CHAT_ID,
+  // ANTHROPIC_API_KEY, TG_SECRET, STUDY_UI_KEY. Optional: GH_PAT, VAULT_REPO.
+}

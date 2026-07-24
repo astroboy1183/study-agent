@@ -5,3 +5,5 @@ summaries/
 .venv/
 __pycache__/
 *.pyc
+cloud/DEPLOY_SECRETS.local.txt
+.wrangler/

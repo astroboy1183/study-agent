@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Study Agent — daily study plan, auto-shifting schedule, Claude-written recaps.
+Study Agent — daily study plan, auto-shifting schedule, model-written recaps.
 
 Design: the plan is an ordered SEQUENCE of units with a pointer, not a calendar.
 The agent always serves the next unfinished unit appropriate to the real day
@@ -10,7 +10,7 @@ forward automatically. Study part of a day and the leftover stays in the queue.
 Dates in plan.json are nominal — used only to report drift in /status.
 
 After you mark a day done, the agent writes a substantial study brief (~a
-20-30 minute read) on that day's topic with Claude, sends it to Telegram in
+20-30 minute read) on that day's topic with the model, sends it to Telegram in
 clean chunks, and saves it as a note in your Obsidian vault. Summaries are
 cached per day, so re-reading never re-bills the API.
 
@@ -27,6 +27,9 @@ Commands (in Telegram):
   /status  - progress, current week, drift vs nominal schedule
   /pause | /resume - silence/restore daily messages (vacation mode)
   /help    - this list
+
+Any non-command message is treated as a question and answered by the model
+(grounded in where you are in the plan, with short follow-up memory).
 """
 
 import json
@@ -45,7 +48,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BOT_TOKEN = os.environ["STUDY_BOT_TOKEN"]                     # from @BotFather
 CHAT_ID = os.environ["STUDY_CHAT_ID"]                         # your numeric chat id
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")  # enables summaries
-CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
+MODEL = os.environ.get("MODEL", "claude-sonnet-5")
 SUMMARY_MAX_TOKENS = int(os.environ.get("SUMMARY_MAX_TOKENS", "4000"))
 
 PLAN_PATH = os.environ.get("PLAN_PATH", os.path.join(BASE_DIR, "plan.json"))
@@ -157,9 +160,9 @@ def send(text, buttons=None, markdown=True):
             result = tg("sendMessage", **params)
     return result
 
-# ---------------------------------------------------------------- claude ---
-def claude(system, user, max_tokens=SUMMARY_MAX_TOKENS):
-    """Return Claude's reply text, or '' on any failure. Thinking is disabled
+# ---------------------------------------------------------------- model ---
+def ask_model(system, user, max_tokens=SUMMARY_MAX_TOKENS):
+    """Return the model's reply text, or '' on any failure. Thinking is disabled
     so the whole token budget goes to the answer (some models otherwise spend
     it thinking and return no text under a tight cap)."""
     if not ANTHROPIC_API_KEY:
@@ -170,7 +173,7 @@ def claude(system, user, max_tokens=SUMMARY_MAX_TOKENS):
             headers={"x-api-key": ANTHROPIC_API_KEY,
                      "anthropic-version": "2023-06-01",
                      "content-type": "application/json"},
-            json={"model": CLAUDE_MODEL, "max_tokens": max_tokens,
+            json={"model": MODEL, "max_tokens": max_tokens,
                   "thinking": {"type": "disabled"},
                   "system": system,
                   "messages": [{"role": "user", "content": user}]},
@@ -179,7 +182,7 @@ def claude(system, user, max_tokens=SUMMARY_MAX_TOKENS):
         return "".join(b.get("text", "") for b in data.get("content", [])
                        if b.get("type") == "text")
     except requests.RequestException as e:
-        print(f"[claude] failed: {e}", file=sys.stderr)
+        print(f"[model] failed: {e}", file=sys.stderr)
         return ""
 
 # ------------------------------------------------------------- selection ---
@@ -265,12 +268,12 @@ def _summary_prompt(u):
 
 def generate_summary(u):
     """Return (markdown_text, from_cache). Caches to disk + vault so a given
-    day's brief is written by Claude exactly once."""
+    day's brief is written by the model exactly once."""
     cache_file = os.path.join(SUMMARY_CACHE, f"day-{u['id']:03d}.md")
     if os.path.exists(cache_file):
         with open(cache_file) as f:
             return f.read(), True
-    body = claude(
+    body = ask_model(
         system=_summary_prompt(u),
         user=(f"Topic (Day {u['id']}, Week {u['week']}, {u['type']}): {u['title']}\n\n"
               f"Today's task/material:\n{u['text']}"))
@@ -304,7 +307,7 @@ def deliver_summary(u):
         send(f"\U0001F58A Writing your study brief for *{u['title']}* — one moment...")
     note, cached = generate_summary(u)
     if not note:
-        send("Couldn't reach Claude for the brief just now — try /summary again in a bit.")
+        send("Couldn't reach the model for the brief just now — try /summary again in a bit.")
         return
     where = ""
     if VAULT_SUMMARIES:
@@ -531,6 +534,58 @@ def publish_progress(reason):
     if update_readme_progress(dt.date.today()):
         git_autopush(f"progress: {reason} ({len(STATE['done'])}/{TOTAL})")
 
+# ------------------------------------------------------------ free Q&A ---
+# Any plain-text message that isn't a command is treated as a question and
+# answered by the model. A short rolling history (in memory only) lets follow-ups
+# like "explain more" work; it resets if the service restarts — that's fine.
+QA_HISTORY = []            # [(role, text), ...] newest last
+QA_HISTORY_MAX = 8         # keep the last 8 turns (~4 exchanges) as context
+QA_SYSTEM = (
+    "You are Jayanth's personal study assistant, reachable over Telegram. "
+    "Jayanth is a data/AI engineer working through a structured mastery roadmap. "
+    "Answer his questions directly and concretely: teach from first principles, "
+    "use small examples or code sketches where they help, and keep it tight "
+    "enough to read on a phone — a few short paragraphs, not an essay, unless he "
+    "explicitly asks you to go deep. Precision over politeness; dry humour and "
+    "the occasional cricket analogy are welcome. If a question relates to his "
+    "current study topic, connect it. Plain text or light Markdown only.")
+
+
+def _study_context():
+    """A compact snapshot of where Jayanth is, so answers are grounded in his
+    actual plan rather than generic."""
+    done = len(STATE["done"])
+    p = pending()
+    bits = [f"{done}/{TOTAL} days done ({done / TOTAL * 100:.0f}%)"]
+    if p:
+        cur = p[0]
+        bits.append(f"current/next: Day {cur['id']} (Week {cur['week']}, "
+                    f"{cur['type']}) — {cur['title']}")
+    last = STATE.get("last_done")
+    if last and str(last) in STATE["done"]:
+        bits.append(f"last completed: Day {last} — {BY_ID[last]['title']}")
+    return "; ".join(bits)
+
+
+def answer_query(text):
+    if not ANTHROPIC_API_KEY:
+        send("I can run the schedule, but answering questions needs "
+             "`ANTHROPIC_API_KEY` set in .env. Add it and restart the service.")
+        return
+    tg("sendChatAction", chat_id=CHAT_ID, action="typing")
+    convo = "\n".join(f"{r.upper()}: {t}" for r, t in QA_HISTORY[-QA_HISTORY_MAX:])
+    prompt = (f"[Where Jayanth is: {_study_context()}]\n\n"
+              + (convo + "\n" if convo else "")
+              + f"USER: {text}\n\nAnswer the latest USER message.")
+    reply = ask_model(QA_SYSTEM, prompt, max_tokens=1500)
+    if not reply:
+        send("Couldn't reach the model just now — try again in a moment.")
+        return
+    QA_HISTORY.append(("user", text))
+    QA_HISTORY.append(("assistant", reply))
+    del QA_HISTORY[:-QA_HISTORY_MAX]  # trim to the rolling window
+    send(_strip_md(reply), markdown=False)
+
 # ---------------------------------------------------------------- router ---
 COMMANDS = [
     ("today", "Today's assignment"),
@@ -544,11 +599,15 @@ COMMANDS = [
     ("help", "Show this command list"),
 ]
 HELP_TEXT = ("*Study agent — commands*\n\n"
-             + "\n".join(f"/{c} — {d}" for c, d in COMMANDS))
+             + "\n".join(f"/{c} — {d}" for c, d in COMMANDS)
+             + "\n\n_Or just send any question in plain text and I'll answer it._")
 
 
 def handle_message(text, day):
+    text = text or ""
     low = text.strip().lower()
+    if not low:
+        return  # non-text message (sticker, photo, etc.) — nothing to answer
     if low.startswith("/today"):
         u = next_unit_for(day)
         send(fmt_unit(u, day) if u else caught_up_message())
@@ -580,8 +639,11 @@ def handle_message(text, day):
         send("▶️ Resumed. The pointer waited for you — that's the whole design.")
     elif low.startswith("/help") or low.startswith("/start"):
         send(HELP_TEXT)
+    elif low.startswith("/"):
+        send("Not a command I know — /help for the list. "
+             "(Or just send a plain-text question and I'll answer it.)")
     else:
-        send("Not a command I know — /help for the list.")
+        answer_query(text)
 
 # ------------------------------------------------------------- main loop ---
 def hhmm(s):
@@ -590,7 +652,7 @@ def hhmm(s):
 
 
 def main():
-    print(f"study-agent up · {TOTAL} units · done={len(STATE['done'])} · model={CLAUDE_MODEL}")
+    print(f"study-agent up · {TOTAL} units · done={len(STATE['done'])} · model={MODEL}")
     me = tg("getMe")
     if me.get("ok"):
         print(f"study-agent polling as @{me['result'].get('username')}")
