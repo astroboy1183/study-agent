@@ -346,6 +346,7 @@ footer .r{margin-left:auto}
       <div class="creds">ex-AWS DynamoDB · Data Engineer @ trigyan.io · MS CS, UIC · Databricks + Fabric certified</div>
       <div class="links">
         <a class="primary" href="https://github.com/astroboy1183" target="_blank" rel="noopener">⚡ GitHub</a>
+        <a href="https://github.com/astroboy1183/study-agent" target="_blank" rel="noopener">⚙ Source</a>
         <a href="https://www.linkedin.com/in/jayanth-appalla" target="_blank" rel="noopener">in LinkedIn</a>
         <a href="https://jayanthappalla.com" target="_blank" rel="noopener">↗ Portfolio</a>
       </div>
@@ -397,7 +398,7 @@ footer .r{margin-left:auto}
   <div class="card reveal"><div class="briefs" id="briefs"></div></div>
 
   <footer>
-    <span>Live &amp; auto-updating · built on a single Cloudflare Worker (zero servers) · <a href="https://github.com/astroboy1183" target="_blank" rel="noopener">source on GitHub ↗</a></span>
+    <span>Live &amp; auto-updating · built on a single Cloudflare Worker (zero servers) · <a href="https://github.com/astroboy1183/study-agent" target="_blank" rel="noopener">source on GitHub ↗</a></span>
     <span class="r" id="foot-updated"></span>
   </footer>
 </div>
