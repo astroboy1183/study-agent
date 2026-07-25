@@ -1099,6 +1099,23 @@ function tracksData(state) {
   });
 }
 
+function learnedData(state) {
+  // A skills cloud from the builds' tech tags: frequency = size, track = colour,
+  // "done" = the tech appears in a build you've already completed (so it lights up).
+  const builds = PLAN.filter((u) => u.type === "build");
+  const map = {};
+  for (const u of builds) {
+    const t = TRACK_BOUNDS.find((b) => u.week >= b.lo && u.week <= b.hi);
+    const done = String(u.id) in state.done;
+    for (const tech of u.tech || []) {
+      if (!map[tech]) map[tech] = { tech, count: 0, done: false, track: t ? t.name : "" };
+      map[tech].count++;
+      if (done) map[tech].done = true;
+    }
+  }
+  return Object.values(map).sort((a, b) => b.count - a.count || a.tech.localeCompare(b.tech));
+}
+
 function stateForUi(state) {
   const done = Object.keys(state.done).length;
   const nPartial = Object.keys(state.partials).length;
@@ -1126,6 +1143,7 @@ function stateForUi(state) {
     buildsLeft: p.filter((u) => u.type === "build").length,
     byType,
     tracks: tracksData(state),
+    learned: learnedData(state),
     grounded: state.recaps || {},
     current: cur
       ? { id: cur.id, week: cur.week, dow: cur.dow, type: cur.type, title: cur.title, text: cur.text, effort: EFFORT[cur.type] }

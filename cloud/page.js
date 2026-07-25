@@ -106,14 +106,14 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .sec::after{content:""; flex:1; height:1px; align-self:center;
   background:linear-gradient(90deg,var(--line2),transparent)}
 
-.card{position:relative; border:1.5px solid transparent; border-radius:20px; padding:1.6rem;
+.card{position:relative; border:1px solid transparent; border-radius:20px; padding:1.6rem;
   background:
     linear-gradient(var(--card),var(--card)) padding-box,
-    conic-gradient(from var(--ang), var(--neon1), var(--neon2), var(--neon3), var(--neon1)) border-box;
-  box-shadow:0 0 34px -14px var(--neon2), 0 22px 46px -26px rgba(0,0,0,.75);
-  backdrop-filter:blur(7px); animation:rot 8s linear infinite}
+    linear-gradient(160deg, rgba(0,229,255,.42), rgba(176,38,255,.16) 60%, rgba(255,45,149,.10)) border-box;
+  box-shadow:0 18px 44px -28px rgba(0,0,0,.8), 0 0 40px -26px rgba(0,229,255,.55);
+  backdrop-filter:blur(8px)}
 .card::before{content:""; position:absolute; inset:0 0 auto 0; height:1px;
-  background:linear-gradient(90deg,transparent,rgba(0,229,255,.4),transparent)}
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,.32),transparent)}
 
 /* now building */
 .now{overflow:hidden}
@@ -170,19 +170,26 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
   margin-top:.75rem; font-family:var(--mono)}
 .mgraph-empty{font-size:.8rem; color:var(--faint); margin-top:.6rem}
 
+/* skills cloud */
+.cloud{display:flex; flex-wrap:wrap; gap:.4rem 1rem; align-items:baseline; line-height:1.5}
+.tagword{font-weight:750; color:var(--faint); opacity:.42; letter-spacing:-.01em; cursor:default; transition:.2s}
+.tagword.on{color:var(--tc); opacity:1; text-shadow:0 0 16px color-mix(in srgb,var(--tc) 55%,transparent)}
+.tagword:hover{opacity:1; color:var(--tc)}
+.cloud-legend{display:flex; gap:1rem; flex-wrap:wrap; font-size:.72rem; color:var(--faint); margin-top:1rem; font-family:var(--mono)}
+.cloud-legend b{color:var(--txt); font-weight:600}
+
 /* four-track overview */
 .tracks{display:grid; grid-template-columns:repeat(4,1fr); gap:1rem}
 @media(max-width:900px){.tracks{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.tracks{grid-template-columns:1fr}}
 .tcard{position:relative; display:flex; flex-direction:column; gap:.55rem;
-  border:1.5px solid transparent; border-radius:16px; padding:1.05rem 1.15rem;
+  border:1px solid transparent; border-radius:16px; padding:1.05rem 1.15rem;
   background:
     linear-gradient(var(--card),var(--card)) padding-box,
-    conic-gradient(from var(--ang), var(--tc), #ffffff, var(--tc)) border-box;
-  box-shadow:0 0 30px -12px var(--tc), 0 16px 36px -20px rgba(0,0,0,.65);
-  backdrop-filter:blur(7px); cursor:pointer; transition:transform .16s, box-shadow .25s;
-  animation:rot 9s linear infinite}
-.tcard:hover{transform:translateY(-3px); box-shadow:0 0 42px -6px var(--tc), 0 18px 42px -18px rgba(0,0,0,.7)}
+    linear-gradient(160deg, color-mix(in srgb,var(--tc) 70%, transparent), color-mix(in srgb,var(--tc) 12%, transparent)) border-box;
+  box-shadow:0 14px 34px -24px rgba(0,0,0,.7), 0 0 34px -22px var(--tc);
+  backdrop-filter:blur(8px); cursor:pointer; transition:transform .16s, box-shadow .25s}
+.tcard:hover{transform:translateY(-3px); box-shadow:0 16px 40px -20px rgba(0,0,0,.7), 0 0 40px -12px var(--tc)}
 .tcard .th{display:flex; align-items:baseline; justify-content:space-between; gap:.5rem}
 .tcard .tn{font-weight:750; font-size:.98rem; letter-spacing:-.01em}
 .tcard .tw{font-family:var(--mono); font-size:.68rem; color:var(--faint); white-space:nowrap}
@@ -206,14 +213,14 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .pgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:1rem}
 @media(max-width:820px){.pgrid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.pgrid{grid-template-columns:1fr}}
-.pcard{position:relative; border:1.5px solid transparent; border-radius:16px; padding:1.1rem 1.2rem;
+.pcard{position:relative; border:1px solid transparent; border-radius:16px; padding:1.1rem 1.2rem;
   background:
     linear-gradient(var(--card),var(--card)) padding-box,
-    conic-gradient(from var(--ang), var(--neon1), var(--neon2), var(--neon3), var(--neon1)) border-box;
-  box-shadow:0 0 24px -14px var(--neon3), 0 14px 34px -22px rgba(0,0,0,.7);
+    linear-gradient(160deg, rgba(0,229,255,.32), rgba(176,38,255,.12) 65%, rgba(255,45,149,.08)) border-box;
+  box-shadow:0 12px 30px -24px rgba(0,0,0,.75);
   transition:transform .16s, box-shadow .25s}
-.pcard:hover{transform:translateY(-3px); box-shadow:0 0 34px -8px var(--neon2), 0 16px 40px -18px rgba(0,0,0,.75); animation:rot 5s linear infinite}
-.pcard.up{opacity:.72}
+.pcard:hover{transform:translateY(-3px); box-shadow:0 14px 36px -20px rgba(0,0,0,.8), 0 0 34px -20px var(--neon2)}
+.pcard.up{opacity:.68}
 .pcard .wk{font-size:.7rem; font-weight:700; letter-spacing:.06em; color:var(--faint)}
 .pcard .nm{font-weight:650; font-size:.98rem; margin-top:.35rem; line-height:1.35}
 .pcard .st{margin-top:.7rem; font-size:.74rem; display:inline-flex; align-items:center; gap:.4rem}
@@ -405,6 +412,9 @@ footer .r{margin-left:auto}
   <div class="sec reveal"><h2>📈 Momentum</h2><span class="sub">cumulative days completed vs the ideal 7-a-week pace</span></div>
   <div class="card reveal"><div id="graph" class="graph-wrap"></div></div>
 
+  <div class="sec reveal"><h2>🧠 What I'm learning</h2><span class="sub">technologies across the roadmap · each lights up in its track's colour once you've built with it</span></div>
+  <div class="card reveal"><div id="learned" class="cloud"></div></div>
+
   <div class="sec reveal"><h2>🔨 Current build</h2><span class="sub">the deep-build project for this week</span></div>
   <div class="card now reveal" id="now"></div>
 
@@ -501,6 +511,7 @@ function render(s){
   renderOwnerBar(s);
   renderTracks(s);
   renderGraph(s);
+  renderLearned(s);
 
   var kp=$("kpis"); kp.replaceChildren();
   kp.appendChild(kpi(s.done, "days completed", "board"));
@@ -607,6 +618,30 @@ var TRACK_META={
   "Linux & Systems":{c:"var(--violet)",repo:"linux-notes"}
 };
 function phaseSlug(n){ return "phase-"+n.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
+// skills word-cloud from build tech tags — sized by frequency, coloured by track, lit if learned
+function renderLearned(s){
+  var c=$("learned"); if(!c) return; c.replaceChildren();
+  var items=s.learned||[];
+  if(!items.length){ c.appendChild(el("div","mgraph-empty","Your skills cloud fills in as you complete builds.")); return; }
+  var max=items[0].count||1;
+  items.forEach(function(it){
+    var sp=el("span","tagword"+(it.done?" on":""));
+    var scale=0.9 + (it.count/max)*1.25;
+    sp.style.fontSize=scale.toFixed(2)+"rem";
+    var m=TRACK_META[it.track];
+    sp.style.setProperty("--tc", m?m.c:"var(--blue)");
+    sp.textContent=it.tech;
+    sp.title=it.track+(it.done?" · learned":" · upcoming");
+    c.appendChild(sp);
+  });
+  var lit=items.filter(function(x){return x.done;}).length;
+  var lg=el("div","cloud-legend");
+  lg.innerHTML="<span><b>"+lit+"</b> of "+items.length+" technologies used so far</span>"+
+    "<span style='color:var(--blue)'>● Data Eng</span><span style='color:var(--green)'>● ML</span>"+
+    "<span style='color:var(--pink)'>● AI</span><span style='color:var(--violet)'>● Linux</span>"+
+    "<span>dim = not built yet</span>";
+  c.appendChild(lg);
+}
 // cumulative-progress momentum chart (SVG, neon glow) — actual pace vs the ideal 7/week line
 function renderGraph(s){
   var c=$("graph"); if(!c) return; c.replaceChildren();
