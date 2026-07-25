@@ -374,7 +374,7 @@ footer .r{margin-left:auto}
   <div class="sec reveal"><h2>🔨 Current build</h2><span class="sub">the deep-build project for this week</span></div>
   <div class="card now reveal" id="now"></div>
 
-  <div class="proj-head reveal"><h2>🚀 Projects</h2><span class="sub" id="proj-sub"></span><button id="edit-toggle" class="edit-btn">✎ Edit links</button></div>
+  <div class="proj-head reveal"><h2>🚀 Projects</h2><span class="sub" id="proj-sub"></span><button id="edit-toggle" class="edit-btn">✎ Owner</button></div>
   <div class="sub-min reveal">★ Featured — the pieces you'd headline</div>
   <div id="featured" class="pgrid reveal"></div>
   <div class="sub-min reveal" style="margin-top:1.7rem">All builds</div>
