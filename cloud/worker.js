@@ -937,6 +937,37 @@ function projectsData(state) {
   };
 }
 
+function tracksData(state) {
+  // Per-track (per-domain) progress: the earliest pending week is the "active" track;
+  // everything before it is complete, everything after is upcoming.
+  const p = pending(state);
+  const curWeek = p.length ? p[0].week : WEEKS;
+  return TRACK_BOUNDS.map((t) => {
+    const units = PLAN.filter((u) => u.week >= t.lo && u.week <= t.hi);
+    const done = units.filter((u) => String(u.id) in state.done).length;
+    const total = units.length;
+    const builds = units.filter((u) => u.type === "build");
+    const buildsDone = builds.filter((u) => String(u.id) in state.done).length;
+    let status;
+    if (total && done >= total) status = "done";
+    else if (curWeek >= t.lo && curWeek <= t.hi) status = "active";
+    else if (curWeek < t.lo) status = "upcoming";
+    else status = "done"; // pointer already past this track and nothing left
+    return {
+      name: t.name,
+      lo: t.lo,
+      hi: t.hi,
+      weeks: t.hi - t.lo + 1,
+      done,
+      total,
+      pct: total ? (done / total) * 100 : 0,
+      builds: { done: buildsDone, total: builds.length },
+      status,
+      current: curWeek >= t.lo && curWeek <= t.hi,
+    };
+  });
+}
+
 function stateForUi(state) {
   const done = Object.keys(state.done).length;
   const nPartial = Object.keys(state.partials).length;
@@ -963,6 +994,7 @@ function stateForUi(state) {
     currentWeek: p.length ? p[0].week : WEEKS,
     buildsLeft: p.filter((u) => u.type === "build").length,
     byType,
+    tracks: tracksData(state),
     current: cur
       ? { id: cur.id, week: cur.week, dow: cur.dow, type: cur.type, title: cur.title, text: cur.text, effort: EFFORT[cur.type] }
       : null,

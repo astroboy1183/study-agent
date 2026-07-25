@@ -154,6 +154,34 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .legend span{display:inline-flex; align-items:center; gap:.4rem}
 .legend i{width:11px; height:11px; border-radius:3px; display:inline-block}
 
+/* four-track overview */
+.tracks{display:grid; grid-template-columns:repeat(4,1fr); gap:1rem}
+@media(max-width:900px){.tracks{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.tracks{grid-template-columns:1fr}}
+.tcard{position:relative; display:flex; flex-direction:column; gap:.55rem; overflow:hidden;
+  border:1px solid var(--line); border-radius:16px; padding:1.05rem 1.1rem 1.1rem 1.25rem;
+  background:rgba(255,255,255,.018); cursor:pointer; transition:.16s}
+.tcard:hover{transform:translateY(-3px); border-color:var(--line2)}
+.tcard::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--tc)}
+.tcard .th{display:flex; align-items:baseline; justify-content:space-between; gap:.5rem}
+.tcard .tn{font-weight:750; font-size:.98rem; letter-spacing:-.01em}
+.tcard .tw{font-family:var(--mono); font-size:.68rem; color:var(--faint); white-space:nowrap}
+.tcard .tp{display:flex; align-items:baseline; gap:.45rem}
+.tcard .tpct{font-size:1.6rem; font-weight:800; letter-spacing:-.02em}
+.tcard .tdays{font-size:.72rem; color:var(--dim)}
+.tbar{height:7px; border-radius:5px; background:rgba(255,255,255,.06); overflow:hidden}
+.tbar i{display:block; height:100%; border-radius:5px; background:var(--tc); transition:width .5s ease}
+.tmeta{display:flex; align-items:center; justify-content:space-between; gap:.5rem}
+.tpill{font-size:.62rem; font-weight:750; text-transform:uppercase; letter-spacing:.05em;
+  padding:.16rem .5rem; border-radius:999px; white-space:nowrap}
+.tpill.active{color:var(--tc); background:color-mix(in srgb,var(--tc) 16%,transparent)}
+.tpill.done{color:var(--green); background:rgba(52,211,153,.14)}
+.tpill.upcoming{color:var(--faint); background:rgba(255,255,255,.05)}
+.tnotes{font-size:.7rem; color:var(--dim); font-weight:600; white-space:nowrap; align-self:flex-start; margin-top:.05rem}
+.tnotes:hover{color:var(--txt)}
+@keyframes flashbg{from{background:color-mix(in srgb,var(--pc) 20%,transparent)} to{background:transparent}}
+.rm-phase.flash{animation:flashbg 1.5s ease; border-radius:8px}
+
 /* projects grid */
 .pgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:1rem}
 @media(max-width:820px){.pgrid{grid-template-columns:repeat(2,1fr)}}
@@ -331,6 +359,9 @@ footer .r{margin-left:auto}
   <div class="kpis reveal" id="kpis"></div>
   <div id="owner-bar"></div>
 
+  <div class="sec reveal"><h2>🧭 The four tracks</h2><span class="sub">progress by domain · click a track to jump to its weeks</span></div>
+  <div class="tracks reveal" id="tracks"></div>
+
   <div class="sec reveal"><h2>🔨 Current build</h2><span class="sub">the deep-build project for this week</span></div>
   <div class="card now reveal" id="now"></div>
 
@@ -425,6 +456,7 @@ function render(s){
   if(hp){ if(s.backlog){ hp.className="hstat behind"; hp.textContent="● "+s.backlog+" behind"; }
     else { hp.className="hstat ok"; hp.textContent="● On track"; } }
   renderOwnerBar(s);
+  renderTracks(s);
 
   var kp=$("kpis"); kp.replaceChildren();
   kp.appendChild(kpi(s.done, "days completed", "board"));
@@ -523,6 +555,44 @@ function updateScrollCues(){
 }
 window.addEventListener("resize", updateScrollCues);
 
+/* four-track overview */
+var TRACK_META={
+  "Data Engineering":{c:"var(--build)",repo:"de-notes"},
+  "Data Science & ML":{c:"var(--consolidate)",repo:"ml-notes"},
+  "Deep Learning & AI":{c:"var(--pink)",repo:"ai-notes"},
+  "Linux & Systems":{c:"var(--teal)",repo:"linux-notes"}
+};
+function phaseSlug(n){ return "phase-"+n.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
+function renderTracks(s){
+  var c=$("tracks"); if(!c) return; c.replaceChildren();
+  (s.tracks||[]).forEach(function(t){
+    var m=TRACK_META[t.name]||{c:"var(--blue)",repo:""};
+    var card=el("div","tcard"); card.style.setProperty("--tc", m.c);
+    card.setAttribute("aria-label", t.name+" — "+Math.round(t.pct)+"% complete, click for its weeks");
+    var th=el("div","th"); th.appendChild(el("span","tn",t.name)); th.appendChild(el("span","tw","W"+t.lo+"–"+t.hi)); card.appendChild(th);
+    var tp=el("div","tp"); tp.appendChild(el("span","tpct",Math.round(t.pct)+"%")); tp.appendChild(el("span","tdays",t.done+" / "+t.total+" days")); card.appendChild(tp);
+    var bar=el("div","tbar"); var fill=el("i"); fill.style.width=(t.done?Math.max(t.pct,2):0)+"%"; bar.appendChild(fill); card.appendChild(bar);
+    var meta=el("div","tmeta");
+    var label=t.status==="done"?"Complete":t.status==="active"?"In progress":"Upcoming";
+    meta.appendChild(el("span","tpill "+t.status, label));
+    meta.appendChild(el("span","tdays", t.builds.done+"/"+t.builds.total+" builds")); card.appendChild(meta);
+    if(m.repo){
+      var a=document.createElement("a"); a.className="tnotes"; a.href="https://github.com/astroboy1183/"+m.repo;
+      a.target="_blank"; a.rel="noopener"; a.textContent="📓 Notes ↗";
+      a.addEventListener("click", function(e){ e.stopPropagation(); });
+      card.appendChild(a);
+    }
+    clickable(card, function(){ goToPhase(t.name); });
+    c.appendChild(card);
+  });
+}
+function goToPhase(name){
+  var target=document.getElementById(phaseSlug(name));
+  if(!target) return;
+  target.scrollIntoView({behavior:"smooth", block:"start"});
+  target.classList.remove("flash"); void target.offsetWidth; target.classList.add("flash");
+}
+
 /* roadmap browser */
 var PHASE_COLOR={"Data Engineering":"var(--build)","Data Science & ML":"var(--consolidate)","Deep Learning & AI":"var(--pink)","Linux & Systems":"var(--teal)"};
 function renderRoadmap(s){
@@ -531,7 +601,7 @@ function renderRoadmap(s){
   var cur=null;
   (s.weeksMeta||[]).forEach(function(w){
     if(w.phase!==cur){ cur=w.phase;
-      var ph=el("div","rm-phase"); ph.style.setProperty("--pc", PHASE_COLOR[w.phase]||"var(--blue)");
+      var ph=el("div","rm-phase"); ph.id=phaseSlug(w.phase); ph.style.setProperty("--pc", PHASE_COLOR[w.phase]||"var(--blue)");
       ph.appendChild(el("span","rm-pname", w.phase)); rm.appendChild(ph); }
     var cells=byWeek[w.n]||[];
     var doneN=cells.filter(function(c){return c.status==="done";}).length;
