@@ -58,7 +58,7 @@ function istToday() {
 
 // ----------------------------------------------------------------- state ---
 async function loadState(env) {
-  const s = { done: {}, partials: {}, paused: false, skipped_today: null, last_done: null, presence: {}, projectLinks: {} };
+  const s = { done: {}, partials: {}, paused: false, skipped_today: null, last_done: null, presence: {}, projectLinks: {}, recaps: {} };
   const raw = await env.STUDY.get("state");
   if (raw) Object.assign(s, JSON.parse(raw));
   return s;
@@ -274,6 +274,94 @@ async function deliverSummary(env, u) {
     `\u{1F4D8} *Study brief — Day ${u.id}: ${u.title}*` + (cached ? " _(cached)_" : "")
   );
   await send(env, stripMd(note), { markdown: false });
+}
+
+// --------------------------------------- grounded recaps (your real work) ---
+// Rewrite a day's note from what Jayanth ACTUALLY did — his own summary and/or
+// his code repo — instead of the plan. Overwrites the cached brief and re-pushes
+// the GitHub note so the public record matches reality.
+function parseRepo(url) {
+  const m = String(url || "").match(/github\.com\/([^/\s]+)\/([^/\s#?]+)/i);
+  return m ? { owner: m[1], repo: m[2].replace(/\.git$/, "") } : null;
+}
+async function ghGet(env, apiPath) {
+  const headers = { accept: "application/vnd.github+json", "user-agent": "study-agent" };
+  if (env.GH_PAT) headers.authorization = `Bearer ${env.GH_PAT}`;
+  const r = await fetch(`https://api.github.com${apiPath}`, { headers });
+  return r.ok ? r : null;
+}
+async function fetchRepoContext(env, url) {
+  // README + file tree + language mix — enough to summarize what was built, cheaply.
+  const pr = parseRepo(url);
+  if (!pr) return null;
+  const base = `/repos/${pr.owner}/${pr.repo}`;
+  const out = [`Repository: ${pr.owner}/${pr.repo}`];
+  let branch = "main";
+  const metaR = await ghGet(env, base);
+  if (metaR) {
+    const m = await metaR.json();
+    branch = m.default_branch || "main";
+    if (m.description) out.push(`Description: ${m.description}`);
+  } else {
+    return null; // repo not reachable (private/typo) — caller falls back
+  }
+  const langR = await ghGet(env, `${base}/languages`);
+  if (langR) { const ks = Object.keys(await langR.json()); if (ks.length) out.push(`Languages: ${ks.join(", ")}`); }
+  const rdR = await ghGet(env, `${base}/readme`);
+  if (rdR) { const rd = await rdR.json(); out.push(`\nREADME:\n${fromB64utf8(rd.content).slice(0, 6000)}`); }
+  const treeR = await ghGet(env, `${base}/git/trees/${branch}?recursive=1`);
+  if (treeR) {
+    const t = await treeR.json();
+    const files = (t.tree || [])
+      .filter((x) => x.type === "blob")
+      .map((x) => x.path)
+      .filter((p) => !/node_modules\/|\.venv\/|dist\/|build\/|\.min\.|package-lock/.test(p))
+      .slice(0, 200);
+    if (files.length) out.push(`\nFiles (${files.length} shown):\n${files.join("\n")}`);
+  }
+  return out.join("\n");
+}
+async function regenerateNote(env, state, u, input) {
+  // input: { notes?, repo? } — at least one required. Returns the note, or a
+  // { error } object the caller can surface. Never throws on a bad repo.
+  const notes = (input.notes || "").trim();
+  const repo = (input.repo || "").trim();
+  if (!notes && !repo) return { error: "Add a summary or a repo URL." };
+  const repoCtx = repo ? await fetchRepoContext(env, repo) : null;
+  if (repo && !repoCtx) return { error: "Couldn't read that repo — is the URL right and the repo public?" };
+  const sourceBits = [];
+  if (notes) sourceBits.push(`WHAT HE SAYS HE DID (his own words):\n${notes}`);
+  if (repoCtx) sourceBits.push(`HIS CODE REPOSITORY:\n${repoCtx}`);
+  const system =
+    summaryPrompt(u) +
+    " CRITICAL: Ground this recap in WHAT HE ACTUALLY DID below — the plan is only " +
+    "background. Where his real work diverged from the plan (different language, " +
+    "approach, extra features, or cut scope), reflect what he actually did. Never " +
+    "invent work he didn't mention; if his input is thin, summarize what's there and " +
+    "note what's missing rather than padding.";
+  const body = await askModel(
+    env,
+    system,
+    `Topic (Day ${u.id}, Week ${u.week}, ${u.type}): ${u.title}\n\n` +
+      `THE PLAN (background only):\n${u.text}\n\n` +
+      sourceBits.join("\n\n"),
+    Number(env.SUMMARY_MAX_TOKENS || 4000)
+  );
+  if (!body) return { error: "The model didn't respond — try again in a moment." };
+  const pr = repo ? parseRepo(repo) : null;
+  const src = pr ? `🔗 grounded in ${pr.owner}/${pr.repo}` : "✍️ from your own summary";
+  const note =
+    `# Day ${u.id} — ${u.title}\n\n` +
+    `> Week ${u.week} · ${phaseName(u.week)} · ${u.type} · studied ${istToday().ymd} · ${src}\n\n` +
+    (notes ? `## What I actually did\n\n${notes}\n\n` : "") +
+    (repo ? `**Repo:** ${repo}\n\n` : "") +
+    `## Recap\n\n${body}\n`;
+  await env.STUDY.put(`brief:${u.id}`, note);
+  state.recaps = state.recaps || {};
+  state.recaps[String(u.id)] = { source: pr ? "repo" : "notes", repo, at: istToday().ymd };
+  await saveState(env, state);
+  await commitNote(env, u, note); // re-push the grounded note to GitHub
+  return { note };
 }
 
 // ------------------------------------------------------ track notes repos ---
@@ -664,6 +752,7 @@ const COMMANDS = [
   ["off", "Log a rest day (streak-safe)"],
   ["skip", "Skip today (no evening nag)"],
   ["summary", "Re-send the last study brief"],
+  ["recap", "Rewrite the last recap from your real work (notes or a repo URL)"],
   ["status", "Progress + any catch-up backlog"],
   ["pause", "Silence daily messages"],
   ["resume", "Resume daily messages"],
@@ -706,6 +795,29 @@ async function handleMessage(env, state, text) {
   } else if (low.startsWith("/summary")) {
     if (state.last_done) await deliverSummary(env, BY_ID[String(state.last_done)]);
     else await send(env, "No completed unit yet — finish a day with /done and the brief follows.");
+  } else if (low.startsWith("/recap")) {
+    const arg = text.trim().replace(/^\/recap(@\S+)?\s*/i, "").trim();
+    if (!state.last_done || !(String(state.last_done) in state.done)) {
+      await send(env, "No completed day yet — finish one with /done first, then /recap <your notes or a repo URL>.");
+    } else if (!arg) {
+      await send(
+        env,
+        "Add your real work after the command and I'll rewrite the last day's recap to match:\n" +
+          "`/recap Built the LSM engine in Rust with a WAL instead of Python`\n" +
+          "or\n`/recap https://github.com/you/your-repo`"
+      );
+    } else {
+      const u = BY_ID[String(state.last_done)];
+      const isRepo = /github\.com\//i.test(arg);
+      await send(env, `\u{1F58A} Rewriting Day ${u.id}'s recap from your ${isRepo ? "repo" : "summary"}…`);
+      const r = await regenerateNote(env, state, u, isRepo ? { repo: arg } : { notes: arg });
+      if (r && r.note) {
+        await send(env, `✅ *Day ${u.id} recap — regrounded in your real work.*`);
+        await send(env, stripMd(r.note), { markdown: false });
+      } else {
+        await send(env, (r && r.error) || "Couldn't rewrite it just now — try again in a moment.");
+      }
+    }
   } else if (low.startsWith("/status")) {
     await status(env, state);
   } else if (low.startsWith("/pause")) {
@@ -995,6 +1107,7 @@ function stateForUi(state) {
     buildsLeft: p.filter((u) => u.type === "build").length,
     byType,
     tracks: tracksData(state),
+    grounded: state.recaps || {},
     current: cur
       ? { id: cur.id, week: cur.week, dow: cur.dow, type: cur.type, title: cur.title, text: cur.text, effort: EFFORT[cur.type] }
       : null,
@@ -1138,6 +1251,23 @@ export default {
         if (!u) return json({ ok: false, msg: "Nothing to mark today — you're caught up." });
         ctx.waitUntil(doDone(env, state, u.id)); // marks done + writes/pushes the note in the background
         return json({ ok: true, day: u.id, title: u.title });
+      }
+      // Owner "revise recap" — rewrite a completed day's note from real work.
+      if (path === "/api/recap" && request.method === "POST") {
+        const key = request.headers.get("x-study-key") || "";
+        if (!env.STUDY_UI_KEY || key !== env.STUDY_UI_KEY) {
+          await new Promise((r) => setTimeout(r, 600));
+          return json({ error: "unauthorized" }, 401);
+        }
+        const b = await request.json().catch(() => ({}));
+        const id = String(b.id || "");
+        if (!(id in BY_ID)) return json({ ok: false, msg: "Unknown day." });
+        if (!(id in state.done)) return json({ ok: false, msg: "Finish the day first (check in), then revise its recap." });
+        const notes = (b.notes || "").toString().trim().slice(0, 6000);
+        const repo = (b.repo || "").toString().trim().slice(0, 300);
+        if (!notes && !repo) return json({ ok: false, msg: "Add a summary or a repo URL." });
+        ctx.waitUntil(regenerateNote(env, state, BY_ID[id], { notes, repo }));
+        return json({ ok: true, day: Number(id) });
       }
       return json({ error: "not found" }, 404);
     }

@@ -331,6 +331,8 @@ footer .r{margin-left:auto}
 .p-plan[open]>summary::before{content:"▾ "}
 .p-plan>summary:hover{color:var(--txt)}
 .p-plan .steps{margin-top:.8rem}
+.revise{margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem}
+.p-ta{resize:vertical;min-height:4.8rem;line-height:1.5;font-family:inherit}
 
 /* owner check-in bar */
 .owner-bar{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin:1.2rem 0;padding:.75rem 1.1rem;border:1px solid rgba(52,211,153,.35);background:rgba(52,211,153,.06);border-radius:12px}
@@ -786,6 +788,7 @@ function openProject(p){
       fetch("/api/unit/"+p.id).then(function(r){ return r.json(); }).then(function(d){
         pb.className=""; pb.innerHTML=stepsHtml(d.text);
       }).catch(function(){ pb.className=""; pb.textContent="—"; });
+      if(EDIT_KEY) body.appendChild(revisePanel(p.id, p.repo, function(note){ rb.className=""; rb.innerHTML=mdToHtml(note); }));
     } else {
       var spec=el("div","p-spec"); spec.appendChild(el("div","p-spec-h","How you'll build it")); var sb=el("div","loading","loading…"); spec.appendChild(sb); body.appendChild(spec);
       fetch("/api/unit/"+p.id).then(function(r){ return r.json(); }).then(function(d){
@@ -887,12 +890,50 @@ var overlay=$("overlay");
 function closeModal(){ overlay.classList.remove("open"); }
 overlay.addEventListener("click", function(e){ if(e.target===overlay) closeModal(); });
 document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeModal(); });
+// Owner-only "revise recap" panel — regenerate a day's note from your real work
+// (a written summary and/or a repo URL). applyFn(newNote) refreshes the display.
+function revisePanel(id, repoPrefill, applyFn){
+  var wrap=el("div","p-edit revise");
+  wrap.appendChild(el("div","p-edit-h","✏️ Revise recap — ground it in your real work"));
+  var ta=document.createElement("textarea"); ta.className="p-input p-ta"; ta.rows=4;
+  ta.placeholder="What you actually did / learned — a few honest lines…";
+  var ri=document.createElement("input"); ri.type="url"; ri.className="p-input"; ri.placeholder="…and/or a GitHub repo URL to summarize"; ri.value=repoPrefill||"";
+  wrap.appendChild(ta); wrap.appendChild(ri);
+  var row=el("div","p-edit-row"); var b=document.createElement("button"); b.className="p-save"; b.textContent="Regenerate recap";
+  var msg=el("span","p-msg","");
+  b.addEventListener("click", function(){
+    var notes=ta.value.trim(), rp=ri.value.trim();
+    if(!notes && !rp){ msg.textContent="Add a summary or a repo URL first."; return; }
+    b.disabled=true; msg.textContent="regenerating… (~30s)";
+    fetch("/api/brief/"+id+"?b="+Date.now(),{cache:"no-store"}).then(function(r){ return r.json(); }).then(function(cur){
+      var before=(cur && cur.note)||"";
+      return fetch("/api/recap",{method:"POST",headers:{"content-type":"application/json","x-study-key":EDIT_KEY},
+        body:JSON.stringify({id:id,notes:notes,repo:rp})}).then(function(r){ return r.json(); }).then(function(d){
+        if(!d.ok){ throw {m:d.msg||"Couldn't regenerate."}; }
+        var tries=0;
+        (function poll(){
+          tries++;
+          fetch("/api/brief/"+id+"?b="+Date.now(),{cache:"no-store"}).then(function(r){ return r.json(); }).then(function(bd){
+            if(bd && bd.note && bd.note!==before){ msg.textContent="done ✓"; b.disabled=false; if(applyFn) applyFn(bd.note); }
+            else if(tries<16){ setTimeout(poll,3000); }
+            else { msg.textContent="taking longer than usual — reopen in a moment."; b.disabled=false; }
+          }).catch(function(){ if(tries<16) setTimeout(poll,3000); else { msg.textContent="reopen in a moment."; b.disabled=false; } });
+        })();
+      });
+    }).catch(function(e){ msg.textContent=(e&&e.m)||"failed — is the passphrase right?"; b.disabled=false; });
+  });
+  row.appendChild(b); row.appendChild(msg); wrap.appendChild(row);
+  return wrap;
+}
 function openBrief(id){
   overlay.classList.add("open"); $("modal").replaceChildren(shell("Day "+id,"loading…"));
   fetch("/api/brief/"+id).then(function(r){ return r.json(); }).then(function(d){
     var body=el("div","m-body");
-    if(!d.note) body.appendChild(el("div","loading","The brief for this day hasn't been published yet."));
-    else body.innerHTML=mdToHtml(d.note);
+    var content=el("div");
+    if(!d.note) content.appendChild(el("div","loading","The brief for this day hasn't been published yet."));
+    else content.innerHTML=mdToHtml(d.note);
+    body.appendChild(content);
+    if(EDIT_KEY) body.appendChild(revisePanel(id, "", function(note){ content.innerHTML=mdToHtml(note); }));
     var m=$("modal"); m.replaceChildren(); m.appendChild(head(d.title?("Day "+d.id+" — "+d.title):("Day "+id))); m.appendChild(body);
   }).catch(function(){ $("modal").replaceChildren(shell("Day "+id,"Couldn't load that brief.")); });
 }
