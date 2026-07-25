@@ -23,24 +23,28 @@ export const PAGE = `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
 <style>
 :root{
-  --bg:#080911; --card:#131730; --card2:#181d3a;
-  --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.16);
-  --txt:#eef1fb; --dim:#9aa3c7; --faint:#616a92;
-  --indigo:#6366f1; --blue:#60a5fa; --violet:#a855f7; --pink:#f472b6;
-  --teal:#2dd4bf; --green:#34d399; --amber:#f59e0b; --red:#fb7185;
-  --theory:#6366f1; --build:#f59e0b; --consolidate:#a855f7;
+  --bg:#0a0616; --card:rgba(17,9,30,.72); --card2:rgba(26,12,44,.82);
+  --line:rgba(255,45,149,.18); --line2:rgba(0,229,255,.32);
+  --txt:#f4eefb; --dim:#bda9d6; --faint:#8778a8;
+  --indigo:#7a5cff; --blue:#00e5ff; --violet:#b026ff; --pink:#ff2d95;
+  --teal:#00e5ff; --green:#1dfc9b; --amber:#ffd54a; --red:#ff5c8a;
+  --theory:#22d3ee; --build:#ff2d95; --consolidate:#b026ff;
+  --neon1:#ff2d95; --neon2:#00e5ff; --neon3:#b026ff;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
+@property --ang{syntax:'<angle>'; inherits:false; initial-value:120deg}
+@keyframes rot{to{--ang:480deg}}
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth; scrollbar-color:#2c3354 #080911}
 body{font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;
   background:var(--bg); color:var(--txt); min-height:100vh; overflow-x:hidden}
 body::before{content:""; position:fixed; inset:0; z-index:-1;
   background:
-    radial-gradient(900px 620px at 8% -14%, rgba(99,102,241,.22), transparent 64%),
-    radial-gradient(880px 600px at 98% -8%, rgba(168,85,247,.17), transparent 64%),
-    radial-gradient(720px 560px at -10% 55%, rgba(45,212,191,.10), transparent 70%),
-    radial-gradient(820px 600px at 108% 96%, rgba(244,114,182,.10), transparent 70%)}
+    linear-gradient(rgba(255,45,149,.045) 1px, transparent 1px) 0 0/100% 42px,
+    linear-gradient(90deg, rgba(0,229,255,.04) 1px, transparent 1px) 0 0/42px 100%,
+    radial-gradient(860px 560px at 10% -12%, rgba(176,38,255,.30), transparent 62%),
+    radial-gradient(780px 540px at 100% -6%, rgba(0,229,255,.16), transparent 60%),
+    radial-gradient(720px 560px at 58% 120%, rgba(255,45,149,.15), transparent 64%)}
 a{color:inherit; text-decoration:none}
 button{font:inherit; cursor:pointer}
 
@@ -67,8 +71,8 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .eyebrow{font-size:.72rem; font-weight:800; letter-spacing:.2em; text-transform:uppercase;
   color:var(--violet); margin-bottom:1rem}
 .hero h1{font-size:clamp(2.35rem,7vw,3.4rem); font-weight:850; letter-spacing:-.03em; line-height:1.04}
-.hero .role{font-size:clamp(1.08rem,3.4vw,1.25rem); font-weight:650; margin-top:.35rem;
-  background:linear-gradient(90deg,#7dd3fc,#c4b5fd 60%,#f9a8d4);
+.hero .role{font-size:clamp(1.08rem,3.4vw,1.25rem); font-weight:750; margin-top:.35rem;
+  background:linear-gradient(90deg,#00e5ff,#b026ff 55%,#ff2d95);
   -webkit-background-clip:text; background-clip:text; color:transparent}
 .hero .tagline{color:var(--dim); font-size:1.02rem; margin:1rem 0 .4rem; max-width:42ch}
 .hero .creds{color:var(--faint); font-size:.86rem}
@@ -102,10 +106,14 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .sec::after{content:""; flex:1; height:1px; align-self:center;
   background:linear-gradient(90deg,var(--line2),transparent)}
 
-.card{position:relative; background:var(--card); border:1px solid var(--line);
-  border-radius:20px; padding:1.6rem; box-shadow:0 24px 48px -24px rgba(3,5,16,.6)}
+.card{position:relative; border:1.5px solid transparent; border-radius:20px; padding:1.6rem;
+  background:
+    linear-gradient(var(--card),var(--card)) padding-box,
+    conic-gradient(from var(--ang), var(--neon1), var(--neon2), var(--neon3), var(--neon1)) border-box;
+  box-shadow:0 0 34px -14px var(--neon2), 0 22px 46px -26px rgba(0,0,0,.75);
+  backdrop-filter:blur(7px); animation:rot 8s linear infinite}
 .card::before{content:""; position:absolute; inset:0 0 auto 0; height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent)}
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,.4),transparent)}
 
 /* now building */
 .now{overflow:hidden}
@@ -156,15 +164,25 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .legend span{display:inline-flex; align-items:center; gap:.4rem}
 .legend i{width:11px; height:11px; border-radius:3px; display:inline-block}
 
+/* momentum graph */
+.graph-wrap .mgraph{width:100%; height:auto; display:block; overflow:visible}
+.mgraph-cap{display:flex; gap:1.1rem; flex-wrap:wrap; font-size:.72rem; color:var(--faint);
+  margin-top:.75rem; font-family:var(--mono)}
+.mgraph-empty{font-size:.8rem; color:var(--faint); margin-top:.6rem}
+
 /* four-track overview */
 .tracks{display:grid; grid-template-columns:repeat(4,1fr); gap:1rem}
 @media(max-width:900px){.tracks{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.tracks{grid-template-columns:1fr}}
-.tcard{position:relative; display:flex; flex-direction:column; gap:.55rem; overflow:hidden;
-  border:1px solid var(--line); border-radius:16px; padding:1.05rem 1.1rem 1.1rem 1.25rem;
-  background:rgba(255,255,255,.018); cursor:pointer; transition:.16s}
-.tcard:hover{transform:translateY(-3px); border-color:var(--line2)}
-.tcard::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--tc)}
+.tcard{position:relative; display:flex; flex-direction:column; gap:.55rem;
+  border:1.5px solid transparent; border-radius:16px; padding:1.05rem 1.15rem;
+  background:
+    linear-gradient(var(--card),var(--card)) padding-box,
+    conic-gradient(from var(--ang), var(--tc), #ffffff, var(--tc)) border-box;
+  box-shadow:0 0 30px -12px var(--tc), 0 16px 36px -20px rgba(0,0,0,.65);
+  backdrop-filter:blur(7px); cursor:pointer; transition:transform .16s, box-shadow .25s;
+  animation:rot 9s linear infinite}
+.tcard:hover{transform:translateY(-3px); box-shadow:0 0 42px -6px var(--tc), 0 18px 42px -18px rgba(0,0,0,.7)}
 .tcard .th{display:flex; align-items:baseline; justify-content:space-between; gap:.5rem}
 .tcard .tn{font-weight:750; font-size:.98rem; letter-spacing:-.01em}
 .tcard .tw{font-family:var(--mono); font-size:.68rem; color:var(--faint); white-space:nowrap}
@@ -188,9 +206,13 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .pgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:1rem}
 @media(max-width:820px){.pgrid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.pgrid{grid-template-columns:1fr}}
-.pcard{border:1px solid var(--line); border-radius:16px; padding:1.1rem 1.2rem;
-  background:rgba(255,255,255,.018); transition:.16s; position:relative}
-.pcard:hover{transform:translateY(-3px); border-color:var(--line2)}
+.pcard{position:relative; border:1.5px solid transparent; border-radius:16px; padding:1.1rem 1.2rem;
+  background:
+    linear-gradient(var(--card),var(--card)) padding-box,
+    conic-gradient(from var(--ang), var(--neon1), var(--neon2), var(--neon3), var(--neon1)) border-box;
+  box-shadow:0 0 24px -14px var(--neon3), 0 14px 34px -22px rgba(0,0,0,.7);
+  transition:transform .16s, box-shadow .25s}
+.pcard:hover{transform:translateY(-3px); box-shadow:0 0 34px -8px var(--neon2), 0 16px 40px -18px rgba(0,0,0,.75); animation:rot 5s linear infinite}
 .pcard.up{opacity:.72}
 .pcard .wk{font-size:.7rem; font-weight:700; letter-spacing:.06em; color:var(--faint)}
 .pcard .nm{font-weight:650; font-size:.98rem; margin-top:.35rem; line-height:1.35}
@@ -225,7 +247,7 @@ footer .r{margin-left:auto}
   box-shadow:0 30px 90px rgba(0,0,0,.6); animation:pop .28s cubic-bezier(.2,.9,.3,1.2) both}
 @keyframes pop{from{opacity:0;transform:scale(.95) translateY(12px)}}
 .m-head{padding:1.25rem 1.5rem 1rem; position:relative;
-  background:linear-gradient(140deg,rgba(99,102,241,.22),transparent 70%)}
+  background:linear-gradient(140deg,rgba(255,45,149,.22),rgba(176,38,255,.12) 45%,transparent 72%)}
 .m-head .ttl{font-size:1.2rem; font-weight:750; padding-right:2rem}
 #m-close{position:absolute; top:.9rem; right:.9rem; width:30px; height:30px; border-radius:9px;
   border:1px solid var(--line2); background:rgba(255,255,255,.05); color:var(--dim); font-size:.95rem}
@@ -380,6 +402,9 @@ footer .r{margin-left:auto}
   <div class="sec reveal"><h2>🧭 The four tracks</h2><span class="sub">progress by domain · click a track to jump to its weeks</span></div>
   <div class="tracks reveal" id="tracks"></div>
 
+  <div class="sec reveal"><h2>📈 Momentum</h2><span class="sub">cumulative days completed vs the ideal 7-a-week pace</span></div>
+  <div class="card reveal"><div id="graph" class="graph-wrap"></div></div>
+
   <div class="sec reveal"><h2>🔨 Current build</h2><span class="sub">the deep-build project for this week</span></div>
   <div class="card now reveal" id="now"></div>
 
@@ -475,6 +500,7 @@ function render(s){
     else { hp.className="hstat ok"; hp.textContent="● On track"; } }
   renderOwnerBar(s);
   renderTracks(s);
+  renderGraph(s);
 
   var kp=$("kpis"); kp.replaceChildren();
   kp.appendChild(kpi(s.done, "days completed", "board"));
@@ -575,12 +601,43 @@ window.addEventListener("resize", updateScrollCues);
 
 /* four-track overview */
 var TRACK_META={
-  "Data Engineering":{c:"var(--build)",repo:"de-notes"},
-  "Data Science & ML":{c:"var(--consolidate)",repo:"ml-notes"},
+  "Data Engineering":{c:"var(--blue)",repo:"de-notes"},
+  "Data Science & ML":{c:"var(--green)",repo:"ml-notes"},
   "Deep Learning & AI":{c:"var(--pink)",repo:"ai-notes"},
-  "Linux & Systems":{c:"var(--teal)",repo:"linux-notes"}
+  "Linux & Systems":{c:"var(--violet)",repo:"linux-notes"}
 };
 function phaseSlug(n){ return "phase-"+n.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
+// cumulative-progress momentum chart (SVG, neon glow) — actual pace vs the ideal 7/week line
+function renderGraph(s){
+  var c=$("graph"); if(!c) return; c.replaceChildren();
+  var W=820,H=230,pl=10,pr=10,pt=16,pb=10;
+  var total=s.total||434, weeks=s.weeks||62;
+  var cum=0, actual=[];
+  (s.board||[]).forEach(function(wk){ (wk.cells||[]).forEach(function(cc){ if(cc.status==="done") cum++; }); actual.push(cum); });
+  var n=actual.length; if(n<2){ c.appendChild(el("div","mgraph-empty","Chart appears as weeks are logged.")); return; }
+  var iw=W-pl-pr, ih=H-pt-pb;
+  function X(i){ return pl + (i/(n-1))*iw; }
+  function Y(v){ return pt + (1 - v/total)*ih; }
+  var a=[], ideal=[];
+  for(var i=0;i<n;i++){ a.push([X(i),Y(actual[i]||0)]); ideal.push([X(i),Y(Math.min(total,(i+1)*(total/weeks)))]); }
+  function P(pts){ var d=""; for(var i=0;i<pts.length;i++){ d+=(i?" L":"M")+pts[i][0].toFixed(1)+" "+pts[i][1].toFixed(1); } return d; }
+  var area=P(a)+" L"+X(n-1).toFixed(1)+" "+Y(0).toFixed(1)+" L"+X(0).toFixed(1)+" "+Y(0).toFixed(1)+" Z";
+  var grid=""; for(var g=0;g<=4;g++){ var gy=(pt+(g/4)*ih).toFixed(1); grid+="<line x1='"+pl+"' y1='"+gy+"' x2='"+(W-pr)+"' y2='"+gy+"' stroke='rgba(255,255,255,.06)' stroke-width='1'/>"; }
+  var svg="<svg viewBox='0 0 "+W+" "+H+"' class='mgraph' role='img' aria-label='cumulative progress chart'>"+
+    "<defs>"+
+      "<linearGradient id='marea' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#ff2d95' stop-opacity='.5'/><stop offset='1' stop-color='#00e5ff' stop-opacity='.03'/></linearGradient>"+
+      "<linearGradient id='mline' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='#ff2d95'/><stop offset='.5' stop-color='#b026ff'/><stop offset='1' stop-color='#00e5ff'/></linearGradient>"+
+      "<filter id='mglow' x='-10%' y='-40%' width='120%' height='180%'><feGaussianBlur stdDeviation='3.5' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter>"+
+    "</defs>"+grid+
+    "<path d='"+area+"' fill='url(#marea)'/>"+
+    "<path d='"+P(ideal)+"' fill='none' stroke='rgba(255,255,255,.3)' stroke-width='1.5' stroke-dasharray='4 5'/>"+
+    "<path d='"+P(a)+"' fill='none' stroke='url(#mline)' stroke-width='2.6' filter='url(#mglow)' stroke-linejoin='round' stroke-linecap='round'/>"+
+    "</svg>";
+  c.innerHTML=svg;
+  var cap=el("div","mgraph-cap");
+  cap.innerHTML="<span style='color:var(--pink)'>● your pace</span><span style='color:var(--dim)'>┄ ideal (7/week → "+total+")</span><span>Week 1 → "+weeks+" · "+s.done+"/"+total+" done</span>";
+  c.appendChild(cap);
+}
 function renderTracks(s){
   var c=$("tracks"); if(!c) return; c.replaceChildren();
   (s.tracks||[]).forEach(function(t){
@@ -612,7 +669,7 @@ function goToPhase(name){
 }
 
 /* roadmap browser */
-var PHASE_COLOR={"Data Engineering":"var(--build)","Data Science & ML":"var(--consolidate)","Deep Learning & AI":"var(--pink)","Linux & Systems":"var(--teal)"};
+var PHASE_COLOR={"Data Engineering":"var(--blue)","Data Science & ML":"var(--green)","Deep Learning & AI":"var(--pink)","Linux & Systems":"var(--violet)"};
 function renderRoadmap(s){
   var rm=$("roadmap"); if(!rm) return; rm.replaceChildren();
   var byWeek={}; (s.board||[]).forEach(function(wk){ byWeek[wk.week]=wk.cells; });
