@@ -1,18 +1,41 @@
 # study-agent
 
-A personal Telegram study coach that serves a 48-week Data / AI / DevOps
-mastery roadmap **one day at a time**, auto-shifts when days slip, writes a
-deep study brief after each finished day, answers free-form questions, and
-shows the whole year on a private dashboard.
+A personal study coach that turns a **62-week, 434-day mastery roadmap** —
+Data Engineering → Data Science & ML → Deep Learning & AI → Linux & Systems —
+into **one topic a day**, delivered over Telegram, tracked on a **public
+dashboard**, and written up as a **deep-dive note pushed to GitHub** every day
+I finish.
 
-It runs **24/7 on Cloudflare — with no server and no always-on machine.** The
-entire thing is one Cloudflare Worker: a Telegram webhook, two cron sends a
-day, and a gated dashboard, all backed by a key-value store.
+It runs **24/7 on Cloudflare — no server, no always-on machine.** The whole
+thing is a single Worker: a Telegram webhook, two daily cron sends, a public
+dashboard, and per-track note commits, all backed by a key-value store.
 
-- **Bot:** `@jayanth_study_bot` (Telegram)
-- **Dashboard:** `https://study-agent.jayanthapalla.workers.dev` _(private — passphrase-gated)_
-- **Runtime:** Cloudflare Workers · KV · Cron Triggers — free tier
-- **Model:** briefs & Q&A via the Anthropic Messages API
+| | |
+|---|---|
+| 🤖 **Bot** | `@jayanth_study_bot` on Telegram |
+| 📊 **Dashboard** | **[study-agent.jayanthapalla.workers.dev](https://study-agent.jayanthapalla.workers.dev)** — public & live |
+| ⚙️ **Runtime** | Cloudflare Workers · KV · Cron Triggers (free tier) |
+| 🧠 **Model** | study briefs & Q&A via the Anthropic Messages API |
+
+---
+
+## The four tracks
+
+The roadmap runs as four ordered tracks. **Every day I finish generates a
+written deep-dive note, auto-committed to that track's own public repo** — a
+growing learning-in-public trail. Each notes repo links back here and to the
+dashboard, and cross-links its siblings.
+
+| Track | Weeks | Focus | 📓 Notes |
+|---|---|---|---|
+| **Data Engineering** | 1–18 | Python, storage internals, SQL & dimensional modeling, dbt, Spark/PySpark, Databricks lakehouse, Kafka streaming, orchestration | **[de-notes](https://github.com/astroboy1183/de-notes)** |
+| **Data Science & ML** | 19–33 | stats & A/B testing, ML from scratch, gradient boosting, feature stores, evaluation, forecasting, recommenders, MLflow, deployment | **[ml-notes](https://github.com/astroboy1183/ml-notes)** |
+| **Deep Learning & AI** | 34–48 | neural nets → PyTorch, CNNs, transformers from scratch, training GPTs, LLM apps, RAG, LoRA fine-tuning, agents & MCP | **[ai-notes](https://github.com/astroboy1183/ai-notes)** |
+| **Linux & Systems** | 49–62 | shell & automation, server hardening, systems programming, a container runtime from scratch, Kubernetes, IaC/GitOps, observability | **[linux-notes](https://github.com/astroboy1183/linux-notes)** |
+
+Each week is **5 theory days (weekdays) + 1 build (Saturday) + 1 consolidation
+(Sunday)** — 62 flagship builds in all, from a mini LSM-tree engine to a
+production RAG app to a container runtime.
 
 ---
 
@@ -21,17 +44,17 @@ day, and a gated dashboard, all backed by a key-value store.
 <!-- PROGRESS:START -->
 `░░░░░░░░░░░░░░░░░░░░░░░░`
 
-**0/336** days done · **0.0%**
+**0/434** days done · **0.0%**
 
 <sub>▓ done · ▒ in progress (½ credit) · ░ to go</sub>
 
-- **Current:** Week 1/48
+- **Current:** Week 1/62
 - **Streak:** 0 days
-- **Pending builds:** 48
+- **Pending builds:** 62
 - **Last completed:** —
-- **Updated:** seeded 2026-07-24 · auto-updates after each completed day
+- **Updated:** seeded 2026-07-25 · auto-updates after each completed day
 
-<details><summary>48-week board (✅ done · 🟨 partial · ⬜ pending · Mon→Sun)</summary>
+<details><summary>62-week board (✅ done · 🟨 partial · ⬜ pending · Mon→Sun)</summary>
 
 `W01` ⬜⬜⬜⬜⬜⬜⬜
 `W02` ⬜⬜⬜⬜⬜⬜⬜
@@ -81,58 +104,55 @@ day, and a gated dashboard, all backed by a key-value store.
 `W46` ⬜⬜⬜⬜⬜⬜⬜
 `W47` ⬜⬜⬜⬜⬜⬜⬜
 `W48` ⬜⬜⬜⬜⬜⬜⬜
+`W49` ⬜⬜⬜⬜⬜⬜⬜
+`W50` ⬜⬜⬜⬜⬜⬜⬜
+`W51` ⬜⬜⬜⬜⬜⬜⬜
+`W52` ⬜⬜⬜⬜⬜⬜⬜
+`W53` ⬜⬜⬜⬜⬜⬜⬜
+`W54` ⬜⬜⬜⬜⬜⬜⬜
+`W55` ⬜⬜⬜⬜⬜⬜⬜
+`W56` ⬜⬜⬜⬜⬜⬜⬜
+`W57` ⬜⬜⬜⬜⬜⬜⬜
+`W58` ⬜⬜⬜⬜⬜⬜⬜
+`W59` ⬜⬜⬜⬜⬜⬜⬜
+`W60` ⬜⬜⬜⬜⬜⬜⬜
+`W61` ⬜⬜⬜⬜⬜⬜⬜
+`W62` ⬜⬜⬜⬜⬜⬜⬜
 
 </details>
 <!-- PROGRESS:END -->
 
-_The board above is rewritten automatically after each completed day (via the GitHub API from the Worker)._
-
----
-
-## Contents
-
-- [Progress](#progress)
-- [What it does](#what-it-does)
-- [Architecture](#architecture)
-- [How it runs 24/7 with no server](#how-it-runs-247-with-no-server)
-- [The three event flows](#the-three-event-flows)
-- [Data model](#data-model)
-- [The schedule logic (day-of-week + pointer)](#the-schedule-logic-day-of-week--pointer)
-- [Telegram commands](#telegram-commands)
-- [The dashboard](#the-dashboard)
-- [Repository layout](#repository-layout)
-- [Deploy from scratch](#deploy-from-scratch)
-- [Operations](#operations)
-- [Security model](#security-model)
-- [Cost](#cost)
-- [Rollback to the local bot](#rollback-to-the-local-bot)
+_The board and notes repos are rewritten automatically from the Worker (via the
+GitHub API) after each completed day._
 
 ---
 
 ## What it does
 
 - **07:30 IST** — sends today's assignment (the next pending unit for the day).
-- **21:30 IST** — evening check with ✅ Done / 🔸 Partial / ⏭ Skip buttons.
-- **On Done** — writes a ~20–30 minute study brief on the day's topic with the
-  model, sends it to Telegram (chunked), and caches it so re-reading never
-  re-bills the API.
-- **Any question** — send plain text and it answers, grounded in where you are
+- **21:30 IST** — an evening check with ✅ Done / 🔸 Partial / ⏭ Skip buttons.
+- **On Done** — writes a ~20–30 min study brief with the model, sends it to
+  Telegram, **commits a rich deep-dive note to the track's GitHub repo**, and
+  caches it so re-reading never re-bills the API.
+- **Check in from anywhere** — mark a day done from Telegram (`/done`) **or**
+  the dashboard's owner-only **✓ I studied it** button; both trigger the note.
+- **Ask anything** — send plain text and it answers, grounded in where you are
   in the plan, with short follow-up memory.
-- **Dashboard** — a private page showing progress, a year-at-a-glance heatmap,
-  per-type balance, the "up next" topic, every brief, and an ask box.
+- **Public dashboard** — anyone can watch progress, browse the full roadmap,
+  and read every finished-day brief.
 
 ---
 
 ## Architecture
 
 One Worker on Cloudflare's edge. Nothing runs between events; each trigger
-spins up the Worker for a few milliseconds and then it's gone.
+spins up the Worker for a few milliseconds, then it's gone.
 
 ```mermaid
 flowchart LR
-  phone["📱 Telegram app"] -->|you type| TG["Telegram servers"]
+  phone["📱 Telegram"] -->|you type| TG["Telegram servers"]
   Cron["⏰ Cloudflare Cron<br/>02:00 &amp; 16:00 UTC"]
-  Browser["💻 Browser"]
+  Browser["🌐 Anyone's browser"]
 
   subgraph Edge["Cloudflare edge (global)"]
     W[["study-agent Worker<br/>fetch() + scheduled()"]]
@@ -147,119 +167,67 @@ flowchart LR
   Browser -->|"GET / and /api/*"| W
 
   W -->|"briefs &amp; Q&amp;A"| ANT["Anthropic Messages API"]
+  W -->|"notes + progress board"| GH["GitHub API<br/>4 notes repos + this README"]
   W -->|"sendMessage / answerCallback"| TG
 ```
 
 **Key idea:** the *plan* is code (bundled from `plan.json`, changes only on
 redeploy) and your *progress* is data (lives in KV, changes as you study). They
-never touch each other — redeploying never affects progress, and studying never
-affects the plan.
+never touch — redeploying never affects progress, and studying never affects
+the plan.
+
+**How it stays up 24/7 with no server:** a Worker isn't a machine you rent and
+keep alive — it's a code bundle on every Cloudflare edge plus data in KV.
+Between events, **zero compute runs**: nothing to crash, patch, or keep up.
+When an event arrives, Cloudflare spins a V8 isolate (~5 ms) on the nearest
+edge, runs the handler, and tears it down. This replaced an earlier design — a
+Python `getUpdates` loop under `systemd` on a laptop, only as available as the
+laptop. That code still lives in [`study_agent.py`](study_agent.py) as a
+fallback.
 
 ---
 
-## How it runs 24/7 with no server
+## Daily notes → GitHub
 
-A Worker is **not** a machine you rent and keep alive. It's a code bundle
-uploaded to every Cloudflare edge location plus some data in KV. Between events,
-**zero compute runs** — there's nothing to crash, patch, or keep up.
-
-When an event arrives (a message, a cron tick, a browser request), Cloudflare
-spins a lightweight V8 isolate (~5 ms cold start) on the nearest edge, runs the
-handler, and tears it down. Availability is Cloudflare's edge itself, which is
-effectively always-on worldwide.
-
-This replaced the previous design — a Python process on a laptop running a
-`getUpdates` polling loop under `systemd`, which could only be as available as
-the laptop. See [Rollback to the local bot](#rollback-to-the-local-bot); that
-code still lives in [`study_agent.py`](study_agent.py) as a fallback.
-
----
-
-## The three event flows
-
-### 1. Telegram message → `fetch` → `/tg`
+Finishing a day is the single trigger for everything downstream:
 
 ```mermaid
 sequenceDiagram
   participant You
-  participant TG as Telegram
-  participant W as Worker /tg
-  participant KV
+  participant W as Worker
   participant M as Anthropic API
-  You->>TG: "/done"
-  TG->>W: POST /tg (X-Telegram-Bot-Api-Secret-Token)
-  W->>W: verify secret header (else 403)
-  W-->>TG: 200 "ok"  (acks immediately)
-  Note over W: ctx.waitUntil keeps the isolate alive
-  W->>KV: load state
-  W->>M: write the study brief
-  M-->>W: brief text
-  W->>KV: cache brief + save state
-  W->>TG: sendMessage (the recap)
+  participant GH as GitHub (track repo)
+  You->>W: /done  (or dashboard ✓ I studied it)
+  W->>M: write the deep-dive note
+  M-->>W: note text
+  W->>GH: commit week-NN/day-NNN-slug.md
+  W->>GH: rewrite that repo's README index
+  W-->>You: recap in Telegram
 ```
 
-The Worker **acks in milliseconds**, then finishes the slow work (the model call
-can take 10–30 s) in the background via `ctx.waitUntil()`. That matters because
-Telegram retries a webhook that doesn't answer quickly.
-
-### 2. The clock → `scheduled` (cron)
-
-Cloudflare's cron scheduler fires `scheduled()` at fixed UTC times; the handler
-branches on `event.cron`:
-
-| Cron (UTC) | IST | Action |
-|---|---|---|
-| `0 2 * * *` | 07:30 | morning assignment |
-| `0 16 * * *` | 21:30 | evening check (skippable) |
-
-It reads KV state (does nothing if paused), computes the day-appropriate unit,
-and sends it. This is what replaced the laptop's forever-loop.
-
-### 3. Browser → `fetch` → dashboard
-
-```
-GET  /            → the HTML page (strict CSP); contains NO progress data
-   unlock w/ passphrase ─► JS sends header  X-Study-Key: <passphrase>
-GET  /api/state   → verifies the key → reads KV → computes → JSON → renders
-GET  /api/brief/N → a cached brief (or generates one, then caches it)
-POST /api/ask     → a study question, answered in context
-```
+Each note is routed to the right repo by week (`1–18 → de-notes`, `19–33 →
+ml-notes`, `34–48 → ai-notes`, `49–62 → linux-notes`) and carries the topic,
+the day's work, a mastery check, and a model-written deep dive. All GitHub
+commits are made with a personal access token and are authored under my own
+account.
 
 ---
 
-## Data model
+## The schedule (day-of-week + pointer)
 
-| Layer | Contents | Mutable? | Where it lives |
-|---|---|---|---|
-| **Bundled at build** | 336-unit `plan.json`, dashboard `page.js` | No — versioned with code | inside the Worker bundle |
-| **KV namespace `STUDY`** | `state` (progress), `brief:<id>` (cached recaps), `qa` (rolling Q&A memory) | Yes — read/write per event | Cloudflare KV (global) |
-| **Secrets / vars** | bot token, API key, webhook secret, dashboard passphrase; model name, token cap | Set once | encrypted in Cloudflare, injected as `env.*` |
-
-`state` shape:
-
-```json
-{ "done": { "12": { "date": "2026-07-24", "status": "done" } },
-  "partials": { "13": "2026-07-24" },
-  "paused": false, "skipped_today": null, "last_done": 12 }
-```
-
----
-
-## The schedule logic (day-of-week + pointer)
-
-The plan is 336 ordered units (43 content weeks + 5 catch-up / deep-dive weeks),
-served by **day of week**, never by calendar date. A pointer walks the queue;
-finishing a day advances it, missing a day doesn't.
+The plan is 434 ordered units served by **day of week**, never by calendar
+date. A pointer walks the queue; finishing a day advances it, missing one
+doesn't.
 
 - **Weekdays → theory.** Builds and consolidations never appear on a weekday.
 - **Saturday → the week's build** — unless weekday theory was missed, in which
-  case the missed topic is served first and the build slides to Sunday.
+  case the missed topic comes first and the build slides to Sunday.
 - **Sunday → consolidation** — or any still-unfinished theory/build first.
+- **Build-gating:** a week's build unlocks only once that week's theory is done.
 
-Miss a day and nothing is lost: the backlog **cascades forward** into the next
-available slots (a missed Friday overflows into Saturday, Saturday into Sunday).
-Builds stay weekend work; only theory overflows into the weekend. **Partial** →
-the leftover carries over. `/status` shows how many earlier topics you still owe.
+Miss a day and nothing is lost — the backlog **cascades forward** into the next
+available slots. **Partial** carries the leftover over; `/status` shows how many
+earlier topics you still owe; `/catchup` serves them oldest-first.
 
 ---
 
@@ -268,12 +236,15 @@ the leftover carries over. `/status` shows how many earlier topics you still owe
 | Command | Does |
 |---|---|
 | `/today` | Show today's assignment |
-| `/done` | Mark done + get the study brief |
-| `/partial` | Did part of it — carries over |
-| `/skip` | Skip today (no evening nag) |
+| `/done` | Mark done → study brief → note pushed to GitHub |
+| `/partial` | Did part of it — the leftover carries over |
+| `/skip` | Skip today |
+| `/more` | Serve the next unit — get ahead |
+| `/catchup` | Start the oldest topic you owe |
 | `/summary` | Re-send the last study brief |
 | `/status` | Progress + any catch-up backlog |
-| `/pause` · `/resume` | Silence / restore daily messages |
+| `/off` | Log an honest day off (keeps the streak honest) |
+| `/pause` · `/resume` | Silence / restore the daily messages |
 | `/help` | Show the command list |
 
 Any **non-command message** is treated as a question and answered in context.
@@ -282,20 +253,20 @@ Any **non-command message** is treated as a question and answered in context.
 
 ## The dashboard
 
-A private, passphrase-gated single page (aurora theme, rendered entirely
-client-side from `/api/state`):
+A **public** single page (aurora theme, rendered client-side from
+`/api/state`) — built for anyone visiting to see the work at a glance:
 
-- Hero **% complete**, **streak**, current week, builds left.
-- A weighted **progress bar** (in-progress days get half credit).
-- **Up next** — the current topic in full.
-- **Balance** — per-type meters (theory / build / consolidate).
-- **The year** — a 7×48 heatmap of every day, colored by topic type; click a
-  finished cell to reread its brief.
-- **Briefs** — every completed day, its recap rendered from Markdown.
-- **Ask** — a study question answered in context.
+- Hero **% complete**, **honest streak**, current week, domains, builds.
+- A **62-week board** heatmap of every day, colored by type; click a finished
+  cell to reread its brief.
+- The full **roadmap browser**, **projects** (the 62 builds, with owner-attached
+  repo/demo links), and a **presence heatmap**.
+- An **owner edit mode** (passphrase-gated): attach project links and hit
+  **✓ I studied it** to check in. Everything else is read-only for visitors.
 
-The HTML shell is public but data-free; all progress is fetched only after the
-passphrase check (wrong key → 401 with a deliberate delay).
+Reads are public; **writes** (`/api/checkin`, `/api/project`, `/api/auth`)
+require the `STUDY_UI_KEY` passphrase — a wrong key returns 401 after a
+deliberate delay.
 
 ---
 
@@ -303,14 +274,13 @@ passphrase check (wrong key → 401 with a deliberate delay).
 
 ```
 study-agent/
-├── plan.json               # the 336-unit roadmap (source of truth for content)
-├── generate_daily_plan.py  # builds plan.json from the roadmap
+├── plan.json               # the 434-unit roadmap (source of truth for content)
+├── generate_plan_v2.py     # regenerates plan.json (62 weeks, 4 tracks)
 ├── daily-plan.md           # human-readable roadmap
 ├── cloud/                  # ← the live deployment
-│   ├── worker.js           #   the whole backend: webhook + cron + dashboard API
-│   ├── page.js             #   the dashboard HTML/CSS/JS (one string)
-│   ├── wrangler.jsonc      #   Worker manifest: KV binding, cron triggers, vars
-│   └── DEPLOY_SECRETS.local.txt   # passphrase/URL note (gitignored)
+│   ├── worker.js           #   backend: webhook + cron + dashboard API + notes push
+│   ├── page.js             #   the dashboard (one HTML/CSS/JS string)
+│   └── wrangler.jsonc      #   Worker manifest: KV binding, crons, vars
 ├── study_agent.py          # the retired local (systemd) bot — kept as fallback
 └── study-agent.service     # its systemd unit (now disabled)
 ```
@@ -322,25 +292,24 @@ study-agent/
 From `cloud/` with `wrangler` authenticated (`npx wrangler login`):
 
 ```bash
-# 1. create the KV namespace, put the printed id into wrangler.jsonc
+# 1. create the KV namespace; put the printed id into wrangler.jsonc
 npx wrangler kv namespace create STUDY
 
-# 2. set the secrets (values not echoed)
-printf '%s' "<bot-token>"      | npx wrangler secret put STUDY_BOT_TOKEN
-printf '%s' "<numeric-chatid>" | npx wrangler secret put STUDY_CHAT_ID
-printf '%s' "<anthropic-key>"  | npx wrangler secret put ANTHROPIC_API_KEY
-printf '%s' "$(openssl rand -hex 24)"    | npx wrangler secret put TG_SECRET
-printf '%s' "$(openssl rand -base64 12)" | npx wrangler secret put STUDY_UI_KEY
+# 2. set the secrets (values never echoed)
+printf '%s' "<bot-token>"              | npx wrangler secret put STUDY_BOT_TOKEN
+printf '%s' "<numeric-chatid>"         | npx wrangler secret put STUDY_CHAT_ID
+printf '%s' "<anthropic-key>"          | npx wrangler secret put ANTHROPIC_API_KEY
+printf '%s' "$(openssl rand -hex 24)"  | npx wrangler secret put TG_SECRET
+printf '%s' "<dashboard-passphrase>"   | npx wrangler secret put STUDY_UI_KEY
+printf '%s' "<github-pat>"             | npx wrangler secret put GH_PAT   # notes + board
 
-# 3. seed the initial state
+# 3. seed the initial state, then deploy (bundles ../plan.json + page.js)
 npx wrangler kv key put state \
   '{"done":{},"partials":{},"paused":false,"skipped_today":null,"last_done":null}' \
   --namespace-id <KV_ID> --remote
-
-# 4. deploy (bundles ../plan.json + page.js, registers the crons)
 npx wrangler deploy
 
-# 5. point Telegram's webhook at the Worker (TG_SECRET must match the secret above)
+# 4. point Telegram's webhook at the Worker (secret_token must equal TG_SECRET)
 curl -X POST "https://api.telegram.org/bot<token>/setWebhook" \
   -H 'content-type: application/json' \
   -d '{"url":"https://study-agent.jayanthapalla.workers.dev/tg",
@@ -348,62 +317,32 @@ curl -X POST "https://api.telegram.org/bot<token>/setWebhook" \
        "allowed_updates":["message","callback_query"]}'
 ```
 
-Optional: set `GH_PAT` + `VAULT_REPO` secrets to also mirror each brief into an
-Obsidian vault git repo via the GitHub API.
+**Vars** (`wrangler.jsonc`) point the notes push at the four repos:
+`NOTES_REPO_DE`, `NOTES_REPO_ML`, `NOTES_REPO_AI`, `NOTES_REPO_LINUX`, plus
+`REPO` for this README's progress board.
 
----
-
-## Operations
-
-```bash
-# redeploy after a code change
-cd cloud && npx wrangler deploy
-
-# rotate / change a secret
-printf '%s' 'NEW_VALUE' | npx wrangler secret put STUDY_UI_KEY
-
-# inspect or edit live state
-npx wrangler kv key get state --namespace-id <KV_ID> --remote
-npx wrangler kv key put state '<json>' --namespace-id <KV_ID> --remote
-
-# live logs (webhook hits, cron runs, errors)
-npx wrangler tail
-
-# check the webhook registration
-curl "https://api.telegram.org/bot<token>/getWebhookInfo"
-```
+**Operations:** `npx wrangler tail` for live logs, `npx wrangler deploy` to
+redeploy, `npx wrangler kv key get/put state --remote` to inspect or edit
+progress.
 
 ---
 
 ## Security model
 
-- **Webhook** — rejects any request without the exact `TG_SECRET` header (403);
-  the handler additionally ignores any chat that isn't `STUDY_CHAT_ID`.
-- **Dashboard data** — every `/api/*` route requires the `STUDY_UI_KEY`
-  passphrase; a wrong key returns 401 after a deliberate ~800 ms delay.
-- **The page** — a strict Content-Security-Policy (`default-src 'none'`,
-  `connect-src 'self'`) blocks all external and cross-origin requests.
-- **Secrets** — never in the repo or the bundle; stored encrypted in Cloudflare
-  and injected at runtime.
+- **Webhook** — rejects any request without the exact `TG_SECRET` header (403),
+  and ignores any chat that isn't `STUDY_CHAT_ID`.
+- **Dashboard** — reads are public and data-only; **all writes** require the
+  `STUDY_UI_KEY` passphrase (wrong key → 401 after a deliberate delay).
+- **Page** — a strict Content-Security-Policy blocks external/cross-origin
+  requests.
+- **Secrets** — never in the repo or bundle; stored encrypted in Cloudflare and
+  injected at runtime. `.env` and deploy notes are gitignored.
 
 ---
 
 ## Cost
 
-The Workers free tier (100k requests/day) and KV free tier comfortably cover a
-personal bot; cron and the isolate runtime are free at this volume. The only
-metered dependency is the model API (billed per token); Telegram is free.
-
----
-
-## Rollback to the local bot
-
-The old laptop bot is stopped and disabled but intact. To switch back:
-
-```bash
-curl "https://api.telegram.org/bot<token>/deleteWebhook"   # free the polling API
-systemctl --user enable --now study-agent                  # restart the local bot
-```
-
-A bot can't poll and use a webhook at once, so deleting the webhook is what lets
-`getUpdates` work again.
+The Workers and KV free tiers comfortably cover a personal bot; cron and the
+isolate runtime are free at this volume. The only metered dependency is the
+model API (billed per token, and cached so re-reads are free); Telegram and
+GitHub are free.

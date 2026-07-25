@@ -281,11 +281,12 @@ async function deliverSummary(env, u) {
 // On /done, the day's rich note is committed there and the repo's README index
 // is regenerated. Never throws — a failed push just keeps the note in KV.
 const TRACK_BOUNDS = [
-  { name: "Data Engineering", lo: 1, hi: 18 },
-  { name: "Data Science & ML", lo: 19, hi: 33 },
-  { name: "Deep Learning & AI", lo: 34, hi: 48 },
-  { name: "Linux & Systems", lo: 49, hi: 62 },
+  { name: "Data Engineering", lo: 1, hi: 18, envKey: "NOTES_REPO_DE" },
+  { name: "Data Science & ML", lo: 19, hi: 33, envKey: "NOTES_REPO_ML" },
+  { name: "Deep Learning & AI", lo: 34, hi: 48, envKey: "NOTES_REPO_AI" },
+  { name: "Linux & Systems", lo: 49, hi: 62, envKey: "NOTES_REPO_LINUX" },
 ];
+const DASHBOARD_URL = "https://study-agent.jayanthapalla.workers.dev";
 function phaseName(week) {
   const t = TRACK_BOUNDS.find((b) => week >= b.lo && week <= b.hi);
   return t ? t.name : "";
@@ -316,7 +317,7 @@ async function ghPut(env, repo, path, content, message) {
     body: JSON.stringify({ message, content: b64utf8(content), ...(sha ? { sha } : {}) }),
   });
 }
-function trackReadme(week, state) {
+function trackReadme(env, week, state) {
   const b = TRACK_BOUNDS.find((x) => week >= x.lo && week <= x.hi);
   const days = PLAN.filter((u) => u.week >= b.lo && u.week <= b.hi && String(u.id) in state.done).sort((a, z) => a.id - z.id);
   const rows = days.map((u) => {
@@ -324,13 +325,22 @@ function trackReadme(week, state) {
     const day = String(u.id).padStart(3, "0");
     return `- [Day ${u.id} — ${u.title}](week-${wk}/day-${day}-${noteSlug(u)}.md) · _${state.done[String(u.id)].date}_`;
   });
+  // sibling tracks — the current one shown plain, the rest linked to their repos
+  const siblings = TRACK_BOUNDS.map((t) =>
+    t === b ? `**${t.name}**` : env[t.envKey] ? `[${t.name}](https://github.com/${env[t.envKey]})` : t.name
+  ).join(" · ");
+  const agent = env.REPO ? `https://github.com/${env.REPO}` : DASHBOARD_URL;
   return (
     `# ${b.name} — Study Notes\n\n` +
-    "Auto-built study notes from my 62-week Data / ML / AI / Linux mastery roadmap — " +
-    "each completed day generates a written deep-dive note here.\n\n" +
-    `**${days.length} note${days.length === 1 ? "" : "s"} so far.**\n\n` +
-    (rows.length ? rows.join("\n") + "\n" : "_The first note lands soon._\n") +
-    "\n---\n_Tracked live on [my learning-in-public dashboard](https://study-agent.jayanthapalla.workers.dev)._\n"
+    `Written deep-dive notes from **Weeks ${b.lo}–${b.hi}** of my 62-week Data · ML · AI · Linux ` +
+    "mastery roadmap. Every day I finish, my study agent writes a note and commits it here automatically.\n\n" +
+    `📊 **[Live progress dashboard](${DASHBOARD_URL})**  ·  ⚙️ **[The agent that writes these](${agent})**\n\n` +
+    `🧭 **Tracks:** ${siblings}\n\n` +
+    "---\n\n" +
+    `### ${days.length} note${days.length === 1 ? "" : "s"} logged\n\n` +
+    (rows.length
+      ? rows.join("\n") + "\n"
+      : "_No notes here yet — the first lands the day I check in for this track._\n")
   );
 }
 async function commitNote(env, u, note) {
@@ -341,7 +351,7 @@ async function commitNote(env, u, note) {
     const day = String(u.id).padStart(3, "0");
     await ghPut(env, repo, `week-${wk}/day-${day}-${noteSlug(u)}.md`, note, `notes: Day ${u.id} — ${u.title}`);
     const state = await loadState(env); // regenerate the index from current progress
-    await ghPut(env, repo, "README.md", trackReadme(u.week, state), `index: Day ${u.id} studied`);
+    await ghPut(env, repo, "README.md", trackReadme(env, u.week, state), `index: Day ${u.id} studied`);
   } catch (e) {
     console.error(`[notes] push failed (kept in KV): ${e}`);
   }
