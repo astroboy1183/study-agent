@@ -831,7 +831,21 @@ function markStudied(btn){
 // Triggered from the top-nav "Owner" link and the Projects-section button.
 function toggleOwner(){
   if(EDIT_KEY){ EDIT_KEY=""; try{localStorage.removeItem("study_edit_key");}catch(e){} setEdit(false); if(DATA) renderProjects(DATA); return; }
-  alert("To sign in, open your Telegram study bot and send /login — then tap 'Open dashboard (signed in)'. This device stays signed in afterward, no password.");
+  var code=prompt("Sign in on this device:\\n\\n1. In Telegram, send /login\\n2. Paste the code it gives you here\\n\\n(If Telegram is on THIS device, just tap the button in that message instead.)");
+  if(code===null) return;
+  code=(code||"").trim().toUpperCase(); if(!code) return;
+  var tries=0;
+  (function attempt(){
+    tries++;
+    fetch("/api/login/redeem",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code:code})})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d.token){ EDIT_KEY=d.token; try{localStorage.setItem("study_edit_key",d.token);}catch(e){} setEdit(true); }
+        else if(d.retry && tries<6){ setTimeout(attempt, 3000); }
+        else { alert(d.error||"That code didn't work — send /login again for a fresh one."); }
+      })
+      .catch(function(){ if(tries<6){ setTimeout(attempt,3000); } else { alert("Network error — try again."); } });
+  })();
 }
 var edb=$("edit-toggle"); if(edb) edb.addEventListener("click", toggleOwner);
 var onav=$("owner-nav"); if(onav) onav.addEventListener("click", function(e){ e.preventDefault(); toggleOwner(); });

@@ -825,11 +825,16 @@ async function handleMessage(env, state, text) {
     } else {
       const token = await signToken(env, { k: "login", exp: Date.now() + 600000, n: crypto.randomUUID() });
       const url = `${DASHBOARD_URL}/owner?t=${encodeURIComponent(token)}`;
+      const code = shortCode(6);
+      await env.STUDY.put(`logincode:${code}`, "1", { expirationTtl: 600 });
       await send(
         env,
-        "🔐 Tap below to sign in *on the device you're reading this on*. " +
-          "It stays trusted for a year — no password. (Link expires in 10 minutes.)",
-        { buttons: [[{ text: "✅ Open dashboard (signed in)", url }]] }
+        "🔐 *Sign in to your dashboard*\n\n" +
+          "• *On this device* — tap the button below.\n" +
+          "• *On another device* (your laptop) — open the dashboard, click *Owner*, and enter this code:\n\n" +
+          "`" + code + "`\n\n" +
+          "_Valid 10 minutes; the device then stays signed in for a year._",
+        { buttons: [[{ text: "✅ Open dashboard here (signed in)", url }]] }
       );
     }
   } else if (low.startsWith("/status")) {
@@ -1186,6 +1191,15 @@ function b64urlBytes(str) {
   const bin = atob(s);
   return Uint8Array.from(bin, (c) => c.charCodeAt(0));
 }
+function shortCode(n) {
+  // Human-typeable code for cross-device sign-in (no O/0/I/1/L to avoid confusion).
+  const A = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  const b = new Uint8Array(n);
+  crypto.getRandomValues(b);
+  let s = "";
+  for (let i = 0; i < n; i++) s += A[b[i] % A.length];
+  return s;
+}
 async function hmacKey(env) {
   return crypto.subtle.importKey(
     "raw",
@@ -1315,6 +1329,16 @@ export default {
       // login token itself is the credential, and only the owner ever receives it).
       if (path === "/api/login/redeem" && request.method === "POST") {
         const b = await request.json().catch(() => ({}));
+        // Cross-device: a short code entered on the target device (e.g. laptop).
+        if (b.code) {
+          const code = String(b.code).trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+          const hit = code && (await env.STUDY.get(`logincode:${code}`));
+          if (!hit) return json({ error: "That code is wrong or expired — send /login again.", retry: true }, 400);
+          await env.STUDY.delete(`logincode:${code}`); // single-use
+          const token = await signToken(env, { k: "device", exp: Date.now() + 365 * 24 * 3600 * 1000 });
+          return json({ token });
+        }
+        // Same-device: the one-tap link token.
         const p = await verifyToken(env, String(b.t || ""), "login");
         if (!p) return json({ error: "This link expired or is invalid — send /login again." }, 400);
         if (p.n) {
