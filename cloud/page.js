@@ -324,6 +324,13 @@ footer .r{margin-left:auto}
 .step-n{flex:none;width:1.55rem;height:1.55rem;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
   font-size:.74rem;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--violet),#a855f7);margin-top:.1rem}
 .step-t{font-size:.92rem;line-height:1.62;color:var(--dim)}
+.p-plan{margin-top:1.1rem;border-top:1px solid var(--line);padding-top:.9rem}
+.p-plan>summary{cursor:pointer;font-size:.72rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;list-style:none}
+.p-plan>summary::-webkit-details-marker{display:none}
+.p-plan>summary::before{content:"▸ ";color:var(--faint)}
+.p-plan[open]>summary::before{content:"▾ "}
+.p-plan>summary:hover{color:var(--txt)}
+.p-plan .steps{margin-top:.8rem}
 
 /* owner check-in bar */
 .owner-bar{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin:1.2rem 0;padding:.75rem 1.1rem;border:1px solid rgba(52,211,153,.35);background:rgba(52,211,153,.06);border-radius:12px}
@@ -762,10 +769,29 @@ function openProject(p){
     row.appendChild(sv); row.appendChild(msg); ed.appendChild(row); body.appendChild(ed);
   }
   if(!p.showcase){
-    var spec=el("div","p-spec"); spec.appendChild(el("div","p-spec-h","How you'll build it")); var sb=el("div","loading","loading…"); spec.appendChild(sb); body.appendChild(spec);
-    fetch("/api/unit/"+p.id).then(function(r){ return r.json(); }).then(function(d){
-      sb.className=""; sb.innerHTML=stepsHtml(d.text);
-    }).catch(function(){ sb.className=""; sb.textContent="Couldn't load the spec."; });
+    var done = p.status && p.status!=="planned";
+    if(done){
+      // Finished build → lead with the recap (the model-written summary of what was built),
+      // and keep the original plan available, collapsed.
+      var rec=el("div","p-spec"); rec.appendChild(el("div","p-spec-h","📓 Build recap"));
+      var rb=el("div","loading","loading recap…"); rec.appendChild(rb); body.appendChild(rec);
+      fetch("/api/brief/"+p.id).then(function(r){ return r.json(); }).then(function(d){
+        rb.className="";
+        if(d && d.note) rb.innerHTML=mdToHtml(d.note);
+        else rb.textContent="Recap is generating — it appears here (and on Telegram + GitHub) once the day's brief is written.";
+      }).catch(function(){ rb.className=""; rb.textContent="Couldn't load the recap."; });
+      var det=document.createElement("details"); det.className="p-plan";
+      var sm=document.createElement("summary"); sm.textContent="The original build plan"; det.appendChild(sm);
+      var pb=el("div","loading","loading…"); det.appendChild(pb); body.appendChild(det);
+      fetch("/api/unit/"+p.id).then(function(r){ return r.json(); }).then(function(d){
+        pb.className=""; pb.innerHTML=stepsHtml(d.text);
+      }).catch(function(){ pb.className=""; pb.textContent="—"; });
+    } else {
+      var spec=el("div","p-spec"); spec.appendChild(el("div","p-spec-h","How you'll build it")); var sb=el("div","loading","loading…"); spec.appendChild(sb); body.appendChild(spec);
+      fetch("/api/unit/"+p.id).then(function(r){ return r.json(); }).then(function(d){
+        sb.className=""; sb.innerHTML=stepsHtml(d.text);
+      }).catch(function(){ sb.className=""; sb.textContent="Couldn't load the spec."; });
+    }
   }
   m.appendChild(body);
 }
