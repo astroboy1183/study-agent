@@ -835,7 +835,12 @@ function toggleOwner(){
 }
 var edb=$("edit-toggle"); if(edb) edb.addEventListener("click", toggleOwner);
 var onav=$("owner-nav"); if(onav) onav.addEventListener("click", function(e){ e.preventDefault(); toggleOwner(); });
-if(EDIT_KEY) setEdit(true);
+// Validate any stored token on load — a stale/rejected one (e.g. the old passphrase) self-heals to signed-out.
+if(EDIT_KEY){
+  fetch("/api/auth",{headers:{"x-study-key":EDIT_KEY}})
+    .then(function(r){ if(r.ok){ setEdit(true); } else { EDIT_KEY=""; try{localStorage.removeItem("study_edit_key");}catch(e){} setEdit(false); if(DATA) renderProjects(DATA); } })
+    .catch(function(){ setEdit(true); }); // offline: stay optimistic
+}
 
 function stat(v,l){ var d=el("div","s"); d.appendChild(el("b",null,String(v))); d.appendChild(el("span",null,l)); return d; }
 function kpi(v,l,target){ var c=el("div","card kpi"); var vv=el("div","v"); c.appendChild(vv); c.appendChild(el("div","l",l));

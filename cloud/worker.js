@@ -1221,8 +1221,9 @@ async function verifyToken(env, token, kind) {
   return payload;
 }
 async function isOwner(env, key) {
+  // Only a Telegram-issued device token authenticates — the STUDY_UI_KEY secret
+  // is the token SIGNING key, never accepted as a typed password.
   if (!key || !env.STUDY_UI_KEY) return false;
-  if (key === env.STUDY_UI_KEY) return true; // break-glass fallback (never surfaced in UI)
   return !!(await verifyToken(env, key, "device"));
 }
 const OWNER_HTML =
