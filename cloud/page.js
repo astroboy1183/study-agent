@@ -170,13 +170,23 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
   margin-top:.75rem; font-family:var(--mono)}
 .mgraph-empty{font-size:.8rem; color:var(--faint); margin-top:.6rem}
 
-/* skills cloud */
-.cloud{display:flex; flex-wrap:wrap; gap:.4rem 1rem; align-items:baseline; line-height:1.5}
-.tagword{font-weight:750; color:var(--faint); opacity:.42; letter-spacing:-.01em; cursor:default; transition:.2s}
-.tagword.on{color:var(--tc); opacity:1; text-shadow:0 0 16px color-mix(in srgb,var(--tc) 55%,transparent)}
-.tagword:hover{opacity:1; color:var(--tc)}
-.cloud-legend{display:flex; gap:1rem; flex-wrap:wrap; font-size:.72rem; color:var(--faint); margin-top:1rem; font-family:var(--mono)}
-.cloud-legend b{color:var(--txt); font-weight:600}
+/* skills / tech stack — grouped chips by domain */
+.skills{display:grid; grid-template-columns:1fr 1fr; gap:1.3rem 2rem}
+@media(max-width:640px){.skills{grid-template-columns:1fr}}
+.skgroup{}
+.skhead{font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.09em;
+  color:var(--tc); margin-bottom:.65rem; display:flex; align-items:center; gap:.45rem}
+.skhead::before{content:""; width:8px; height:8px; border-radius:2px; background:var(--tc); box-shadow:0 0 10px var(--tc)}
+.skchips{display:flex; flex-wrap:wrap; gap:.45rem}
+.skchip{font-size:.8rem; font-weight:600; padding:.32rem .68rem; border-radius:8px; color:var(--dim);
+  border:1px solid color-mix(in srgb,var(--tc) 26%, transparent);
+  background:color-mix(in srgb,var(--tc) 6%, transparent); transition:.16s}
+.skchip:hover{color:var(--txt); border-color:var(--tc)}
+.skchip.built{color:var(--txt); border-color:var(--tc);
+  background:color-mix(in srgb,var(--tc) 20%, transparent);
+  box-shadow:0 0 16px -5px var(--tc)}
+.cloud-legend{display:flex; gap:1.2rem; flex-wrap:wrap; font-size:.74rem; color:var(--faint); margin-top:1.3rem; padding-top:1rem; border-top:1px solid var(--line); font-family:var(--mono)}
+.cloud-legend b{color:var(--txt); font-weight:700}
 
 /* four-track overview */
 .tracks{display:grid; grid-template-columns:repeat(4,1fr); gap:1rem}
@@ -403,6 +413,9 @@ footer .r{margin-left:auto}
     </div>
   </section>
 
+  <div class="sec reveal"><h2>🛠 Skills &amp; tech stack</h2><span class="sub">across data engineering, ML, AI &amp; systems · highlighted chips are ones I've shipped with</span></div>
+  <div class="card reveal"><div id="learned" class="skills"></div></div>
+
   <div class="kpis reveal" id="kpis"></div>
   <div id="owner-bar"></div>
 
@@ -411,9 +424,6 @@ footer .r{margin-left:auto}
 
   <div class="sec reveal"><h2>📈 Momentum</h2><span class="sub">cumulative days completed vs the ideal 7-a-week pace</span></div>
   <div class="card reveal"><div id="graph" class="graph-wrap"></div></div>
-
-  <div class="sec reveal"><h2>🧠 What I'm learning</h2><span class="sub">technologies across the roadmap · each lights up in its track's colour once you've built with it</span></div>
-  <div class="card reveal"><div id="learned" class="cloud"></div></div>
 
   <div class="sec reveal"><h2>🔨 Current build</h2><span class="sub">the deep-build project for this week</span></div>
   <div class="card now reveal" id="now"></div>
@@ -618,28 +628,38 @@ var TRACK_META={
   "Linux & Systems":{c:"var(--violet)",repo:"linux-notes"}
 };
 function phaseSlug(n){ return "phase-"+n.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
-// skills word-cloud from build tech tags — sized by frequency, coloured by track, lit if learned
+// recruiter-facing tech stack: chips grouped by domain, coloured per track,
+// highlighted once shipped with. Reads as a clean, categorised skill set.
+var SKILL_GROUPS=[
+  {track:"Data Engineering",   label:"Data Engineering"},
+  {track:"Data Science & ML",  label:"Data Science & Analytics"},
+  {track:"Deep Learning & AI", label:"AI & LLMs"},
+  {track:"Linux & Systems",    label:"Systems · Infra · DevOps"}
+];
 function renderLearned(s){
   var c=$("learned"); if(!c) return; c.replaceChildren();
   var items=s.learned||[];
-  if(!items.length){ c.appendChild(el("div","mgraph-empty","Your skills cloud fills in as you complete builds.")); return; }
-  var max=items[0].count||1;
-  items.forEach(function(it){
-    var sp=el("span","tagword"+(it.done?" on":""));
-    var scale=0.9 + (it.count/max)*1.25;
-    sp.style.fontSize=scale.toFixed(2)+"rem";
-    var m=TRACK_META[it.track];
-    sp.style.setProperty("--tc", m?m.c:"var(--blue)");
-    sp.textContent=it.tech;
-    sp.title=it.track+(it.done?" · learned":" · upcoming");
-    c.appendChild(sp);
+  if(!items.length){ c.appendChild(el("div","mgraph-empty","Tech stack appears here.")); return; }
+  var groups={}; items.forEach(function(it){ (groups[it.track]=groups[it.track]||[]).push(it); });
+  var shipped=0, tot=items.length;
+  SKILL_GROUPS.forEach(function(g){
+    var arr=groups[g.track]; if(!arr||!arr.length) return;
+    var m=TRACK_META[g.track]||{c:"var(--blue)"};
+    var box=el("div","skgroup"); box.style.setProperty("--tc", m.c);
+    box.appendChild(el("div","skhead", g.label));
+    var chips=el("div","skchips");
+    arr.forEach(function(it){
+      var chip=el("span","skchip"+(it.done?" built":""));
+      chip.textContent=it.tech;
+      chip.title=it.done?"shipped with this":"on the roadmap";
+      if(it.done) shipped++;
+      chips.appendChild(chip);
+    });
+    box.appendChild(chips); c.appendChild(box);
   });
-  var lit=items.filter(function(x){return x.done;}).length;
   var lg=el("div","cloud-legend");
-  lg.innerHTML="<span><b>"+lit+"</b> of "+items.length+" technologies used so far</span>"+
-    "<span style='color:var(--blue)'>● Data Eng</span><span style='color:var(--green)'>● ML</span>"+
-    "<span style='color:var(--pink)'>● AI</span><span style='color:var(--violet)'>● Linux</span>"+
-    "<span>dim = not built yet</span>";
+  lg.innerHTML="<span><b>"+tot+"</b> technologies across 4 domains</span>"+
+    (shipped?"<span><b style='color:var(--green)'>"+shipped+"</b> shipped with so far</span>":"<span>highlighted = shipped with</span>");
   c.appendChild(lg);
 }
 // cumulative-progress momentum chart (SVG, neon glow) — actual pace vs the ideal 7/week line

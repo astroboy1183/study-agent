@@ -1099,19 +1099,39 @@ function tracksData(state) {
   });
 }
 
+// Non-tool "approach" tags that read badly as recruiter skill chips.
+const SKILL_BLOCK = new Set([
+  "from-scratch", "paper reproduction", "ablation study", "systems", "database internals",
+  "representation learning", "process management", "system design", "autograd", "optimization",
+  "linear algebra", "statistics", "backtesting", "matrix factorization",
+]);
+// Real professional analytics/BI + platform tools not covered by roadmap builds —
+// seeded as already-proven so the recruiter view shows the full working stack.
+const SKILL_EXTRA = [
+  { tech: "Power BI", track: "Data Science & ML" },
+  { tech: "Tableau", track: "Data Science & ML" },
+  { tech: "SAP Analytics Cloud", track: "Data Science & ML" },
+  { tech: "Java / Spring", track: "Data Engineering" },
+  { tech: "Azure", track: "Linux & Systems" },
+];
 function learnedData(state) {
-  // A skills cloud from the builds' tech tags: frequency = size, track = colour,
-  // "done" = the tech appears in a build you've already completed (so it lights up).
+  // Recruiter tech stack from the builds' tech tags: frequency = weight, track = colour,
+  // "done" = it appears in a build you've completed (so it's highlighted as shipped-with).
   const builds = PLAN.filter((u) => u.type === "build");
   const map = {};
   for (const u of builds) {
     const t = TRACK_BOUNDS.find((b) => u.week >= b.lo && u.week <= b.hi);
     const done = String(u.id) in state.done;
     for (const tech of u.tech || []) {
+      if (SKILL_BLOCK.has(tech)) continue;
       if (!map[tech]) map[tech] = { tech, count: 0, done: false, track: t ? t.name : "" };
       map[tech].count++;
       if (done) map[tech].done = true;
     }
+  }
+  for (const e of SKILL_EXTRA) {
+    if (map[e.tech]) map[e.tech].done = true;
+    else map[e.tech] = { tech: e.tech, count: 2, done: true, track: e.track };
   }
   return Object.values(map).sort((a, b) => b.count - a.count || a.tech.localeCompare(b.tech));
 }
