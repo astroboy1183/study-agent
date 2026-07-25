@@ -315,7 +315,7 @@ footer .r{margin-left:auto}
       <div class="role">Data &amp; AI Engineer</div>
       <p class="tagline">A 434-day climb through data engineering, machine learning, AI, and
         Linux systems — studied and shipped in public, one day at a time.</p>
-      <div class="creds">ex-AWS · MS CS, UIC · Hyderabad, India</div>
+      <div class="creds">ex-AWS DynamoDB · Data Engineer @ trigyan.io · MS CS, UIC · Databricks + Fabric certified</div>
       <div class="links">
         <a class="primary" href="https://github.com/astroboy1183" target="_blank" rel="noopener">⚡ GitHub</a>
         <a href="https://www.linkedin.com/in/jayanth-appalla" target="_blank" rel="noopener">in LinkedIn</a>
