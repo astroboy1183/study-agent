@@ -64,9 +64,8 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 @media(max-width:820px){.hero{grid-template-columns:1fr; gap:2rem; padding:2.5rem 0 1.5rem}}
 .eyebrow{font-size:.72rem; font-weight:800; letter-spacing:.2em; text-transform:uppercase;
   color:var(--violet); margin-bottom:1rem}
-.hero h1{font-size:3.4rem; font-weight:850; letter-spacing:-.03em; line-height:1.02}
-@media(max-width:820px){.hero h1{font-size:2.6rem}}
-.hero .role{font-size:1.25rem; font-weight:650; margin-top:.35rem;
+.hero h1{font-size:clamp(2.35rem,7vw,3.4rem); font-weight:850; letter-spacing:-.03em; line-height:1.04}
+.hero .role{font-size:clamp(1.08rem,3.4vw,1.25rem); font-weight:650; margin-top:.35rem;
   background:linear-gradient(90deg,#7dd3fc,#c4b5fd 60%,#f9a8d4);
   -webkit-background-clip:text; background-clip:text; color:transparent}
 .hero .tagline{color:var(--dim); font-size:1.02rem; margin:1rem 0 .4rem; max-width:42ch}
@@ -138,12 +137,18 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .mbar i{display:block; height:100%; border-radius:5px}
 
 /* board */
-.board-wrap{overflow-x:auto; padding-bottom:.4rem}
+.board-wrap{overflow-x:auto; padding-bottom:.4rem; -webkit-overflow-scrolling:touch}
 .board{display:grid; grid-template-rows:repeat(7,1fr); grid-auto-flow:column;
   grid-auto-columns:1fr; gap:3px; min-width:640px}
 .cell{aspect-ratio:1; border-radius:2px; background:rgba(255,255,255,.045); cursor:pointer; transition:transform .1s,box-shadow .1s}
 .cell.today{box-shadow:0 0 0 2px var(--txt); position:relative; z-index:1}
-.cell:hover{transform:scale(1.4); box-shadow:0 0 0 2px var(--line2); z-index:2; position:relative}
+@media(hover:hover){.cell:hover{transform:scale(1.4); box-shadow:0 0 0 2px var(--line2); z-index:2; position:relative}}
+/* larger, more tappable cells on touch-sized screens */
+@media(max-width:640px){.board{min-width:840px; gap:4px} .hm{min-width:560px!important; gap:4px!important}}
+/* horizontal-scroll cue — shown only when the strip actually overflows */
+.swipe-cue{display:none; font-family:var(--mono); font-size:.7rem; color:var(--faint);
+  text-align:right; margin-top:.5rem; user-select:none; opacity:.85}
+.swipe-cue.on{display:block}
 .cell:focus-visible,.kpi:focus-visible,.pcard:focus-visible,.now:focus-visible,.brow:focus-visible,.rm-day:focus-visible{outline:2px solid var(--violet); outline-offset:2px; z-index:3}
 .legend{display:flex; gap:1.1rem; flex-wrap:wrap; font-size:.76rem; color:var(--dim); margin-top:.9rem}
 .legend span{display:inline-flex; align-items:center; gap:.4rem}
@@ -239,7 +244,7 @@ footer .r{margin-left:auto}
 .cstat .ci{font-size:1.55rem;line-height:1}
 .cstat .cv{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;line-height:1}
 .cstat .cl{color:var(--faint);font-size:.74rem;margin-top:.2rem}
-.hm-wrap{overflow-x:auto;padding-bottom:.4rem}
+.hm-wrap{overflow-x:auto;padding-bottom:.4rem;-webkit-overflow-scrolling:touch}
 .hm{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;min-width:480px}
 .hc{aspect-ratio:1;border-radius:4px;background:transparent;transition:transform .1s}
 .hc.f:hover{transform:scale(1.35);box-shadow:0 0 0 2px var(--line2)}
@@ -341,6 +346,7 @@ footer .r{margin-left:auto}
   <div class="sec reveal"><h2>The year</h2><span class="sub">every day of the plan · colored by type · click any box to open that day (⬜ outline = today)</span></div>
   <div class="card reveal">
     <div class="board-wrap"><div class="board" id="board"></div></div>
+    <div class="swipe-cue" id="board-cue" aria-hidden="true"></div>
     <div class="legend">
       <span><i style="background:var(--theory)"></i>theory</span>
       <span><i style="background:var(--build)"></i>build</span>
@@ -497,7 +503,25 @@ function render(s){
 
   $("foot-updated").textContent = "updated "+new Date(s.updated).toLocaleDateString("en",{day:"numeric",month:"short",year:"numeric"});
   reveals();
+  requestAnimationFrame(updateScrollCues);
 }
+
+/* horizontal-scroll cues — shown only when a strip actually overflows, hidden once scrolled to the end */
+function setCue(wrap, cue, label){
+  if(!wrap || !cue) return;
+  var apply=function(){
+    var over=(wrap.scrollWidth - wrap.clientWidth - wrap.scrollLeft) > 6;
+    cue.textContent=label; cue.classList.toggle("on", over);
+  };
+  if(!wrap.__cueWired){ wrap.addEventListener("scroll", apply, {passive:true}); wrap.__cueWired=true; }
+  apply();
+}
+function updateScrollCues(){
+  var bd=$("board"); if(bd) setCue(bd.parentNode, $("board-cue"), "scroll for all 62 weeks →");
+  var hm=document.querySelector(".hm-wrap"); var hc=$("hm-cue");
+  if(hm && hc) setCue(hm, hc, "scroll for full history →");
+}
+window.addEventListener("resize", updateScrollCues);
 
 /* roadmap browser */
 var PHASE_COLOR={"Data Engineering":"var(--build)","Data Science & ML":"var(--consolidate)","Deep Learning & AI":"var(--pink)","Linux & Systems":"var(--teal)"};
@@ -576,6 +600,7 @@ function renderConsistency(s){
     grid.appendChild(cell);
   });
   var wrap=el("div","hm-wrap"); wrap.appendChild(grid); c.appendChild(wrap);
+  var cue=el("div","swipe-cue"); cue.id="hm-cue"; cue.setAttribute("aria-hidden","true"); c.appendChild(cue);
   var lg=el("div","hm-legend");
   [["var(--green)","studied"],["var(--build)","partial"],["var(--blue)","rest day"],["rgba(251,113,133,.32)","missed"]].forEach(function(x){
     var sp=document.createElement("span"); var ic=document.createElement("i"); ic.style.background=x[0];
