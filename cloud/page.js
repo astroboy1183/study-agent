@@ -55,6 +55,8 @@ header nav{margin-left:auto; display:flex; gap:.4rem}
 header nav a{font-size:.82rem; color:var(--dim); padding:.4rem .8rem; border-radius:9px;
   border:1px solid transparent; transition:.15s}
 header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-color:var(--line)}
+#owner-nav{cursor:pointer}
+#owner-nav.on{color:var(--green); border-color:color-mix(in srgb,var(--green) 40%,transparent); background:rgba(52,211,153,.08)}
 
 .wrap{max-width:1120px; margin:0 auto; padding:0 1.5rem 4rem}
 
@@ -337,6 +339,7 @@ footer .r{margin-left:auto}
     <a href="https://github.com/astroboy1183" target="_blank" rel="noopener">GitHub</a>
     <a href="https://www.linkedin.com/in/jayanth-appalla" target="_blank" rel="noopener">LinkedIn</a>
     <a href="https://jayanthappalla.com" target="_blank" rel="noopener">Portfolio</a>
+    <a id="owner-nav" href="#" role="button" title="Owner sign-in — daily check-in + edit links">Owner</a>
   </nav>
 </header>
 
@@ -766,7 +769,11 @@ function openProject(p){
   }
   m.appendChild(body);
 }
-function setEdit(on){ var b=$("edit-toggle"); if(!b) return; b.textContent=on?"✓ Editing — click to lock":"✎ Edit links"; b.classList.toggle("on", on); renderOwnerBar(DATA); }
+function setEdit(on){
+  var b=$("edit-toggle"); if(b){ b.textContent=on?"✓ Owner — click to lock":"✎ Owner"; b.classList.toggle("on", on); }
+  var nv=$("owner-nav"); if(nv){ nv.textContent=on?"Owner ✓":"Owner"; nv.classList.toggle("on", on); nv.title=on?"Signed in — click to sign out":"Owner sign-in — daily check-in + edit links"; }
+  renderOwnerBar(DATA);
+}
 
 /* owner-only "I studied today" check-in — writes the note + pushes to the track repo */
 function renderOwnerBar(s){
@@ -791,17 +798,18 @@ function markStudied(btn){
     })
     .catch(function(){ alert("Failed — check the passphrase and try again."); btn.disabled=false; btn.textContent="✓ I studied it"; });
 }
-var edb=$("edit-toggle");
-if(edb){
-  edb.addEventListener("click", function(){
-    if(EDIT_KEY){ EDIT_KEY=""; try{localStorage.removeItem("study_edit_key");}catch(e){} setEdit(false); if(DATA) renderProjects(DATA); return; }
-    var key=prompt("Owner passphrase to edit project links:"); if(!key) return; key=key.trim();
-    fetch("/api/auth",{headers:{"x-study-key":key}}).then(function(r){
-      if(r.ok){ EDIT_KEY=key; try{localStorage.setItem("study_edit_key",key);}catch(e){} setEdit(true); }
-      else alert("Wrong passphrase."); }).catch(function(){ alert("Network error — try again."); });
-  });
-  if(EDIT_KEY) setEdit(true);
+// Owner sign-in — unlocks the daily check-in bar AND project-link editing.
+// Triggered from the top-nav "Owner" link and the Projects-section button.
+function toggleOwner(){
+  if(EDIT_KEY){ EDIT_KEY=""; try{localStorage.removeItem("study_edit_key");}catch(e){} setEdit(false); if(DATA) renderProjects(DATA); return; }
+  var key=prompt("Owner passphrase (unlocks your daily check-in + editing project links):"); if(!key) return; key=key.trim();
+  fetch("/api/auth",{headers:{"x-study-key":key}}).then(function(r){
+    if(r.ok){ EDIT_KEY=key; try{localStorage.setItem("study_edit_key",key);}catch(e){} setEdit(true); }
+    else alert("Wrong passphrase."); }).catch(function(){ alert("Network error — try again."); });
 }
+var edb=$("edit-toggle"); if(edb) edb.addEventListener("click", toggleOwner);
+var onav=$("owner-nav"); if(onav) onav.addEventListener("click", function(e){ e.preventDefault(); toggleOwner(); });
+if(EDIT_KEY) setEdit(true);
 
 function stat(v,l){ var d=el("div","s"); d.appendChild(el("b",null,String(v))); d.appendChild(el("span",null,l)); return d; }
 function kpi(v,l,target){ var c=el("div","card kpi"); var vv=el("div","v"); c.appendChild(vv); c.appendChild(el("div","l",l));
