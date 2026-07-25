@@ -831,10 +831,7 @@ function markStudied(btn){
 // Triggered from the top-nav "Owner" link and the Projects-section button.
 function toggleOwner(){
   if(EDIT_KEY){ EDIT_KEY=""; try{localStorage.removeItem("study_edit_key");}catch(e){} setEdit(false); if(DATA) renderProjects(DATA); return; }
-  var key=prompt("Owner passphrase (unlocks your daily check-in + editing project links):"); if(!key) return; key=key.trim();
-  fetch("/api/auth",{headers:{"x-study-key":key}}).then(function(r){
-    if(r.ok){ EDIT_KEY=key; try{localStorage.setItem("study_edit_key",key);}catch(e){} setEdit(true); }
-    else alert("Wrong passphrase."); }).catch(function(){ alert("Network error — try again."); });
+  alert("To sign in, open your Telegram study bot and send /login — then tap 'Open dashboard (signed in)'. This device stays signed in afterward, no password.");
 }
 var edb=$("edit-toggle"); if(edb) edb.addEventListener("click", toggleOwner);
 var onav=$("owner-nav"); if(onav) onav.addEventListener("click", function(e){ e.preventDefault(); toggleOwner(); });

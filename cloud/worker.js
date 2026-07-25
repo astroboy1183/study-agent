@@ -753,6 +753,7 @@ const COMMANDS = [
   ["skip", "Skip today (no evening nag)"],
   ["summary", "Re-send the last study brief"],
   ["recap", "Rewrite the last recap from your real work (notes or a repo URL)"],
+  ["login", "Sign in to the dashboard on this device (no password)"],
   ["status", "Progress + any catch-up backlog"],
   ["pause", "Silence daily messages"],
   ["resume", "Resume daily messages"],
@@ -817,6 +818,19 @@ async function handleMessage(env, state, text) {
       } else {
         await send(env, (r && r.error) || "Couldn't rewrite it just now — try again in a moment.");
       }
+    }
+  } else if (low.startsWith("/login")) {
+    if (!env.STUDY_UI_KEY) {
+      await send(env, "Sign-in isn't configured yet (STUDY_UI_KEY secret is unset).");
+    } else {
+      const token = await signToken(env, { k: "login", exp: Date.now() + 600000, n: crypto.randomUUID() });
+      const url = `${DASHBOARD_URL}/owner?t=${encodeURIComponent(token)}`;
+      await send(
+        env,
+        "🔐 Tap below to sign in *on the device you're reading this on*. " +
+          "It stays trusted for a year — no password. (Link expires in 10 minutes.)",
+        { buttons: [[{ text: "✅ Open dashboard (signed in)", url }]] }
+      );
     }
   } else if (low.startsWith("/status")) {
     await status(env, state);
@@ -1155,6 +1169,76 @@ function json(obj, status = 200, cache = "no-store") {
   });
 }
 
+// --------------------------------------------------- passwordless sign-in ---
+// Owner auth is a signed token, not a passphrase: /login (Telegram) mints a
+// short-lived login token → tapping its link redeems it for a long-lived device
+// token, stored on that device. All tokens are HMAC-signed with STUDY_UI_KEY
+// (server-only), so rotating that secret revokes every device at once.
+function b64url(bytes) {
+  let s = "";
+  const b = new Uint8Array(bytes);
+  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function b64urlBytes(str) {
+  let s = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (s.length % 4) s += "=";
+  const bin = atob(s);
+  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+}
+async function hmacKey(env) {
+  return crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(env.STUDY_UI_KEY || "no-key-set"),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign", "verify"]
+  );
+}
+async function signToken(env, payload) {
+  const p = b64url(new TextEncoder().encode(JSON.stringify(payload)));
+  const sig = await crypto.subtle.sign("HMAC", await hmacKey(env), new TextEncoder().encode(p));
+  return p + "." + b64url(sig);
+}
+async function verifyToken(env, token, kind) {
+  if (!token || typeof token !== "string" || token.indexOf(".") < 0) return null;
+  const [p, sig] = token.split(".");
+  let ok;
+  try {
+    ok = await crypto.subtle.verify("HMAC", await hmacKey(env), b64urlBytes(sig), new TextEncoder().encode(p));
+  } catch (e) {
+    return null;
+  }
+  if (!ok) return null;
+  let payload;
+  try {
+    payload = JSON.parse(new TextDecoder().decode(b64urlBytes(p)));
+  } catch (e) {
+    return null;
+  }
+  if (kind && payload.k !== kind) return null;
+  if (payload.exp && Date.now() > payload.exp) return null;
+  return payload;
+}
+async function isOwner(env, key) {
+  if (!key || !env.STUDY_UI_KEY) return false;
+  if (key === env.STUDY_UI_KEY) return true; // break-glass fallback (never surfaced in UI)
+  return !!(await verifyToken(env, key, "device"));
+}
+const OWNER_HTML =
+  "<!doctype html><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\">" +
+  "<title>Signing in…</title>" +
+  "<body style=\"font-family:system-ui,sans-serif;background:#0b0d17;color:#e8eaf2;display:grid;place-items:center;min-height:100vh;margin:0\">" +
+  "<div id=m style=\"font-size:1rem;opacity:.9\">Signing you in…</div>" +
+  "<script>(function(){var t=new URLSearchParams(location.search).get('t');" +
+  "if(!t){document.getElementById('m').textContent='Invalid link.';return;}" +
+  "fetch('/api/login/redeem',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:t})})" +
+  ".then(function(r){return r.json();}).then(function(d){" +
+  "if(d.token){try{localStorage.setItem('study_edit_key',d.token);}catch(e){}" +
+  "document.getElementById('m').textContent='\\u2713 Signed in \\u2014 opening your dashboard\\u2026';location.replace('/');}" +
+  "else{document.getElementById('m').textContent=d.error||'This link expired \\u2014 send /login again.';}})" +
+  ".catch(function(){document.getElementById('m').textContent='Something went wrong \\u2014 send /login again.';});})();<\/script>";
+
 // ------------------------------------------------------------------ main ---
 export default {
   async fetch(request, env, ctx) {
@@ -1179,6 +1263,19 @@ export default {
           "content-security-policy":
             "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; " +
             "connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'",
+          "x-content-type-options": "nosniff",
+        },
+      });
+    }
+
+    // Passwordless sign-in landing — redeems a /login link into a device token.
+    if (path === "/owner" && request.method === "GET") {
+      return new Response(OWNER_HTML, {
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store",
+          "content-security-policy":
+            "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'",
           "x-content-type-options": "nosniff",
         },
       });
@@ -1213,17 +1310,30 @@ export default {
           "public, max-age=300"
         );
       }
-      // Owner check — lets the dashboard unlock "edit links" mode.
+      // Redeem a one-tap /login link for a long-lived device token (public: the
+      // login token itself is the credential, and only the owner ever receives it).
+      if (path === "/api/login/redeem" && request.method === "POST") {
+        const b = await request.json().catch(() => ({}));
+        const p = await verifyToken(env, String(b.t || ""), "login");
+        if (!p) return json({ error: "This link expired or is invalid — send /login again." }, 400);
+        if (p.n) {
+          if (await env.STUDY.get("used:" + p.n)) return json({ error: "This link was already used — send /login again." }, 400);
+          await env.STUDY.put("used:" + p.n, "1", { expirationTtl: 900 });
+        }
+        const token = await signToken(env, { k: "device", exp: Date.now() + 365 * 24 * 3600 * 1000 });
+        return json({ token });
+      }
+      // Owner check — lets the dashboard confirm a device token / passphrase is valid.
       if (path === "/api/auth") {
         const key = request.headers.get("x-study-key") || "";
-        if (env.STUDY_UI_KEY && key === env.STUDY_UI_KEY) return json({ ok: true });
+        if (await isOwner(env, key)) return json({ ok: true });
         await new Promise((r) => setTimeout(r, 600));
         return json({ ok: false }, 401);
       }
       // Attach a repo/demo link to a project (owner only).
       if (path === "/api/project" && request.method === "POST") {
         const key = request.headers.get("x-study-key") || "";
-        if (!env.STUDY_UI_KEY || key !== env.STUDY_UI_KEY) {
+        if (!(await isOwner(env, key))) {
           await new Promise((r) => setTimeout(r, 600));
           return json({ error: "unauthorized" }, 401);
         }
@@ -1242,7 +1352,7 @@ export default {
       // Owner "I studied today" — marks the current day done (brief + note push).
       if (path === "/api/checkin" && request.method === "POST") {
         const key = request.headers.get("x-study-key") || "";
-        if (!env.STUDY_UI_KEY || key !== env.STUDY_UI_KEY) {
+        if (!(await isOwner(env, key))) {
           await new Promise((r) => setTimeout(r, 600));
           return json({ error: "unauthorized" }, 401);
         }
@@ -1255,7 +1365,7 @@ export default {
       // Owner "revise recap" — rewrite a completed day's note from real work.
       if (path === "/api/recap" && request.method === "POST") {
         const key = request.headers.get("x-study-key") || "";
-        if (!env.STUDY_UI_KEY || key !== env.STUDY_UI_KEY) {
+        if (!(await isOwner(env, key))) {
           await new Promise((r) => setTimeout(r, 600));
           return json({ error: "unauthorized" }, 401);
         }
