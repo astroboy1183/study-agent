@@ -316,7 +316,12 @@ footer .r{margin-left:auto}
 .p-save:disabled{opacity:.55;cursor:wait}
 .p-msg{font-size:.8rem;color:var(--faint)}
 .p-spec{margin-top:1.3rem}
-.p-spec-h{font-size:.72rem;font-weight:700;color:var(--dim);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.06em}
+.p-spec-h{font-size:.72rem;font-weight:700;color:var(--dim);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.06em}
+.steps{display:flex;flex-direction:column;gap:.9rem}
+.step{display:flex;gap:.8rem;align-items:flex-start}
+.step-n{flex:none;width:1.55rem;height:1.55rem;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:.74rem;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--violet),#a855f7);margin-top:.1rem}
+.step-t{font-size:.92rem;line-height:1.62;color:var(--dim)}
 
 /* owner check-in bar */
 .owner-bar{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin:1.2rem 0;padding:.75rem 1.1rem;border:1px solid rgba(52,211,153,.35);background:rgba(52,211,153,.06);border-radius:12px}
@@ -631,14 +636,26 @@ function openUnit(id){
     var m=$("modal"); m.replaceChildren(); m.appendChild(head("Day "+d.id+" — "+d.title)); m.appendChild(body);
   }).catch(function(){ $("modal").replaceChildren(shell("Day "+id,"Couldn't load that day.")); });
 }
+// Build specs are stored as "[Block A] … [Block B] … [Block C] …" — render them
+// as clean numbered steps instead of raw "Block A/B/C" labels.
+function stepsHtml(text){
+  var parts=(text||"").split(/\\[Block [A-Z]\\]/).map(function(s){ return s.trim(); }).filter(Boolean);
+  if(parts.length<2) return "<p style='line-height:1.7'>"+esc(text||"")+"</p>";
+  return "<div class='steps'>"+parts.map(function(p,i){
+    return "<div class='step'><span class='step-n'>"+(i+1)+"</span><span class='step-t'>"+esc(p)+"</span></div>";
+  }).join("")+"</div>";
+}
 function unitHtml(d){
-  var t=esc(d.text)
-    .replace(/🎥 Watch:/g,"<b>🎥 Watch:</b>")
-    .replace(/💻 Code:/g,"<b>💻 Code:</b>")
-    .replace(/\\[Block ([A-Z])\\]/g,"<br><br><b>Block $1.</b> ")
-    .replace(/\\n/g,"<br>");
   var out="<div class='rm-meta'>Week "+d.week+" · "+DOW[d.dow]+" · "+d.type+" · Day "+d.id+"</div>";
-  out+="<p style='line-height:1.75'>"+t+"</p>";
+  if(/\\[Block [A-Z]\\]/.test(d.text||"")){
+    out+=stepsHtml(d.text);
+  } else {
+    var t=esc(d.text)
+      .replace(/🎥 Watch:/g,"<b>🎥 Watch:</b>")
+      .replace(/💻 Code:/g,"<b>💻 Code:</b>")
+      .replace(/\\n/g,"<br>");
+    out+="<p style='line-height:1.75'>"+t+"</p>";
+  }
   if(d.mastery) out+="<div class='rm-mastery'>🎯 <b>Mastery (answer aloud):</b> "+esc(d.mastery)+"</div>";
   return out;
 }
@@ -716,7 +733,9 @@ function openProject(p){
   var body=el("div","m-body");
   body.appendChild(el("div","rm-meta","Week "+p.week+" · "+statusLabel(p.status)+(p.flag?" · ★ Featured":"")));
   if(p.demo){ var dm=el("div","p-demo"); dm.textContent="“"+p.demo+"”"; body.appendChild(dm); }
-  body.appendChild(el("p", null, p.blurb));
+  // Weekly builds derive their blurb from the spec's first step, so it would duplicate the
+  // steps below — only show a standalone summary for showcase projects, or when there's no demo.
+  if(p.blurb && (p.showcase || !p.demo)) body.appendChild(el("p", null, p.blurb));
   if(p.tech && p.tech.length){ var tw=el("div","chips"); p.tech.forEach(function(t){ tw.appendChild(el("span","chip",t)); }); body.appendChild(tw); }
   if(p.repo||p.demoUrl){ var lr=el("div","p-links");
     if(p.repo){ var a=el("a","plink big"); a.href=p.repo; a.target="_blank"; a.rel="noopener"; a.textContent="↗ View code"; lr.appendChild(a); }
@@ -740,11 +759,10 @@ function openProject(p){
     row.appendChild(sv); row.appendChild(msg); ed.appendChild(row); body.appendChild(ed);
   }
   if(!p.showcase){
-    var spec=el("div","p-spec"); spec.appendChild(el("div","p-spec-h","The build")); var sb=el("div","loading","loading spec…"); spec.appendChild(sb); body.appendChild(spec);
+    var spec=el("div","p-spec"); spec.appendChild(el("div","p-spec-h","How you'll build it")); var sb=el("div","loading","loading…"); spec.appendChild(sb); body.appendChild(spec);
     fetch("/api/unit/"+p.id).then(function(r){ return r.json(); }).then(function(d){
-      var t=esc(d.text).replace(/\\[Block ([A-Z])\\]/g,"<br><br><b>Block $1.</b> ").replace(/\\n/g,"<br>");
-      sb.className=""; sb.innerHTML="<p style='line-height:1.7'>"+t+"</p>";
-    }).catch(function(){ sb.textContent="Couldn't load the spec."; });
+      sb.className=""; sb.innerHTML=stepsHtml(d.text);
+    }).catch(function(){ sb.className=""; sb.textContent="Couldn't load the spec."; });
   }
   m.appendChild(body);
 }
