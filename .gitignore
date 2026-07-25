@@ -1,0 +1,19 @@
+# secrets — never commit
+.env
+.env.*
+!env.example
+cloud/DEPLOY_SECRETS.local.txt
+cloud/.dev.vars
+cloud/.dev.vars.*
+
+# local runtime state
+state.json
+state.json.tmp
+summaries/
+
+# deps / build / caches
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.wrangler/
