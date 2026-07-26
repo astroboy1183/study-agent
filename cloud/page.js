@@ -320,6 +320,9 @@ footer .r{margin-left:auto}
 .rm-day.done .rm-dt{color:var(--txt)}
 .rm-meta{font-family:var(--mono);font-size:.72rem;color:var(--faint);margin-bottom:.7rem}
 .rm-mastery{margin-top:1rem;padding:.75rem .9rem;border-radius:10px;border:1px solid var(--line2);background:rgba(255,255,255,.03);font-size:.9rem;line-height:1.6}
+.codepath{margin-top:1rem;padding:.7rem .9rem;border-radius:10px;border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);background:color-mix(in srgb,var(--blue) 7%,transparent);font-size:.85rem;line-height:1.6;color:var(--dim)}
+.codepath code{font-family:var(--mono);font-size:.82em;background:rgba(255,255,255,.08);padding:.1rem .35rem;border-radius:5px;color:var(--txt)}
+.codepath a{color:var(--blue);font-weight:650}
 .ytlink{color:var(--pink); text-decoration:none; font-weight:600; border-bottom:1px dashed color-mix(in srgb,var(--pink) 45%,transparent)}
 .ytlink:hover{color:#ff7ac0; border-bottom-color:var(--pink); text-shadow:0 0 10px color-mix(in srgb,var(--pink) 50%,transparent)}
 
@@ -640,10 +643,10 @@ window.addEventListener("resize", updateScrollCues);
 
 /* four-track overview */
 var TRACK_META={
-  "Data Engineering":{c:"var(--blue)",repo:"de-notes"},
-  "Data Science & ML":{c:"var(--green)",repo:"ml-notes"},
-  "Deep Learning & AI":{c:"var(--pink)",repo:"ai-notes"},
-  "Linux & Systems":{c:"var(--violet)",repo:"linux-notes"}
+  "Data Engineering":{c:"var(--blue)",repo:"de"},
+  "Data Science & ML":{c:"var(--green)",repo:"ml"},
+  "Deep Learning & AI":{c:"var(--pink)",repo:"ai"},
+  "Linux & Systems":{c:"var(--violet)",repo:"linux"}
 };
 // Recruiter-friendly DISPLAY names for the tracks (internal keys/content unchanged).
 var TRACK_LABEL={
@@ -753,7 +756,7 @@ function renderTracks(s){
     meta.appendChild(el("span","tdays", t.builds.done+"/"+t.builds.total+" builds")); card.appendChild(meta);
     if(m.repo){
       var a=document.createElement("a"); a.className="tnotes"; a.href="https://github.com/astroboy1183/"+m.repo;
-      a.target="_blank"; a.rel="noopener"; a.textContent="📓 Notes ↗";
+      a.target="_blank"; a.rel="noopener"; a.textContent="📂 Code + notes ↗";
       a.addEventListener("click", function(e){ e.stopPropagation(); });
       card.appendChild(a);
     }
@@ -822,6 +825,8 @@ function ytHref(q){
   var c=q.split(/[;|]/)[0].replace(/^\\s*search\\s+/i,"").replace(/["']/g,"").trim().slice(0,160);
   return "https://www.youtube.com/results?search_query="+encodeURIComponent(c).replace(/\\(/g,"%28").replace(/\\)/g,"%29");
 }
+function daySlug(title){ return (title||"").replace(/[^\\w\\- ]/g,"").trim().replace(/\\s+/g,"-").toLowerCase().slice(0,50); }
+function weekRepo(w){ if(w<=18)return "de"; if(w<=33)return "ml"; if(w<=48)return "ai"; return "linux"; }
 function unitHtml(d){
   var out="<div class='rm-meta'>Day "+d.id+" · Week "+d.week+" · "+d.type+"</div>";
   if(/\\[Block [A-Z]\\]/.test(d.text||"")){
@@ -835,6 +840,10 @@ function unitHtml(d){
       return esc(line);
     }).join("<br>");
     out+="<p style='line-height:1.75'>"+html+"</p>";
+  }
+  if(d.type!=="consolidate"){
+    var wk=pad(d.week), dd=("00"+d.id).slice(-3), repo=weekRepo(d.week);
+    out+="<div class='codepath'>📂 Commit today's code to <code>week-"+wk+"/day-"+dd+"-"+daySlug(d.title)+"/</code> in <a href='https://github.com/astroboy1183/"+repo+"' target='_blank' rel='noopener'>"+repo+"</a> — <code>notes.md</code> auto-lands in the same folder when you check in.</div>";
   }
   if(d.mastery) out+="<div class='rm-mastery'>🎯 <b>Mastery (answer aloud):</b> "+esc(d.mastery)+"</div>";
   return out;

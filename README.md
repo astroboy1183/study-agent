@@ -21,17 +21,16 @@ dashboard, and per-track note commits, all backed by a key-value store.
 
 ## The four tracks
 
-The roadmap runs as four ordered tracks. **Every day I finish generates a
-written deep-dive note, auto-committed to that track's own public repo** — a
-growing learning-in-public trail. Each notes repo links back here and to the
-dashboard, and cross-links its siblings.
+The roadmap runs as four ordered tracks, each with **its own public repo** where
+I commit code **and** the agent auto-commits notes — organised day by day
+(`week-NN/day-NNN-slug/` holds my code + an auto-generated `notes.md`).
 
-| Track | Weeks | Focus | 📓 Notes |
+| Track | Weeks | Focus | 📂 Repo |
 |---|---|---|---|
-| **Data Engineering** | 1–18 | Python, storage internals, SQL & dimensional modeling, dbt, Spark/PySpark, Databricks lakehouse, Kafka streaming, orchestration | **[de-notes](https://github.com/astroboy1183/de-notes)** |
-| **Data Science & ML** | 19–33 | stats & A/B testing, ML from scratch, gradient boosting, feature stores, evaluation, forecasting, recommenders, MLflow, deployment | **[ml-notes](https://github.com/astroboy1183/ml-notes)** |
-| **Deep Learning & AI** | 34–48 | neural nets → PyTorch, CNNs, transformers from scratch, training GPTs, LLM apps, RAG, LoRA fine-tuning, agents & MCP | **[ai-notes](https://github.com/astroboy1183/ai-notes)** |
-| **Linux & Systems** | 49–62 | shell & automation, server hardening, systems programming, a container runtime from scratch, Kubernetes, IaC/GitOps, observability | **[linux-notes](https://github.com/astroboy1183/linux-notes)** |
+| **Data Engineering** | 1–18 | Python, storage internals, SQL & dimensional modeling, dbt, Spark/PySpark, Databricks lakehouse, Kafka streaming, orchestration | **[de](https://github.com/astroboy1183/de)** |
+| **Data Science & ML** | 19–33 | stats & A/B testing, ML from scratch, gradient boosting, feature stores, evaluation, forecasting, recommenders, MLflow, deployment | **[ml](https://github.com/astroboy1183/ml)** |
+| **Deep Learning & AI** | 34–48 | neural nets → PyTorch, CNNs, transformers from scratch, training GPTs, LLM apps, RAG, LoRA fine-tuning, agents & MCP | **[ai](https://github.com/astroboy1183/ai)** |
+| **Linux & Systems** | 49–62 | shell & automation, server hardening, systems programming, a container runtime from scratch, Kubernetes, IaC/GitOps, observability | **[linux](https://github.com/astroboy1183/linux)** |
 
 Each week is **5 theory days (weekdays) + 1 build (Saturday) + 1 consolidation
 (Sunday)** — 62 flagship builds in all, from a mini LSM-tree engine to a
@@ -205,8 +204,9 @@ sequenceDiagram
   W-->>You: recap in Telegram
 ```
 
-Each note is routed to the right repo by week (`1–18 → de-notes`, `19–33 →
-ml-notes`, `34–48 → ai-notes`, `49–62 → linux-notes`) and carries the topic,
+Each note is routed to the right repo by week (`1–18 → de`, `19–33 → ml`,
+`34–48 → ai`, `49–62 → linux`), lands in that day's folder as `notes.md`
+next to my code, and carries the topic,
 the day's work, a mastery check, and a model-written deep dive. All GitHub
 commits are made with a personal access token and are authored under my own
 account.

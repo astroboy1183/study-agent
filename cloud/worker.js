@@ -420,7 +420,9 @@ function trackReadme(env, week, state) {
   const rows = days.map((u) => {
     const wk = String(u.week).padStart(2, "0");
     const day = String(u.id).padStart(3, "0");
-    return `- [Day ${u.id} — ${u.title}](week-${wk}/day-${day}-${noteSlug(u)}.md) · _${state.done[String(u.id)].date}_`;
+    const folder = `week-${wk}/day-${day}-${noteSlug(u)}`;
+    const tag = u.type === "build" ? "🔨 " : "";
+    return `- ✅ ${tag}[Day ${u.id} — ${u.title}](${folder}/) · [notes](${folder}/notes.md) · _${state.done[String(u.id)].date}_`;
   });
   // sibling tracks — the current one shown plain, the rest linked to their repos
   const siblings = TRACK_BOUNDS.map((t) =>
@@ -428,16 +430,19 @@ function trackReadme(env, week, state) {
   ).join(" · ");
   const agent = env.REPO ? `https://github.com/${env.REPO}` : DASHBOARD_URL;
   return (
-    `# ${b.name} — Study Notes\n\n` +
-    `Written deep-dive notes from **Weeks ${b.lo}–${b.hi}** of my 62-week Data · ML · AI · Linux ` +
-    "mastery roadmap. Every day I finish, my study agent writes a note and commits it here automatically.\n\n" +
-    `📊 **[Live progress dashboard](${DASHBOARD_URL})**  ·  ⚙️ **[The agent that writes these](${agent})**\n\n` +
+    `# ${b.name}\n\n` +
+    `My **code + written notes**, day by day, for **Weeks ${b.lo}–${b.hi}** of my 62-week ` +
+    "Data · ML · AI · Linux mastery roadmap.\n\n" +
+    "**How it works:** each day I commit my code into that day's folder — " +
+    "`week-NN/day-NNN-slug/` — and my study agent auto-writes a `notes.md` deep-dive in the " +
+    "same folder when I check in. Builds are the 🔨 Saturday projects.\n\n" +
+    `📊 **[Live progress dashboard](${DASHBOARD_URL})**  ·  ⚙️ **[The study agent](${agent})**\n\n` +
     `🧭 **Tracks:** ${siblings}\n\n` +
     "---\n\n" +
-    `### ${days.length} note${days.length === 1 ? "" : "s"} logged\n\n` +
+    `### ${days.length} day${days.length === 1 ? "" : "s"} done\n\n` +
     (rows.length
       ? rows.join("\n") + "\n"
-      : "_No notes here yet — the first lands the day I check in for this track._\n")
+      : "_Nothing here yet — day 1 lands the first time I commit code and check in._\n")
   );
 }
 async function commitNote(env, u, note) {
@@ -446,7 +451,8 @@ async function commitNote(env, u, note) {
   try {
     const wk = String(u.week).padStart(2, "0");
     const day = String(u.id).padStart(3, "0");
-    await ghPut(env, repo, `week-${wk}/day-${day}-${noteSlug(u)}.md`, note, `notes: Day ${u.id} — ${u.title}`);
+    // notes.md lives INSIDE the day's folder, alongside the code Jayanth commits
+    await ghPut(env, repo, `week-${wk}/day-${day}-${noteSlug(u)}/notes.md`, note, `notes: Day ${u.id} — ${u.title}`);
     const state = await loadState(env); // regenerate the index from current progress
     await ghPut(env, repo, "README.md", trackReadme(env, u.week, state), `index: Day ${u.id} studied`);
   } catch (e) {
