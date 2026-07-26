@@ -25,7 +25,7 @@ export const PAGE = `<!DOCTYPE html>
 :root{
   --bg:#0a0616; --card:rgba(17,9,30,.72); --card2:rgba(26,12,44,.82);
   --line:rgba(255,45,149,.18); --line2:rgba(0,229,255,.32);
-  --txt:#f4eefb; --dim:#bda9d6; --faint:#8778a8;
+  --txt:#f4eefb; --dim:#c3b2dd; --faint:#9f92c4;
   --indigo:#7a5cff; --blue:#00e5ff; --violet:#b026ff; --pink:#ff2d95;
   --teal:#00e5ff; --green:#1dfc9b; --amber:#ffd54a; --red:#ff5c8a;
   --theory:#22d3ee; --build:#ff2d95; --consolidate:#b026ff;
@@ -118,11 +118,11 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 /* now building */
 .now{overflow:hidden}
 .now .badge{display:inline-flex; align-items:center; gap:.5rem; font-size:.74rem; font-weight:700;
-  color:#fde68a; background:rgba(245,158,11,.13); border:1px solid rgba(245,158,11,.4);
+  color:#ffd1e8; background:rgba(255,45,149,.13); border:1px solid rgba(255,45,149,.45);
   border-radius:999px; padding:.28rem .8rem}
-.now .badge .dot{width:7px; height:7px; border-radius:50%; background:var(--amber);
-  box-shadow:0 0 0 0 rgba(245,158,11,.6); animation:pulse 2s infinite}
-@keyframes pulse{70%{box-shadow:0 0 0 7px rgba(245,158,11,0)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
+.now .badge .dot{width:7px; height:7px; border-radius:50%; background:var(--pink);
+  box-shadow:0 0 0 0 rgba(255,45,149,.6); animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 7px rgba(255,45,149,0)}100%{box-shadow:0 0 0 0 rgba(255,45,149,0)}}
 .now h3{font-size:1.55rem; font-weight:750; letter-spacing:-.02em; margin:.9rem 0 .5rem}
 .now p{color:var(--dim); font-size:.96rem; max-width:70ch}
 .now .meta{color:var(--faint); font-size:.8rem; margin-top:.9rem}
@@ -169,6 +169,13 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .mgraph-cap{display:flex; gap:1.1rem; flex-wrap:wrap; font-size:.72rem; color:var(--faint);
   margin-top:.75rem; font-family:var(--mono)}
 .mgraph-empty{font-size:.8rem; color:var(--faint); margin-top:.6rem}
+
+/* filter chips (roadmap + projects) */
+.filter-chips{display:flex; flex-wrap:wrap; gap:.5rem; margin:0 0 1.1rem}
+.fchip{font-size:.78rem; font-weight:650; padding:.34rem .85rem; border-radius:999px; cursor:pointer;
+  color:var(--dim); border:1px solid var(--line); background:rgba(255,255,255,.03); transition:.15s; user-select:none}
+.fchip:hover{color:var(--txt); border-color:var(--line2)}
+.fchip.on{color:#fff; border-color:transparent; background:linear-gradient(90deg,var(--pink),var(--blue)); box-shadow:0 4px 16px -6px var(--blue)}
 
 /* skills / tech stack — grouped chips by domain */
 .skills{display:grid; grid-template-columns:1fr 1fr; gap:1.3rem 2rem}
@@ -429,16 +436,22 @@ footer .r{margin-left:auto}
   <div class="card now reveal" id="now"></div>
 
   <div class="proj-head reveal"><h2>🚀 Projects</h2><span class="sub" id="proj-sub"></span><button id="edit-toggle" class="edit-btn">✎ Owner</button></div>
+  <div id="proj-filter" class="filter-chips reveal"></div>
   <div class="sub-min reveal">★ Featured — the pieces you'd headline</div>
   <div id="featured" class="pgrid reveal"></div>
   <div class="sub-min reveal" style="margin-top:1.7rem">All builds</div>
   <div id="all-projects" class="pgrid-c reveal"></div>
 
-  <div class="sec reveal"><h2>🔥 Consistency</h2><span class="sub">show up daily — a rest day counts, a silent miss doesn't</span></div>
-  <div class="card reveal" id="consistency"></div>
+  <div class="sec reveal"><h2>📚 The roadmap</h2><span class="sub">all 62 weeks · click any day for its concept, video &amp; coding rep</span></div>
+  <div id="rm-filter" class="filter-chips reveal"></div>
+  <div class="card reveal"><div id="roadmap"></div></div>
 
-  <div class="sec reveal"><h2>The year</h2><span class="sub">every day of the plan · colored by type · click any box to open that day (⬜ outline = today)</span></div>
-  <div class="card reveal">
+  <div class="sec reveal"><h2>📘 Study briefs</h2><span class="sub">a deep recap written for every completed day</span></div>
+  <div class="card reveal"><div class="briefs" id="briefs"></div></div>
+
+  <div class="sec reveal"><h2>📅 Activity &amp; consistency</h2><span class="sub">the day-by-day view · show-up streak, the full year, and the theory/build/consolidate balance</span></div>
+  <div class="card reveal" id="consistency"></div>
+  <div class="card reveal" style="margin-top:1rem">
     <div class="board-wrap"><div class="board" id="board"></div></div>
     <div class="swipe-cue" id="board-cue" aria-hidden="true"></div>
     <div class="legend">
@@ -449,15 +462,7 @@ footer .r{margin-left:auto}
       <span><i style="background:rgba(255,255,255,.045)"></i>to go</span>
     </div>
   </div>
-
-  <div class="sec reveal"><h2>Balance</h2><span class="sub">theory on weekdays · builds &amp; consolidations on weekends</span></div>
-  <div class="meters reveal" id="meters"></div>
-
-  <div class="sec reveal"><h2>📚 The roadmap</h2><span class="sub">all 62 weeks · click any day for its concept, video &amp; coding rep</span></div>
-  <div class="card reveal"><div id="roadmap"></div></div>
-
-  <div class="sec reveal"><h2>📘 Study briefs</h2><span class="sub">a deep recap written for every completed day</span></div>
-  <div class="card reveal"><div class="briefs" id="briefs"></div></div>
+  <div class="meters reveal" id="meters" style="margin-top:1rem"></div>
 
   <footer>
     <span>Live &amp; auto-updating · built on a single Cloudflare Worker (zero servers) · <a href="https://github.com/astroboy1183/study-agent" target="_blank" rel="noopener">source on GitHub ↗</a></span>
@@ -472,7 +477,6 @@ footer .r{margin-left:auto}
 "use strict";
 var $ = function(id){ return document.getElementById(id); };
 var TYPE_COLOR = { theory:"var(--theory)", build:"var(--build)", consolidate:"var(--consolidate)" };
-var DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 var DATA = null;
 var EDIT_KEY = (function(){ try{ return localStorage.getItem("study_edit_key")||""; }catch(e){ return ""; } })();
 function refresh(){ fetch("/api/state?bust="+Date.now(),{cache:"no-store"}).then(function(r){ return r.json(); }).then(render); }
@@ -635,6 +639,22 @@ var TRACK_LABEL={
   "Linux & Systems":"DevOps & Cloud Infrastructure"
 };
 function trackLabel(n){ return TRACK_LABEL[n]||n; }
+// filter state + helpers (roadmap + projects)
+var rmFilter="all", projFilter="all";
+var TRACK_ORDER=["Data Engineering","Data Science & ML","Deep Learning & AI","Linux & Systems"];
+function weekTrack(w){ if(w>=1&&w<=18)return "Data Engineering"; if(w<=33)return "Data Science & ML"; if(w<=48)return "Deep Learning & AI"; if(w>=49&&w<=62)return "Linux & Systems"; return ""; }
+function trackFilterOpts(extra){
+  return [{key:"all",label:"All"}].concat(extra||[]).concat(TRACK_ORDER.map(function(t){ return {key:t,label:trackLabel(t)}; }));
+}
+function filterChips(host, opts, current, onPick){
+  if(!host) return; host.replaceChildren();
+  opts.forEach(function(o){
+    var c=el("span","fchip"+(o.key===current?" on":""));
+    c.textContent=o.label;
+    clickable(c, function(){ onPick(o.key); }, false);
+    host.appendChild(c);
+  });
+}
 function phaseSlug(n){ return "phase-"+n.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
 // recruiter-facing tech stack: chips grouped by domain, coloured per track,
 // highlighted once shipped with. Reads as a clean, categorised skill set.
@@ -652,6 +672,7 @@ function renderLearned(s){
   var shipped=0, tot=items.length;
   SKILL_GROUPS.forEach(function(g){
     var arr=groups[g.track]; if(!arr||!arr.length) return;
+    arr.sort(function(a,b){ return (b.done-a.done) || (b.count-a.count) || a.tech.localeCompare(b.tech); }); // proven first
     var m=TRACK_META[g.track]||{c:"var(--blue)"};
     var box=el("div","skgroup"); box.style.setProperty("--tc", m.c);
     box.appendChild(el("div","skhead", trackLabel(g.track)));
@@ -700,6 +721,7 @@ function renderGraph(s){
   var cap=el("div","mgraph-cap");
   cap.innerHTML="<span style='color:var(--pink)'>● your pace</span><span style='color:var(--dim)'>┄ ideal (7/week → "+total+")</span><span>Week 1 → "+weeks+" · "+s.done+"/"+total+" done</span>";
   c.appendChild(cap);
+  if(!s.done){ c.appendChild(el("div","mgraph-empty","🚀 The dashed line is your target pace — your own line lifts off the moment you log Day 1.")); }
 }
 function renderTracks(s){
   var c=$("tracks"); if(!c) return; c.replaceChildren();
@@ -735,9 +757,11 @@ function goToPhase(name){
 var PHASE_COLOR={"Data Engineering":"var(--blue)","Data Science & ML":"var(--green)","Deep Learning & AI":"var(--pink)","Linux & Systems":"var(--violet)"};
 function renderRoadmap(s){
   var rm=$("roadmap"); if(!rm) return; rm.replaceChildren();
+  filterChips($("rm-filter"), trackFilterOpts(), rmFilter, function(k){ rmFilter=k; renderRoadmap(s); });
   var byWeek={}; (s.board||[]).forEach(function(wk){ byWeek[wk.week]=wk.cells; });
   var cur=null;
   (s.weeksMeta||[]).forEach(function(w){
+    if(rmFilter!=="all" && w.phase!==rmFilter) return;
     if(w.phase!==cur){ cur=w.phase;
       var ph=el("div","rm-phase"); ph.id=phaseSlug(w.phase); ph.style.setProperty("--pc", PHASE_COLOR[w.phase]||"var(--blue)");
       ph.appendChild(el("span","rm-pname", trackLabel(w.phase))); rm.appendChild(ph); }
@@ -831,14 +855,22 @@ function renderConsistency(s){
 
 /* projects: featured strip + full grid, richer modal, owner edit-mode */
 function statusLabel(st){ return st==="built"?"✓ Built":st==="studied"?"◐ Studied":"Planned"; }
+function projMatch(p){
+  if(projFilter==="all") return true;
+  if(projFilter==="built") return p.status==="built";
+  return weekTrack(p.week)===projFilter;
+}
 function renderProjects(s){
   var pr=s.projects;
   $("proj-sub").textContent = pr.built+" built · "+pr.studied+" studied · "+pr.total+" projects";
+  filterChips($("proj-filter"), trackFilterOpts([{key:"built",label:"✓ Built"}]), projFilter, function(k){ projFilter=k; renderProjects(s); });
+  var fl=pr.featured.filter(projMatch), al=pr.all.filter(projMatch);
   var feat=$("featured"); feat.replaceChildren();
-  if(!pr.featured.length) feat.appendChild(el("div","empty","No featured projects yet."));
-  pr.featured.forEach(function(p){ feat.appendChild(projectCard(p, true)); });
+  if(!fl.length) feat.appendChild(el("div","empty","No featured projects match this filter."));
+  fl.forEach(function(p){ feat.appendChild(projectCard(p, true)); });
   var all=$("all-projects"); all.replaceChildren();
-  pr.all.forEach(function(p){ all.appendChild(projectCard(p, false)); });
+  if(!al.length) all.appendChild(el("div","empty","No projects match this filter."));
+  al.forEach(function(p){ all.appendChild(projectCard(p, false)); });
 }
 function projectCard(p, big){
   var c=el("div","pcard"+(p.status==="planned"?" up":""));
