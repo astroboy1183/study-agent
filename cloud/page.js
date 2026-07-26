@@ -295,7 +295,7 @@ footer .r{margin-left:auto}
 .rm-days{padding:.3rem .5rem .55rem}
 .rm-day{display:flex;align-items:center;gap:.6rem;padding:.4rem .55rem;border-radius:8px;cursor:pointer;transition:background .12s}
 .rm-day:hover{background:rgba(255,255,255,.05)}
-.rm-dl{font-family:var(--mono);font-size:.68rem;color:var(--faint);width:26px;flex:none}
+.rm-dl{font-family:var(--mono);font-size:.68rem;color:var(--faint);width:50px;flex:none}
 .rm-dot{width:8px;height:8px;border-radius:2px;flex:none}
 .rm-dt{font-size:.86rem;color:var(--dim)}
 .rm-day.done .rm-dt{color:var(--txt)}
@@ -560,7 +560,7 @@ function render(s){
     if(c.status==="done") cell.style.background=TYPE_COLOR[c.type];
     else if(c.status==="partial") cell.style.background="repeating-linear-gradient(45deg,"+solid(c.type)+","+solid(c.type)+" 3px,rgba(255,255,255,.05) 3px,rgba(255,255,255,.05) 6px)";
     else cell.style.background=faintType(c.type);
-    var label="W"+pad(wk.week)+" · "+DOW[c.dow]+" · Day "+c.id+"\\n"+c.title+(c.status==="done"?"  ✓":c.status==="partial"?"  ◐":"");
+    var label="Day "+c.id+" · Week "+wk.week+" · "+c.type+"\\n"+c.title+(c.status==="done"?"  ✓":c.status==="partial"?"  ◐":"");
     cell.setAttribute("aria-label", "Day "+c.id+" — "+c.title);
     cell.addEventListener("pointerenter", function(e){ showTip(e,label); });
     cell.addEventListener("pointermove", moveTip);
@@ -752,7 +752,7 @@ function renderRoadmap(s){
     var days=el("div","rm-days");
     cells.forEach(function(c){
       var row=el("div","rm-day"+(c.status==="done"?" done":""));
-      row.appendChild(el("span","rm-dl", DOW[c.dow]));
+      row.appendChild(el("span","rm-dl", "Day "+c.id));
       var dot=el("span","rm-dot"); dot.style.background="var(--"+c.type+")"; row.appendChild(dot);
       row.appendChild(el("span","rm-dt", c.title));
       clickable(row, function(){ openUnit(c.id); });
@@ -778,7 +778,7 @@ function stepsHtml(text){
   }).join("")+"</div>";
 }
 function unitHtml(d){
-  var out="<div class='rm-meta'>Week "+d.week+" · "+DOW[d.dow]+" · "+d.type+" · Day "+d.id+"</div>";
+  var out="<div class='rm-meta'>Day "+d.id+" · Week "+d.week+" · "+d.type+"</div>";
   if(/\\[Block [A-Z]\\]/.test(d.text||"")){
     out+=stepsHtml(d.text);
   } else {
