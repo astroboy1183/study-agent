@@ -212,28 +212,28 @@ function fmtUnit(u, dow) {
 // ------------------------------------------------------------- summaries ---
 function summaryPrompt(u) {
   const common =
-    "You are writing a study brief for Jayanth, a data/AI engineer, to read " +
-    "AS REINFORCEMENT right after he has studied today's topic. Aim for a " +
-    "focused 20-30 minute read. Explain from first principles, then go deep on " +
-    "the mechanism (the how and why, not just definitions). Use concrete " +
-    "examples, commands, and small code/diagram sketches where they help. Call " +
-    "out common misconceptions and failure modes. Precision over politeness; " +
-    "dry humour and the occasional cricket analogy are welcome. End with a 3-5 " +
-    "line 'Lock it in' recap. Use Markdown headings and short paragraphs. Do " +
-    "not pad — every line should teach something.";
+    "Write these as MY OWN study notes, in the FIRST PERSON — as if I (Jayanth, a " +
+    "data/AI engineer) am writing them myself right after studying today's topic. " +
+    "Use 'I', 'my', 'today I…'; NEVER address a reader as 'you' or 'your', and never " +
+    "call them a 'brief for Jayanth'. Aim for a focused 20-30 minute read that locks the " +
+    "topic in: explain it from first principles, then go deep on the mechanism (the how " +
+    "and why, not just definitions). Use concrete examples, commands, and small code/diagram " +
+    "sketches where they help. Call out common misconceptions and failure modes I should " +
+    "watch for. Precision over politeness; dry humour and the occasional cricket analogy " +
+    "are welcome. End with a 3-5 line 'Lock it in' recap. Use Markdown headings and short " +
+    "paragraphs. Do not pad — every line should teach me something.";
   if (u.type === "theory") return common;
   if (u.type === "build")
     return (
       common +
-      " Today was a hands-on BUILD day. Frame the brief around the principles " +
-      "the build exercises: what each step was really teaching, why it works, " +
-      "and what to notice next time."
+      " Today was a hands-on BUILD day. Frame my notes around the principles the build " +
+      "exercised: what each step was really teaching me, why it works, and what to notice " +
+      "next time."
     );
   return (
     common +
-    " Today was a CONSOLIDATION day. Tie the week's threads together: the " +
-    "through-line concept, how the pieces connect, and the questions he should " +
-    "now be able to answer cold."
+    " Today was a CONSOLIDATION day. Tie the week's threads together: the through-line " +
+    "concept, how the pieces connect, and the questions I should now be able to answer cold."
   );
 }
 
@@ -255,15 +255,15 @@ async function generateSummary(env, u) {
     `Today's task/material:\n${u.text}`;
   if (code) {
     system +=
-      " IMPORTANT: He has ALSO committed his own code for this day (below). Weave a real " +
-      "review of HIS code into the brief — what it does, what it does well, what each part " +
-      "teaches, subtle bugs / edge cases / gaps, and how it maps to today's concept. " +
-      "Reference actual file and function names from his code. Be specific and honest, not generic.";
-    user += `\n\nHIS CODE for this day (from \`${folder}/\`):\n${code}`;
+      " I ALSO committed my own code for this day (below). Weave a review of MY code into the " +
+      "notes, still in the first person — what I built, what it does well, what each part taught " +
+      "me, subtle bugs / edge cases / gaps I should note, and how it maps to today's concept. " +
+      "Reference my actual file and function names. Be specific and honest with myself, not generic.";
+    user += `\n\nMY CODE for this day (from \`${folder}/\`):\n${code}`;
   }
   const body = await askModel(env, system, user, Number(env.SUMMARY_MAX_TOKENS || 4000));
   if (!body) return { note: "", cached: false };
-  const stamp = code ? " · 🔗 includes a review of your code" : "";
+  const stamp = code ? " · 🔗 with a review of my code" : "";
   const note =
     `# Day ${u.id} — ${u.title}\n\n` +
     `> Week ${u.week} · ${phaseName(u.week)} · ${u.type} · studied ${istToday().ymd}${stamp}\n\n` +
@@ -387,15 +387,14 @@ async function regenerateNote(env, state, u, input) {
   const repoCtx = repo ? await fetchRepoContext(env, repo) : null;
   if (repo && !repoCtx) return { error: "Couldn't read that repo — is the URL right and the repo public?" };
   const sourceBits = [];
-  if (notes) sourceBits.push(`WHAT HE SAYS HE DID (his own words):\n${notes}`);
-  if (repoCtx) sourceBits.push(`HIS CODE REPOSITORY:\n${repoCtx}`);
+  if (notes) sourceBits.push(`WHAT I SAY I DID (my own words):\n${notes}`);
+  if (repoCtx) sourceBits.push(`MY CODE REPOSITORY:\n${repoCtx}`);
   const system =
     summaryPrompt(u) +
-    " CRITICAL: Ground this recap in WHAT HE ACTUALLY DID below — the plan is only " +
-    "background. Where his real work diverged from the plan (different language, " +
-    "approach, extra features, or cut scope), reflect what he actually did. Never " +
-    "invent work he didn't mention; if his input is thin, summarize what's there and " +
-    "note what's missing rather than padding.";
+    " CRITICAL: Ground these notes in WHAT I ACTUALLY DID below (first person) — the plan is " +
+    "only background. Where my real work diverged from the plan (different language, approach, " +
+    "extra features, or cut scope), reflect what I actually did. Never invent work I didn't " +
+    "mention; if my input is thin, summarize what's there and note what's missing rather than padding.";
   const body = await askModel(
     env,
     system,
@@ -406,7 +405,7 @@ async function regenerateNote(env, state, u, input) {
   );
   if (!body) return { error: "The model didn't respond — try again in a moment." };
   const pr = repo ? parseRepo(repo) : null;
-  const src = pr ? `🔗 grounded in ${pr.owner}/${pr.repo}` : "✍️ from your own summary";
+  const src = pr ? `🔗 grounded in ${pr.owner}/${pr.repo}` : "✍️ from my own summary";
   const note =
     `# Day ${u.id} — ${u.title}\n\n` +
     `> Week ${u.week} · ${phaseName(u.week)} · ${u.type} · studied ${istToday().ymd} · ${src}\n\n` +
