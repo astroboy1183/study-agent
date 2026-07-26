@@ -843,7 +843,7 @@ function unitHtml(d){
   }
   if(d.type!=="consolidate"){
     var wk=pad(d.week), dd=("00"+d.id).slice(-3), repo=weekRepo(d.week);
-    out+="<div class='codepath'>📂 Commit today's code to <code>week-"+wk+"/day-"+dd+"-"+daySlug(d.title)+"/</code> in <a href='https://github.com/astroboy1183/"+repo+"' target='_blank' rel='noopener'>"+repo+"</a> — <code>notes.md</code> auto-lands in the same folder when you check in.</div>";
+    out+="<div class='codepath'>📂 Commit today's code to <code>week-"+wk+"/day-"+dd+"-"+daySlug(d.title)+"/</code> in <a href='https://github.com/astroboy1183/"+repo+"' target='_blank' rel='noopener'>"+repo+"</a> <b>before you check in</b> — the auto-note then <b>reads your code</b> and reviews it, and drops <code>notes.md</code> in the same folder.</div>";
   }
   if(d.mastery) out+="<div class='rm-mastery'>🎯 <b>Mastery (answer aloud):</b> "+esc(d.mastery)+"</div>";
   return out;

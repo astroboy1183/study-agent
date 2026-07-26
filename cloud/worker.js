@@ -242,17 +242,31 @@ async function generateSummary(env, u) {
   const key = `brief:${u.id}`;
   const cached = await env.STUDY.get(key);
   if (cached) return { note: cached, cached: true };
-  const body = await askModel(
-    env,
-    summaryPrompt(u),
+  // Read the code Jayanth committed to this day's folder, if any, so the brief
+  // reviews his real work — not just the plan. (Commit code before /done.)
+  const repo = trackRepo(env, u.week);
+  const wk = String(u.week).padStart(2, "0");
+  const day = String(u.id).padStart(3, "0");
+  const folder = `week-${wk}/day-${day}-${noteSlug(u)}`;
+  const code = env.GH_PAT && repo ? await fetchDayCode(env, repo, folder) : null;
+  let system = summaryPrompt(u);
+  let user =
     `Topic (Day ${u.id}, Week ${u.week}, ${u.type}): ${u.title}\n\n` +
-      `Today's task/material:\n${u.text}`,
-    Number(env.SUMMARY_MAX_TOKENS || 4000)
-  );
+    `Today's task/material:\n${u.text}`;
+  if (code) {
+    system +=
+      " IMPORTANT: He has ALSO committed his own code for this day (below). Weave a real " +
+      "review of HIS code into the brief — what it does, what it does well, what each part " +
+      "teaches, subtle bugs / edge cases / gaps, and how it maps to today's concept. " +
+      "Reference actual file and function names from his code. Be specific and honest, not generic.";
+    user += `\n\nHIS CODE for this day (from \`${folder}/\`):\n${code}`;
+  }
+  const body = await askModel(env, system, user, Number(env.SUMMARY_MAX_TOKENS || 4000));
   if (!body) return { note: "", cached: false };
+  const stamp = code ? " · 🔗 includes a review of your code" : "";
   const note =
     `# Day ${u.id} — ${u.title}\n\n` +
-    `> Week ${u.week} · ${phaseName(u.week)} · ${u.type} · studied ${istToday().ymd}\n\n` +
+    `> Week ${u.week} · ${phaseName(u.week)} · ${u.type} · studied ${istToday().ymd}${stamp}\n\n` +
     `## Today's work\n\n${u.text}\n\n` +
     (u.mastery ? `## Mastery check\n\n${u.mastery}\n\n` : "") +
     `## Deep dive\n\n${body}\n`;
@@ -329,6 +343,38 @@ async function fetchRepoContext(env, url) {
     if (files.length) out.push(`\nFiles (${files.length} shown):\n${files.join("\n")}`);
   }
   return out.join("\n");
+}
+async function fetchDayCode(env, repo, folder) {
+  // Read the files Jayanth committed under a day's folder (excluding notes.md),
+  // within a char budget, so the model can review his actual code. Never throws.
+  try {
+    const metaR = await ghGet(env, `/repos/${repo}`);
+    const branch = metaR ? (await metaR.json()).default_branch || "main" : "main";
+    const treeR = await ghGet(env, `/repos/${repo}/git/trees/${branch}?recursive=1`);
+    if (!treeR) return null;
+    const tree = await treeR.json();
+    const files = (tree.tree || [])
+      .filter((x) => x.type === "blob" && x.path.startsWith(folder + "/"))
+      .filter((x) => !/\/notes\.md$/i.test(x.path) && !/(^|\/)readme/i.test(x.path))
+      .filter((x) => !/node_modules\/|\.venv\/|dist\/|build\/|\.min\.|package-lock|\.(png|jpe?g|gif|svg|pdf|zip|ico|lock)$/i.test(x.path))
+      .filter((x) => (x.size || 0) < 80000);
+    if (!files.length) return null;
+    const parts = [];
+    let budget = 26000;
+    for (const f of files.slice(0, 14)) {
+      if (budget <= 0) break;
+      const cr = await ghGet(env, `/repos/${repo}/contents/${f.path.split("/").map(encodeURIComponent).join("/")}`);
+      if (!cr) continue;
+      const c = await cr.json();
+      const content = fromB64utf8(c.content || "").slice(0, budget);
+      budget -= content.length;
+      parts.push(`--- ${f.path.slice(folder.length + 1)} ---\n${content}`);
+    }
+    return parts.length ? parts.join("\n\n") : null;
+  } catch (e) {
+    console.error(`[code] fetch failed: ${e}`);
+    return null;
+  }
 }
 async function regenerateNote(env, state, u, input) {
   // input: { notes?, repo? } — at least one required. Returns the note, or a
