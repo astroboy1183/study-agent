@@ -1124,6 +1124,14 @@ const SKILL_RENAME = {
   "A/B testing": "A/B Testing", "matplotlib": "Matplotlib", "agents": "AI Agents",
   "CNN": "CNNs", "embeddings": "Embeddings", "HuggingFace": "Hugging Face",
   "Transformer": "Transformers", "bash": "Bash", "NLP": "NLP",
+  // ambiguous / obscure tool names → clear, recognisable skill names
+  "Glue": "AWS Glue", "Athena": "AWS Athena",
+  "Great Expectations": "Data Quality", "Feast": "Feature Stores",
+  "Evidently": "Model Monitoring", "DVC": "Data Versioning (DVC)",
+  "Optuna": "Hyperparameter Tuning (Optuna)", "SHAP": "Model Explainability (SHAP)",
+  "Prophet": "Forecasting (Prophet)",
+  "pgvector": "Vector Search (pgvector)", "vLLM": "LLM Serving (vLLM)",
+  "PEFT": "Fine-tuning", "ARIMA": "Time Series (ARIMA)",
 };
 function learnedData(state) {
   // Tech stack derived ENTIRELY from the 62-week roadmap's build tags — nothing
