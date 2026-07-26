@@ -422,7 +422,7 @@ footer .r{margin-left:auto}
     </div>
   </section>
 
-  <div class="sec reveal"><h2>🛠 Skills &amp; tech stack</h2><span class="sub">across data engineering, ML, AI &amp; systems · highlighted chips are ones I've shipped with</span></div>
+  <div class="sec reveal"><h2>🛠 Skills &amp; tech stack</h2><span class="sub">every technology in the 62-week roadmap · each lights up in its track colour as I build with it</span></div>
   <div class="card reveal"><div id="learned" class="skills"></div></div>
 
   <div class="kpis reveal" id="kpis"></div>
@@ -690,7 +690,8 @@ function renderLearned(s){
   });
   var lg=el("div","cloud-legend");
   lg.innerHTML="<span><b>"+tot+"</b> technologies across 4 domains</span>"+
-    (shipped?"<span><b style='color:var(--green)'>"+shipped+"</b> shipped with so far</span>":"<span>highlighted = shipped with</span>");
+    "<span><b style='color:var(--green)'>"+shipped+"</b> / "+tot+" built with so far</span>"+
+    "<span>dim = still ahead on the roadmap</span>";
   c.appendChild(lg);
 }
 // cumulative-progress momentum chart (SVG, neon glow) — actual pace vs the ideal 7/week line
