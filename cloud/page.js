@@ -627,6 +627,14 @@ var TRACK_META={
   "Deep Learning & AI":{c:"var(--pink)",repo:"ai-notes"},
   "Linux & Systems":{c:"var(--violet)",repo:"linux-notes"}
 };
+// Recruiter-friendly DISPLAY names for the tracks (internal keys/content unchanged).
+var TRACK_LABEL={
+  "Data Engineering":"Data Engineering",
+  "Data Science & ML":"Data Science & ML",
+  "Deep Learning & AI":"AI & LLM Engineering",
+  "Linux & Systems":"DevOps & Cloud Infrastructure"
+};
+function trackLabel(n){ return TRACK_LABEL[n]||n; }
 function phaseSlug(n){ return "phase-"+n.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
 // recruiter-facing tech stack: chips grouped by domain, coloured per track,
 // highlighted once shipped with. Reads as a clean, categorised skill set.
@@ -646,7 +654,7 @@ function renderLearned(s){
     var arr=groups[g.track]; if(!arr||!arr.length) return;
     var m=TRACK_META[g.track]||{c:"var(--blue)"};
     var box=el("div","skgroup"); box.style.setProperty("--tc", m.c);
-    box.appendChild(el("div","skhead", g.label));
+    box.appendChild(el("div","skhead", trackLabel(g.track)));
     var chips=el("div","skchips");
     arr.forEach(function(it){
       var chip=el("span","skchip"+(it.done?" built":""));
@@ -698,8 +706,8 @@ function renderTracks(s){
   (s.tracks||[]).forEach(function(t){
     var m=TRACK_META[t.name]||{c:"var(--blue)",repo:""};
     var card=el("div","tcard"); card.style.setProperty("--tc", m.c);
-    card.setAttribute("aria-label", t.name+" — "+Math.round(t.pct)+"% complete, click for its weeks");
-    var th=el("div","th"); th.appendChild(el("span","tn",t.name)); th.appendChild(el("span","tw","W"+t.lo+"–"+t.hi)); card.appendChild(th);
+    card.setAttribute("aria-label", trackLabel(t.name)+" — "+Math.round(t.pct)+"% complete, click for its weeks");
+    var th=el("div","th"); th.appendChild(el("span","tn",trackLabel(t.name))); th.appendChild(el("span","tw","W"+t.lo+"–"+t.hi)); card.appendChild(th);
     var tp=el("div","tp"); tp.appendChild(el("span","tpct",Math.round(t.pct)+"%")); tp.appendChild(el("span","tdays",t.done+" / "+t.total+" days")); card.appendChild(tp);
     var bar=el("div","tbar"); var fill=el("i"); fill.style.width=(t.done?Math.max(t.pct,2):0)+"%"; bar.appendChild(fill); card.appendChild(bar);
     var meta=el("div","tmeta");
@@ -732,7 +740,7 @@ function renderRoadmap(s){
   (s.weeksMeta||[]).forEach(function(w){
     if(w.phase!==cur){ cur=w.phase;
       var ph=el("div","rm-phase"); ph.id=phaseSlug(w.phase); ph.style.setProperty("--pc", PHASE_COLOR[w.phase]||"var(--blue)");
-      ph.appendChild(el("span","rm-pname", w.phase)); rm.appendChild(ph); }
+      ph.appendChild(el("span","rm-pname", trackLabel(w.phase))); rm.appendChild(ph); }
     var cells=byWeek[w.n]||[];
     var doneN=cells.filter(function(c){return c.status==="done";}).length;
     var det=document.createElement("details"); det.className="rm-week";
