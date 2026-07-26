@@ -632,7 +632,7 @@ function phaseSlug(n){ return "phase-"+n.toLowerCase().replace(/[^a-z0-9]+/g,"-"
 // highlighted once shipped with. Reads as a clean, categorised skill set.
 var SKILL_GROUPS=[
   {track:"Data Engineering",   label:"Data Engineering"},
-  {track:"Data Science & ML",  label:"Data Science & Analytics"},
+  {track:"Data Science & ML",  label:"Data Science & ML"},
   {track:"Deep Learning & AI", label:"AI & LLMs"},
   {track:"Linux & Systems",    label:"Systems · Infra · DevOps"}
 ];
