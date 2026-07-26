@@ -1141,8 +1141,8 @@
    "week": 17,
    "dow": 2,
    "type": "theory",
-   "title": "Redshift + IAM & cost",
-   "text": "Redshift architecture (distribution/sort keys, Spectrum), IAM for data access, and cloud cost control.\n🎥 Watch: Search 'Redshift architecture distribution sort keys'.\n💻 Code: Load data into Redshift Serverless, tune a query with dist/sort keys, and estimate cost.",
+   "title": "Cloud platform fundamentals: IAM, VPC networking, storage & cost",
+   "text": "The transferable cloud layer under every data tool: identity & least-privilege (IAM roles/policies), VPC networking & security groups, storage classes, and cloud cost control — plus Redshift (dist/sort keys, Spectrum) as the warehouse example.\n🎥 Watch: Search 'AWS IAM explained', 'VPC basics', 'Redshift architecture distribution sort keys'.\n💻 Code: Set up a least-privilege IAM role, load data into Redshift Serverless behind a VPC, tune a query with dist/sort keys, and estimate the monthly cost.",
    "mastery": null,
    "id": 115
   },
@@ -2034,8 +2034,8 @@
    "week": 30,
    "dow": 0,
    "type": "theory",
-   "title": "ML system design",
-   "text": "The full ML lifecycle (data -> features -> train -> serve -> monitor), and why more than 90% of the work isn't the model.\n🎥 Watch: Chip Huyen — Designing ML Systems (overview); Made With ML.\n💻 Code: Draw the end-to-end architecture for an ML system you'll build, labeling every component.",
+   "title": "Containers & Docker for ML — a just-in-time primer",
+   "text": "Just enough containers to productionize ML now: images, layers, Dockerfiles, volumes, and reproducible environments — a bridge to the deep Containers/Kubernetes track later. (Full ML system design is its own week soon.)\n🎥 Watch: Docker in 100 Seconds; Docker for Data Science/ML tutorials.\n💻 Code: Containerize a training + inference script with a slim multi-stage Dockerfile; build, run, and push the image to a registry.",
    "mastery": null,
    "id": 204
   },
@@ -2305,7 +2305,7 @@
    "type": "consolidate",
    "title": "Phase 2 review",
    "text": "You've gone from math to a shipped, monitored ML product. Step back: which parts felt weakest, and how will the AI phase build on this foundation?",
-   "mastery": "Give the 3-minute tour of your ML product: the problem, the data/features, why this model, and how you'd know if it broke in production.",
+   "mastery": "Give the 3-minute tour of your ML product: the problem, the data/features, why this model, and how you'd know if it broke in production. Spaced recall (no notes): explain three Data-Engineering ideas you'd started to forget — an LSM-tree, a Kafka consumer group, and a star schema.",
    "id": 231
   },
   {
@@ -3357,7 +3357,7 @@
    "type": "consolidate",
    "title": "Phase 3 review",
    "text": "You've gone from a neuron to a shipped, evaluated AI system. Step back: what's genuinely yours now, and how will the Linux/systems phase let you productionize all of it?",
-   "mastery": "Give the 3-minute tour of your AI system: the architecture, why RAG/agent/fine-tune, how you evaluate it, and how you keep it safe and affordable.",
+   "mastery": "Give the 3-minute tour of your AI system: the architecture, why RAG/agent/fine-tune, how you evaluate it, and how you keep it safe and affordable. Spaced recall (cold): explain exactly-once streaming (DE), gradient boosting vs a neural net (ML), and where each fits in your AI system.",
    "id": 336
   },
   {
@@ -4347,312 +4347,374 @@
   {
    "n": 1,
    "title": "Python for Data Engineering I",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 2,
    "title": "Python for Data Engineering II",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 3,
    "title": "Databases I — SQL & Relational",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 4,
    "title": "Databases II — Storage & Formats",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 5,
    "title": "Distributed Systems I",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 6,
    "title": "Distributed Systems II",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 7,
    "title": "Data Modeling — Kimball",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 8,
    "title": "Warehousing & Modeling II",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 9,
    "title": "Spark Internals I",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 10,
    "title": "Spark II & PySpark",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 11,
    "title": "Databricks & the Lakehouse",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 12,
    "title": "Streaming I — Kafka",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 13,
    "title": "Streaming II — Processing",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 14,
    "title": "Orchestration",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 15,
    "title": "dbt & Analytics Engineering",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 16,
    "title": "Data Quality & Governance",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": false
   },
   {
    "n": 17,
    "title": "Cloud DE & Advanced Patterns",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 18,
    "title": "DE Capstone",
-   "phase": "Data Engineering"
+   "phase": "Data Engineering",
+   "core": true
   },
   {
    "n": 19,
    "title": "Math I — Linear Algebra",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 20,
    "title": "Math II — Calculus & Optimization",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 21,
    "title": "Math III — Probability & Statistics",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 22,
    "title": "Data Analysis & Wrangling",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 23,
    "title": "Classical ML I — Supervised",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 24,
    "title": "Classical ML II — Trees & Ensembles",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 25,
    "title": "Classical ML III — More Methods",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": false
   },
   {
    "n": 26,
    "title": "Feature Engineering",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 27,
    "title": "Model Evaluation",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 28,
    "title": "Time Series & Forecasting",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": false
   },
   {
    "n": 29,
    "title": "Recommender Systems",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 30,
    "title": "MLOps I — Productionizing",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 31,
    "title": "MLOps II — Serving & Monitoring",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 32,
    "title": "ML System Design & Scale",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 33,
    "title": "ML Capstone",
-   "phase": "Data Science & ML"
+   "phase": "Data Science & ML",
+   "core": true
   },
   {
    "n": 34,
    "title": "Neural Networks — Foundations",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 35,
    "title": "PyTorch & Training",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 36,
    "title": "Computer Vision & CNNs",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 37,
    "title": "Sequence Models & NLP",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 38,
    "title": "Transformers I — Architecture",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 39,
    "title": "Transformers II — Pretraining",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 40,
    "title": "LLMs I — Understanding & Using",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 41,
    "title": "LLMs II — Embeddings & RAG",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 42,
    "title": "LLMs III — Fine-tuning",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 43,
    "title": "AI Agents I",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 44,
    "title": "AI Agents II & MCP",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 45,
    "title": "LLMOps & Production AI",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 46,
    "title": "Advanced AI",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": false
   },
   {
    "n": 47,
    "title": "AI Engineering",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 48,
    "title": "AI Capstone",
-   "phase": "Deep Learning & AI"
+   "phase": "Deep Learning & AI",
+   "core": true
   },
   {
    "n": 49,
    "title": "Linux Basics I — The Command Line",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": true
   },
   {
    "n": 50,
    "title": "Linux Basics II — Text, Processes & Jobs",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": true
   },
   {
    "n": 51,
    "title": "Shell Scripting & Automation",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": true
   },
   {
    "n": 52,
    "title": "System Administration & Servers",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": true
   },
   {
    "n": 53,
    "title": "Linux Internals I — Processes & Memory",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": false
   },
   {
    "n": 54,
    "title": "Linux Internals II — I/O, FS & Scheduling",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": false
   },
   {
    "n": 55,
    "title": "Systems Networking",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": true
   },
   {
    "n": 56,
    "title": "Containers, Deep",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": true
   },
   {
    "n": 57,
    "title": "Kubernetes, Deep",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": true
   },
   {
    "n": 58,
    "title": "IaC & GitOps",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": true
   },
   {
    "n": 59,
    "title": "Observability & SRE",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": false
   },
   {
    "n": 60,
    "title": "Performance & Security",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": false
   },
   {
    "n": 61,
    "title": "Grand Capstone — Productionize",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": true
   },
   {
    "n": 62,
    "title": "Launch & Portfolio",
-   "phase": "Linux & Systems"
+   "phase": "Linux & Systems",
+   "core": true
   }
  ]
 }

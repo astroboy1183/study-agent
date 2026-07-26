@@ -486,10 +486,10 @@ WEEKS = [
     "concept": "Kinesis for streaming ingest and Lambda for event-driven serverless processing — when serverless beats a cluster.",
     "watch": "Search 'AWS Kinesis Lambda data pipeline'.",
     "code": "Build a Kinesis -> Lambda -> S3 mini streaming ingest."},
-   {"t": "Redshift + IAM & cost",
-    "concept": "Redshift architecture (distribution/sort keys, Spectrum), IAM for data access, and cloud cost control.",
-    "watch": "Search 'Redshift architecture distribution sort keys'.",
-    "code": "Load data into Redshift Serverless, tune a query with dist/sort keys, and estimate cost."},
+   {"t": "Cloud platform fundamentals: IAM, VPC networking, storage & cost",
+    "concept": "The transferable cloud layer under every data tool: identity & least-privilege (IAM roles/policies), VPC networking & security groups, storage classes, and cloud cost control — plus Redshift (dist/sort keys, Spectrum) as the warehouse example.",
+    "watch": "Search 'AWS IAM explained', 'VPC basics', 'Redshift architecture distribution sort keys'.",
+    "code": "Set up a least-privilege IAM role, load data into Redshift Serverless behind a VPC, tune a query with dist/sort keys, and estimate the monthly cost."},
    {"t": "CDC & log-based ingestion",
     "concept": "Change Data Capture with Debezium reading the DB WAL/binlog into Kafka — low-latency, low-load replication of changes.",
     "watch": "Search 'Debezium CDC tutorial'; Confluent CDC talks.",
@@ -856,10 +856,10 @@ WEEKS = [
     "mastery": "How does matrix factorization fill a sparse ratings matrix, and why can offline metrics mislead you about a live recommender?"}},
 
  {"title": "MLOps I — Productionizing", "days": [
-   {"t": "ML system design",
-    "concept": "The full ML lifecycle (data -> features -> train -> serve -> monitor), and why more than 90% of the work isn't the model.",
-    "watch": "Chip Huyen — Designing ML Systems (overview); Made With ML.",
-    "code": "Draw the end-to-end architecture for an ML system you'll build, labeling every component."},
+   {"t": "Containers & Docker for ML — a just-in-time primer",
+    "concept": "Just enough containers to productionize ML now: images, layers, Dockerfiles, volumes, and reproducible environments — a bridge to the deep Containers/Kubernetes track later. (Full ML system design is its own week soon.)",
+    "watch": "Docker in 100 Seconds; Docker for Data Science/ML tutorials.",
+    "code": "Containerize a training + inference script with a slim multi-stage Dockerfile; build, run, and push the image to a registry."},
    {"t": "Experiment tracking (MLflow, W&B)",
     "concept": "Tracking params/metrics/artifacts for reproducibility and comparison instead of losing results in notebooks.",
     "watch": "MLflow quickstart; Weights & Biases tutorials.",
@@ -969,7 +969,7 @@ WEEKS = [
     "C": "Ship it: repo, model card, demo — your flagship Data Science / ML portfolio project."},
   "cons": {"title": "Phase 2 review",
     "text": "You've gone from math to a shipped, monitored ML product. Step back: which parts felt weakest, and how will the AI phase build on this foundation?",
-    "mastery": "Give the 3-minute tour of your ML product: the problem, the data/features, why this model, and how you'd know if it broke in production."}},
+    "mastery": "Give the 3-minute tour of your ML product: the problem, the data/features, why this model, and how you'd know if it broke in production. Spaced recall (no notes): explain three Data-Engineering ideas you'd started to forget — an LSM-tree, a Kafka consumer group, and a star schema."}},
 
  # ============================ PHASE 3 — DEEP LEARNING & AI ==================
  {"title": "Neural Networks — Foundations", "days": [
@@ -1405,7 +1405,7 @@ WEEKS = [
     "C": "Ship it: repo, case study, demo — your flagship AI portfolio project."},
   "cons": {"title": "Phase 3 review",
     "text": "You've gone from a neuron to a shipped, evaluated AI system. Step back: what's genuinely yours now, and how will the Linux/systems phase let you productionize all of it?",
-    "mastery": "Give the 3-minute tour of your AI system: the architecture, why RAG/agent/fine-tune, how you evaluate it, and how you keep it safe and affordable."}},
+    "mastery": "Give the 3-minute tour of your AI system: the architecture, why RAG/agent/fine-tune, how you evaluate it, and how you keep it safe and affordable. Spaced recall (cold): explain exactly-once streaming (DE), gradient boosting vs a neural net (ML), and where each fits in your AI system."}},
 
  # ============================ PHASE 4 — LINUX & SYSTEMS (LAST) ==============
  {"title": "Linux Basics I — The Command Line", "days": [
@@ -1893,11 +1893,15 @@ def phase_of(w):
     return "Linux & Systems"
 
 
+# "Deep dive" weeks — valuable depth, but deferrable on a time-boxed CORE path.
+# The other 54 weeks form a focused ~12-month core. (Adjust this set freely.)
+DEEP_WEEKS = {16, 25, 28, 46, 53, 54, 59, 60}
+
 units = []
 weeks_meta = []
 uid = 0
 for wi, wk in enumerate(WEEKS, start=1):
-    weeks_meta.append({"n": wi, "title": wk["title"], "phase": phase_of(wi)})
+    weeks_meta.append({"n": wi, "title": wk["title"], "phase": phase_of(wi), "core": wi not in DEEP_WEEKS})
     for di, d in enumerate(wk["days"]):
         uid += 1
         text = f"{d['concept']}\n\U0001F3A5 Watch: {d['watch']}\n\U0001F4BB Code: {d['code']}"

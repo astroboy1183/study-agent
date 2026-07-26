@@ -299,6 +299,8 @@ footer .r{margin-left:auto}
 .rm-wn{font-family:var(--mono);font-size:.74rem;font-weight:700;color:var(--dim)}
 .rm-theme{flex:1;font-weight:600;font-size:.92rem;letter-spacing:-.01em}
 .rm-count{font-family:var(--mono);font-size:.72rem;color:var(--green)}
+.rm-deep{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);
+  border:1px solid var(--line);border-radius:999px;padding:.1rem .45rem;white-space:nowrap}
 .rm-days{padding:.3rem .5rem .55rem}
 .rm-day{display:flex;align-items:center;gap:.6rem;padding:.4rem .55rem;border-radius:8px;cursor:pointer;transition:background .12s}
 .rm-day:hover{background:rgba(255,255,255,.05)}
@@ -757,11 +759,12 @@ function goToPhase(name){
 var PHASE_COLOR={"Data Engineering":"var(--blue)","Data Science & ML":"var(--green)","Deep Learning & AI":"var(--pink)","Linux & Systems":"var(--violet)"};
 function renderRoadmap(s){
   var rm=$("roadmap"); if(!rm) return; rm.replaceChildren();
-  filterChips($("rm-filter"), trackFilterOpts(), rmFilter, function(k){ rmFilter=k; renderRoadmap(s); });
+  filterChips($("rm-filter"), trackFilterOpts([{key:"core",label:"⚡ Core path"}]), rmFilter, function(k){ rmFilter=k; renderRoadmap(s); });
   var byWeek={}; (s.board||[]).forEach(function(wk){ byWeek[wk.week]=wk.cells; });
   var cur=null;
   (s.weeksMeta||[]).forEach(function(w){
-    if(rmFilter!=="all" && w.phase!==rmFilter) return;
+    if(rmFilter==="core"){ if(w.core===false) return; }
+    else if(rmFilter!=="all" && w.phase!==rmFilter) return;
     if(w.phase!==cur){ cur=w.phase;
       var ph=el("div","rm-phase"); ph.id=phaseSlug(w.phase); ph.style.setProperty("--pc", PHASE_COLOR[w.phase]||"var(--blue)");
       ph.appendChild(el("span","rm-pname", trackLabel(w.phase))); rm.appendChild(ph); }
@@ -771,6 +774,7 @@ function renderRoadmap(s){
     var sum=document.createElement("summary");
     sum.appendChild(el("span","rm-wn","W"+pad(w.n)));
     sum.appendChild(el("span","rm-theme", w.title));
+    if(w.core===false) sum.appendChild(el("span","rm-deep","deep dive"));
     sum.appendChild(el("span","rm-count", doneN?doneN+"/7":""));
     det.appendChild(sum);
     var days=el("div","rm-days");
