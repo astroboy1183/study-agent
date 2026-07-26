@@ -287,7 +287,7 @@ footer .r{margin-left:auto}
 @media(prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 
 /* roadmap browser */
-.rm-phase{margin:1.4rem 0 .5rem;display:flex;align-items:center;gap:.7rem}
+.rm-phase{margin:1.4rem 0 .5rem;display:flex;align-items:center;gap:.7rem;scroll-margin-top:84px}
 .rm-phase:first-child{margin-top:.2rem}
 .rm-pname{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pc)}
 .rm-phase::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--pc) 45%,transparent),transparent)}
