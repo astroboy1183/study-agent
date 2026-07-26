@@ -320,6 +320,8 @@ footer .r{margin-left:auto}
 .rm-day.done .rm-dt{color:var(--txt)}
 .rm-meta{font-family:var(--mono);font-size:.72rem;color:var(--faint);margin-bottom:.7rem}
 .rm-mastery{margin-top:1rem;padding:.75rem .9rem;border-radius:10px;border:1px solid var(--line2);background:rgba(255,255,255,.03);font-size:.9rem;line-height:1.6}
+.ytlink{color:var(--pink); text-decoration:none; font-weight:600; border-bottom:1px dashed color-mix(in srgb,var(--pink) 45%,transparent)}
+.ytlink:hover{color:#ff7ac0; border-bottom-color:var(--pink); text-shadow:0 0 10px color-mix(in srgb,var(--pink) 50%,transparent)}
 
 /* consistency + status */
 .hstat{font-size:.68rem;font-weight:700;letter-spacing:0;padding:.16rem .6rem;border-radius:999px;margin-left:.6rem;text-transform:none;white-space:nowrap;display:inline-block;vertical-align:middle}
@@ -816,16 +818,23 @@ function stepsHtml(text){
     return "<div class='step'><span class='step-n'>"+(i+1)+"</span><span class='step-t'>"+esc(p)+"</span></div>";
   }).join("")+"</div>";
 }
+function ytHref(q){
+  var c=q.split(/[;|]/)[0].replace(/^\\s*search\\s+/i,"").replace(/["']/g,"").trim().slice(0,160);
+  return "https://www.youtube.com/results?search_query="+encodeURIComponent(c).replace(/\\(/g,"%28").replace(/\\)/g,"%29");
+}
 function unitHtml(d){
   var out="<div class='rm-meta'>Day "+d.id+" · Week "+d.week+" · "+d.type+"</div>";
   if(/\\[Block [A-Z]\\]/.test(d.text||"")){
     out+=stepsHtml(d.text);
   } else {
-    var t=esc(d.text)
-      .replace(/🎥 Watch:/g,"<b>🎥 Watch:</b>")
-      .replace(/💻 Code:/g,"<b>💻 Code:</b>")
-      .replace(/\\n/g,"<br>");
-    out+="<p style='line-height:1.75'>"+t+"</p>";
+    var html=(d.text||"").split("\\n").map(function(line){
+      var mw=line.match(/^🎥 Watch:\\s*(.+)$/);
+      if(mw) return "<b>🎥 Watch:</b> <a class='ytlink' href='"+ytHref(mw[1])+"' target='_blank' rel='noopener'>"+esc(mw[1])+" ▶</a>";
+      var mc=line.match(/^💻 Code:\\s*(.+)$/);
+      if(mc) return "<b>💻 Code:</b> "+esc(mc[1]);
+      return esc(line);
+    }).join("<br>");
+    out+="<p style='line-height:1.75'>"+html+"</p>";
   }
   if(d.mastery) out+="<div class='rm-mastery'>🎯 <b>Mastery (answer aloud):</b> "+esc(d.mastery)+"</div>";
   return out;

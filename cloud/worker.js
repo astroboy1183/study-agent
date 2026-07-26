@@ -187,6 +187,13 @@ function caughtUpMessage(state) {
   return `\u{1F389} *Plan complete.* All ${TOTAL} days done. Take the victory lap.`;
 }
 
+function ytSearchUrl(q) {
+  const clean = String(q || "").split(/[;|]/)[0].replace(/^\s*search\s+/i, "").replace(/["']/g, "").trim().slice(0, 160);
+  return (
+    "https://www.youtube.com/results?search_query=" +
+    encodeURIComponent(clean).replace(/\(/g, "%28").replace(/\)/g, "%29")
+  );
+}
 function fmtUnit(u, dow) {
   let carry = "";
   if (dow != null && u.dow !== dow && u.type === "theory")
@@ -195,6 +202,8 @@ function fmtUnit(u, dow) {
     `${ICON[u.type]} *Day ${u.id}/${TOTAL} · Week ${u.week} · ` +
     `${DOW[u.dow]}-type · ~${EFFORT[u.type]}*${carry}\n` +
     `*${u.title}*\n\n${u.text}`;
+  const mw = (u.text || "").match(/🎥 Watch: (.+)/);
+  if (mw) head += `\n\n🔎 [Find today's video on YouTube ▶](${ytSearchUrl(mw[1])})`;
   if (u.type === "consolidate" && u.mastery)
     head += `\n\n\u{1F3AF} *Mastery check (answer aloud):* ${u.mastery}`;
   return head;
