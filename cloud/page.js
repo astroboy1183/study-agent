@@ -189,17 +189,19 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .skills{display:grid; grid-template-columns:1fr 1fr; gap:1.3rem 2rem}
 @media(max-width:640px){.skills{grid-template-columns:1fr}}
 .skgroup{}
-.skhead{font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.09em;
-  color:var(--tc); margin-bottom:.65rem; display:flex; align-items:center; gap:.45rem}
-.skhead::before{content:""; width:8px; height:8px; border-radius:2px; background:var(--tc); box-shadow:0 0 10px var(--tc)}
-.skchips{display:flex; flex-wrap:wrap; gap:.45rem}
-.skchip{font-size:.8rem; font-weight:600; padding:.32rem .68rem; border-radius:8px; color:var(--dim);
-  border:1px solid color-mix(in srgb,var(--tc) 26%, transparent);
-  background:color-mix(in srgb,var(--tc) 6%, transparent); transition:.16s}
-.skchip:hover{color:var(--txt); border-color:var(--tc)}
-.skchip.built{color:var(--txt); border-color:var(--tc);
-  background:color-mix(in srgb,var(--tc) 20%, transparent);
-  box-shadow:0 0 16px -5px var(--tc)}
+.skhead{font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em;
+  color:color-mix(in srgb,var(--tc) 78%,#fff); margin-bottom:.8rem; display:flex; align-items:center; gap:.5rem}
+.skhead::before{content:""; width:9px; height:9px; border-radius:3px; background:var(--tc); box-shadow:0 0 12px var(--tc)}
+.skchips{display:flex; flex-wrap:wrap; gap:.5rem}
+/* every chip carries its track colour (outlined pill); built ones fill in + glow */
+.skchip{font-size:.8rem; font-weight:650; padding:.38rem .8rem; border-radius:999px; cursor:default;
+  color:color-mix(in srgb,var(--tc) 72%,#fff);
+  border:1px solid color-mix(in srgb,var(--tc) 42%,transparent);
+  background:color-mix(in srgb,var(--tc) 8%,transparent); transition:.16s}
+.skchip:hover{transform:translateY(-1px); border-color:var(--tc); box-shadow:0 0 18px -6px var(--tc)}
+.skchip.built{color:#08060f; font-weight:750; border-color:transparent;
+  background:linear-gradient(135deg, var(--tc), color-mix(in srgb,var(--tc) 55%,#fff));
+  box-shadow:0 0 22px -5px var(--tc)}
 .cloud-legend{display:flex; gap:1.2rem; flex-wrap:wrap; font-size:.74rem; color:var(--faint); margin-top:1.3rem; padding-top:1rem; border-top:1px solid var(--line); font-family:var(--mono)}
 .cloud-legend b{color:var(--txt); font-weight:700}
 
