@@ -43,19 +43,19 @@ production RAG app to a container runtime.
 <!-- PROGRESS:START -->
 `░░░░░░░░░░░░░░░░░░░░░░░░`
 
-**0/434** days done · **0.0%**
+**1/434** days done · **0.2%**
 
 <sub>▓ done · ▒ in progress (½ credit) · ░ to go</sub>
 
 - **Current:** Week 1/62
-- **Streak:** 0 days
+- **Streak:** 1 day
 - **Pending builds:** 62
-- **Last completed:** —
-- **Updated:** seeded 2026-07-25 · auto-updates after each completed day
+- **Last completed:** Day 1 — The data model & idioms for pipelines (2026-07-26)
+- **Updated:** 2026-07-26 21:29 IST
 
 <details><summary>62-week board (✅ done · 🟨 partial · ⬜ pending · Mon→Sun)</summary>
 
-`W01` ⬜⬜⬜⬜⬜⬜⬜
+`W01` ✅⬜⬜⬜⬜⬜⬜
 `W02` ⬜⬜⬜⬜⬜⬜⬜
 `W03` ⬜⬜⬜⬜⬜⬜⬜
 `W04` ⬜⬜⬜⬜⬜⬜⬜
