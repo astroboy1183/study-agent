@@ -15,11 +15,11 @@ export const PAGE = `<!DOCTYPE html>
 <meta property="og:type" content="website">
 <meta property="og:title" content="Jayanth Appalla — Data &amp; AI Engineer, learning in public">
 <meta property="og:description" content="A 62-week mastery roadmap · 74 projects · Data Engineering, ML, AI &amp; Linux — built and shipped in public.">
-<meta property="og:image" content="https://study-agent.jayanthapalla.workers.dev/og.svg">
+<meta property="og:image" content="https://study-agent.jayanthapalla.workers.dev/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Jayanth Appalla — Data &amp; AI Engineer, learning in public">
 <meta name="twitter:description" content="A 62-week mastery roadmap · 74 projects · DE, ML, AI &amp; Linux — in public.">
-<meta name="twitter:image" content="https://study-agent.jayanthapalla.workers.dev/og.svg">
+<meta name="twitter:image" content="https://study-agent.jayanthapalla.workers.dev/og.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
 <style>
 :root{

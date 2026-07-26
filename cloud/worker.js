@@ -1334,7 +1334,17 @@ export default {
       });
     }
 
-    // Social share card
+    // Social share card — raster PNG (from KV) for LinkedIn/X previews.
+    if (path === "/og.png" && request.method === "GET") {
+      const buf = await env.STUDY.get("og.png", { type: "arrayBuffer" });
+      if (buf) {
+        return new Response(buf, {
+          headers: { "content-type": "image/png", "cache-control": "public, max-age=86400" },
+        });
+      }
+      // fall through to the SVG if the PNG isn't in KV yet
+    }
+    // Social share card (SVG fallback)
     if (path === "/og.svg" && request.method === "GET") {
       return new Response(ogSvg(), {
         headers: { "content-type": "image/svg+xml; charset=utf-8", "cache-control": "public, max-age=3600" },
