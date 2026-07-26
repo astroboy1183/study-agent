@@ -292,6 +292,8 @@ async function deliverSummary(env, u) {
     await send(env, "Couldn't reach the model for the brief just now — try /summary again in a bit.");
     return;
   }
+  // Self-heal: if a previous push got cut off, the note is cached but not on GitHub — re-push it (no model cost).
+  if (!(await env.STUDY.get(`pushed:${u.id}`))) await commitNote(env, u, note);
   await send(
     env,
     `\u{1F4D8} *Study brief — Day ${u.id}: ${u.title}*` + (cached ? " _(cached)_" : "")
@@ -454,11 +456,13 @@ async function ghPut(env, repo, path, content, message) {
   let sha;
   const head = await fetch(url, { headers });
   if (head.ok) sha = (await head.json()).sha;
-  await fetch(url, {
+  const res = await fetch(url, {
     method: "PUT",
     headers,
     body: JSON.stringify({ message, content: b64utf8(content), ...(sha ? { sha } : {}) }),
   });
+  if (!res.ok) console.error(`[ghPut] ${repo}/${path} → ${res.status} ${(await res.text()).slice(0, 200)}`);
+  return res.ok;
 }
 function trackReadme(env, week, state) {
   const b = TRACK_BOUNDS.find((x) => week >= x.lo && week <= x.hi);
@@ -498,7 +502,16 @@ async function commitNote(env, u, note) {
     const wk = String(u.week).padStart(2, "0");
     const day = String(u.id).padStart(3, "0");
     // notes.md lives INSIDE the day's folder, alongside the code Jayanth commits
-    await ghPut(env, repo, `week-${wk}/day-${day}-${noteSlug(u)}/notes.md`, note, `notes: Day ${u.id} — ${u.title}`);
+    const ok = await ghPut(env, repo, `week-${wk}/day-${day}-${noteSlug(u)}/notes.md`, note, `notes: Day ${u.id} — ${u.title}`);
+    if (!ok) {
+      await send(
+        env,
+        `⚠️ Day ${u.id}'s note is written but I couldn't push it to GitHub just now. ` +
+          "It's saved — just run /done again and it'll re-push (no re-billing).",
+      );
+      return;
+    }
+    await env.STUDY.put(`pushed:${u.id}`, "1"); // notes.md is up on GitHub
     const state = await loadState(env); // regenerate the index from current progress
     await ghPut(env, repo, "README.md", trackReadme(env, u.week, state), `index: Day ${u.id} studied`);
   } catch (e) {
