@@ -68,9 +68,10 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .hero{display:grid; grid-template-columns:1.35fr 1fr; gap:2.5rem; align-items:center;
   padding:3.5rem 0 2.5rem}
 @media(max-width:820px){.hero{grid-template-columns:1fr; gap:2rem; padding:2.5rem 0 1.5rem}}
-.eyebrow{font-size:.72rem; font-weight:800; letter-spacing:.2em; text-transform:uppercase;
-  color:var(--violet); margin-bottom:1rem}
-.hero h1{font-size:clamp(2.35rem,7vw,3.4rem); font-weight:850; letter-spacing:-.03em; line-height:1.04}
+.eyebrow{font-size:.72rem; font-weight:800; letter-spacing:.22em; text-transform:uppercase; margin-bottom:1rem;
+  background:linear-gradient(90deg,#00e5ff,#ff2d95); -webkit-background-clip:text; background-clip:text; color:transparent}
+.hero h1{font-size:clamp(2.35rem,7vw,3.4rem); font-weight:850; letter-spacing:-.03em; line-height:1.04;
+  text-shadow:0 0 46px rgba(176,38,255,.3)}
 .hero .role{font-size:clamp(1.08rem,3.4vw,1.25rem); font-weight:750; margin-top:.35rem;
   background:linear-gradient(90deg,#00e5ff,#b026ff 55%,#ff2d95);
   -webkit-background-clip:text; background-clip:text; color:transparent}
@@ -80,24 +81,31 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .links a{display:inline-flex; align-items:center; gap:.45rem; font-size:.86rem; font-weight:600;
   padding:.55rem 1rem; border-radius:11px; border:1px solid var(--line2);
   background:rgba(255,255,255,.03); transition:.16s}
-.links a:hover{transform:translateY(-2px); border-color:var(--violet);
-  box-shadow:0 8px 22px rgba(139,92,246,.22)}
-.links a.primary{background:linear-gradient(90deg,#6366f1,#a855f7); border-color:transparent; color:#fff}
+.links a:hover{transform:translateY(-2px); border-color:var(--blue);
+  box-shadow:0 8px 26px -6px rgba(0,229,255,.4)}
+.links a.primary{background:linear-gradient(90deg,#b026ff,#ff2d95); border-color:transparent; color:#fff;
+  box-shadow:0 8px 24px -6px rgba(255,45,149,.5)}
+.links a.primary:hover{border-color:transparent; box-shadow:0 12px 32px -6px rgba(255,45,149,.62)}
 
 /* progress ring */
-.ring-card{display:flex; flex-direction:column; align-items:center; gap:1rem}
-.ring{position:relative; width:230px; height:230px}
-.ring svg{transform:rotate(-90deg)}
+.ring-card{display:flex; flex-direction:column; align-items:center; gap:1.15rem}
+.ring{position:relative; width:230px; height:230px; z-index:0}
+.ring::after{content:""; position:absolute; inset:-16%; z-index:-1; border-radius:50%;
+  background:radial-gradient(circle, rgba(176,38,255,.24), rgba(0,229,255,.09) 52%, transparent 72%)}
+.ring svg{transform:rotate(-90deg); filter:drop-shadow(0 0 16px rgba(0,229,255,.32))}
 .ring .mid{position:absolute; inset:0; display:flex; flex-direction:column;
   align-items:center; justify-content:center; text-align:center}
-.ring .pct{font-size:3.1rem; font-weight:850; letter-spacing:-.03em; line-height:1;
-  background:linear-gradient(92deg,#7dd3fc,#c4b5fd 55%,#f9a8d4);
+.ring .pct{font-size:3.2rem; font-weight:850; letter-spacing:-.03em; line-height:1;
+  background:linear-gradient(92deg,#00e5ff,#b026ff 55%,#ff2d95);
   -webkit-background-clip:text; background-clip:text; color:transparent}
-.ring .of{color:var(--faint); font-size:.82rem; margin-top:.35rem}
-.ring-stats{display:flex; gap:1.5rem}
+.ring .of{color:var(--dim); font-size:.8rem; margin-top:.4rem; font-family:var(--mono)}
+.ring-stats{display:flex; gap:1.8rem}
 .ring-stats .s{text-align:center}
-.ring-stats .s b{display:block; font-size:1.35rem; font-weight:750}
-.ring-stats .s span{color:var(--faint); font-size:.74rem}
+.ring-stats .s b{display:block; font-size:1.4rem; font-weight:800}
+.ring-stats .s:nth-child(1) b{color:var(--blue)}
+.ring-stats .s:nth-child(2) b{color:var(--pink)}
+.ring-stats .s:nth-child(3) b{color:var(--violet)}
+.ring-stats .s span{color:var(--faint); font-size:.72rem; text-transform:uppercase; letter-spacing:.06em}
 
 /* ── sections ── */
 .sec{display:flex; align-items:baseline; gap:1rem; margin:2.75rem 0 1.25rem}
@@ -1025,16 +1033,20 @@ function drawRing(pct, done, total){
   var svg=document.createElementNS(NS,"svg"); svg.setAttribute("viewBox","0 0 200 200");
   svg.setAttribute("width","230"); svg.setAttribute("height","230");
   var defs=document.createElementNS(NS,"defs");
-  defs.innerHTML="<linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#60a5fa'/><stop offset='.55' stop-color='#a855f7'/><stop offset='1' stop-color='#f472b6'/></linearGradient>";
+  defs.innerHTML="<linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#00e5ff'/><stop offset='.55' stop-color='#b026ff'/><stop offset='1' stop-color='#ff2d95'/></linearGradient><filter id='rglow' x='-40%' y='-40%' width='180%' height='180%'><feGaussianBlur stdDeviation='2.6'/></filter>";
   svg.appendChild(defs);
   function circle(stroke,w,dash){ var c=document.createElementNS(NS,"circle");
     c.setAttribute("cx","100"); c.setAttribute("cy","100"); c.setAttribute("r",String(r));
     c.setAttribute("fill","none"); c.setAttribute("stroke",stroke); c.setAttribute("stroke-width",String(w));
     c.setAttribute("stroke-linecap","round"); if(dash!==undefined){ c.setAttribute("stroke-dasharray",String(C));
       c.setAttribute("stroke-dashoffset",String(dash)); } return c; }
-  svg.appendChild(circle("rgba(255,255,255,.07)",14));
-  var fg=circle("url(#g)",14, C);
+  svg.appendChild(circle("rgba(255,255,255,.06)",14));
+  var fg=circle("url(#g)",14, C); fg.setAttribute("filter","url(#rglow)");
   svg.appendChild(fg);
+  // glowing start-marker so the ring reads as "alive" even at 0%
+  var dot=document.createElementNS(NS,"circle"); dot.setAttribute("cx",String(100+r)); dot.setAttribute("cy","100");
+  dot.setAttribute("r","7"); dot.setAttribute("fill","#00e5ff"); dot.setAttribute("filter","url(#rglow)");
+  svg.appendChild(dot);
   var wrap=$("ring"); wrap.replaceChildren(); wrap.appendChild(svg);
   var mid=el("div","mid");
   var p=el("div","pct","0%"); mid.appendChild(p);
