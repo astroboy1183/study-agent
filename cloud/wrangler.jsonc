@@ -21,7 +21,8 @@
     "NOTES_REPO_DE": "astroboy1183/de",
     "NOTES_REPO_ML": "astroboy1183/ml",
     "NOTES_REPO_AI": "astroboy1183/ai",
-    "NOTES_REPO_LINUX": "astroboy1183/linux"
+    "NOTES_REPO_LINUX": "astroboy1183/linux",
+    "NOTES_REPO_CV": "astroboy1183/cv"
   },
   "observability": { "enabled": true }
   // Secrets (wrangler secret put): STUDY_BOT_TOKEN, STUDY_CHAT_ID,

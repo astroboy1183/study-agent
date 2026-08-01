@@ -30,16 +30,20 @@ import { PAGE } from "./page.js";
 
 const PLAN = PLAN_DATA.units || PLAN_DATA;
 const WEEKS_META = PLAN_DATA.weeks || []; // [{n, title, phase}] for the roadmap view
-const BY_ID = Object.fromEntries(PLAN.map((u) => [String(u.id), u]));
+// Computer Vision — a priority track (16 sessions) served BEFORE the main plan.
+const PRIORITY = PLAN_DATA.priority || [];
+const BY_ID = Object.fromEntries(PLAN.concat(PRIORITY).map((u) => [String(u.id), u]));
 const TOTAL = PLAN.length;
 const WEEKS = PLAN.reduce((m, u) => Math.max(m, u.week), 0);
+const priorityPending = (state) => PRIORITY.filter((u) => !(String(u.id) in state.done));
 
 const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const ICON = { theory: "\u{1F4D6}", build: "\u{1F528}", consolidate: "\u{1F9E0}" };
+const ICON = { theory: "\u{1F4D6}", build: "\u{1F528}", consolidate: "\u{1F9E0}", cv: "\u{1F3AF}" };
 const EFFORT = {
   theory: "45-60 min (read + video + code)",
   build: "5-6 hrs (blocks A/B/C)",
   consolidate: "3-4 hrs (review + lab)",
+  cv: "60-120 min (one session)",
 };
 const TG_CHUNK = 3800; // < Telegram's 4096 limit
 const MORNING_CRON = "0 2 * * *"; // 07:30 IST = 02:00 UTC (REMIND_TIME)
@@ -164,6 +168,9 @@ function pending(state) {
 //   Saturday: overdue theory first (older in the queue), else this week's build
 //   Sunday  : the oldest pending unit, whatever it is, then consolidation
 function nextUnitFor(state, dow) {
+  // Computer Vision priority track comes first, in order, regardless of weekday.
+  const cv = priorityPending(state);
+  if (cv.length) return cv[0];
   const p = pending(state);
   if (!p.length) return null;
   if (dow <= 4) {
@@ -195,6 +202,14 @@ function ytSearchUrl(q) {
   );
 }
 function fmtUnit(u, dow) {
+  if (u.type === "cv") {
+    let head =
+      `${ICON.cv} *Computer Vision (priority) · session ${u.session}/${PRIORITY.length} · ~${EFFORT.cv}*\n` +
+      `*${u.title}*\n\n${u.text}`;
+    const m = (u.text || "").match(/🎥 Watch: (.+)/);
+    if (m) head += `\n\n🔎 [Find today's video on YouTube ▶](${ytSearchUrl(m[1])})`;
+    return head;
+  }
   let carry = "";
   if (dow != null && u.dow !== dow && u.type === "theory")
     carry = `  _(catching up ${DOW[u.dow]}'s topic)_`;
@@ -244,14 +259,11 @@ async function generateSummary(env, u) {
   if (cached) return { note: cached, cached: true };
   // Read the code Jayanth committed to this day's folder, if any, so the brief
   // reviews his real work — not just the plan. (Commit code before /done.)
-  const repo = trackRepo(env, u.week);
-  const wk = String(u.week).padStart(2, "0");
-  const day = String(u.id).padStart(3, "0");
-  const folder = `week-${wk}/day-${day}-${noteSlug(u)}`;
+  const { repo, folder } = noteTarget(env, u);
   const code = env.GH_PAT && repo ? await fetchDayCode(env, repo, folder) : null;
   let system = summaryPrompt(u);
   let user =
-    `Topic (Day ${u.id}, Week ${u.week}, ${u.type}): ${u.title}\n\n` +
+    `Topic (${u.type === "cv" ? u.title : `Day ${u.id}, Week ${u.week}`}, ${u.type}): ${u.title}\n\n` +
     `Today's task/material:\n${u.text}`;
   if (code) {
     system +=
@@ -264,9 +276,14 @@ async function generateSummary(env, u) {
   const body = await askModel(env, system, user, Number(env.SUMMARY_MAX_TOKENS || 4000));
   if (!body) return { note: "", cached: false };
   const stamp = code ? " · 🔗 with a review of my code" : "";
+  const heading = u.type === "cv" ? u.title : `Day ${u.id} — ${u.title}`;
+  const meta =
+    u.type === "cv"
+      ? `> Computer Vision · session ${u.session}/${PRIORITY.length} · studied ${istToday().ymd}${stamp}`
+      : `> Week ${u.week} · ${phaseName(u.week)} · ${u.type} · studied ${istToday().ymd}${stamp}`;
   const note =
-    `# Day ${u.id} — ${u.title}\n\n` +
-    `> Week ${u.week} · ${phaseName(u.week)} · ${u.type} · studied ${istToday().ymd}${stamp}\n\n` +
+    `# ${heading}\n\n` +
+    `${meta}\n\n` +
     `## Today's work\n\n${u.text}\n\n` +
     (u.mastery ? `## Mastery check\n\n${u.mastery}\n\n` : "") +
     `## Deep dive\n\n${body}\n`;
@@ -444,6 +461,44 @@ function trackRepo(env, week) {
 function noteSlug(u) {
   return u.title.replace(/[^\w\- ]/g, "").trim().replace(/\s+/g, "-").toLowerCase().slice(0, 50);
 }
+function cvFolder(u) {
+  const slug = noteSlug({ title: u.title.replace(/^Session \d+ · /, "") });
+  return `session-${String(u.session).padStart(2, "0")}-${slug}`;
+}
+// Which repo + folder a unit's code and notes.md live in.
+function noteTarget(env, u) {
+  if (u.type === "cv") {
+    return { repo: env.NOTES_REPO_CV, folder: cvFolder(u) };
+  }
+  const wk = String(u.week).padStart(2, "0");
+  const day = String(u.id).padStart(3, "0");
+  return { repo: trackRepo(env, u.week), folder: `week-${wk}/day-${day}-${noteSlug(u)}` };
+}
+// The Computer Vision repo's README — a full session roadmap + progress index.
+function cvReadme(env, state) {
+  const doneN = PRIORITY.filter((u) => String(u.id) in state.done).length;
+  const secs = PRIORITY.map((u) => {
+    const folder = cvFolder(u);
+    const isDone = String(u.id) in state.done;
+    const watch = ((u.text || "").match(/🎥 Watch: (.+)/) || [])[1] || "";
+    const code = ((u.text || "").match(/💻 Code: (.+)/) || [])[1] || "";
+    return (
+      `### ${isDone ? "✅" : "⬜"} ${u.title}\n` +
+      `📂 \`${folder}/\`${isDone ? ` · [notes](${folder}/notes.md)` : ""}\n` +
+      (watch ? `- 🎥 ${watch}\n` : "") +
+      (code ? `- 💻 ${code}\n` : "")
+    );
+  });
+  return (
+    "# Computer Vision — Ground-Up\n\n" +
+    "My priority CV track — 16 sessions from what-an-image-is to Document AI + VLMs. " +
+    "I commit each session's code to `session-NN-slug/`, and my study agent auto-writes " +
+    "`notes.md` in the same folder when I check in. Built to run on a 4 GB GTX 1650.\n\n" +
+    `📊 **[Live dashboard](${DASHBOARD_URL})** · ⚙️ **[The study agent](https://github.com/${env.REPO || "astroboy1183/study-agent"})**\n\n` +
+    `**${doneN}/${PRIORITY.length} sessions done.**\n\n---\n\n` +
+    secs.join("\n")
+  );
+}
 async function ghPut(env, repo, path, content, message) {
   const url = `https://api.github.com/repos/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
   const headers = {
@@ -495,24 +550,24 @@ function trackReadme(env, week, state) {
   );
 }
 async function commitNote(env, u, note) {
-  const repo = trackRepo(env, u.week);
+  const { repo, folder } = noteTarget(env, u);
   if (!env.GH_PAT || !repo) return;
+  const label = u.type === "cv" ? u.title : `Day ${u.id} — ${u.title}`;
   try {
-    const wk = String(u.week).padStart(2, "0");
-    const day = String(u.id).padStart(3, "0");
     // notes.md lives INSIDE the day's folder, alongside the code Jayanth commits
-    const ok = await ghPut(env, repo, `week-${wk}/day-${day}-${noteSlug(u)}/notes.md`, note, `notes: Day ${u.id} — ${u.title}`);
+    const ok = await ghPut(env, repo, `${folder}/notes.md`, note, `notes: ${label}`);
     if (!ok) {
       await send(
         env,
-        `⚠️ Day ${u.id}'s note is written but I couldn't push it to GitHub just now. ` +
+        `⚠️ ${label}'s note is written but I couldn't push it to GitHub just now. ` +
           "It's saved — just run /done again and it'll re-push (no re-billing).",
       );
       return;
     }
     await env.STUDY.put(`pushed:${u.id}`, "1"); // notes.md is up on GitHub
     const state = await loadState(env); // regenerate the index from current progress
-    await ghPut(env, repo, "README.md", trackReadme(env, u.week, state), `index: Day ${u.id} studied`);
+    const readme = u.type === "cv" ? cvReadme(env, state) : trackReadme(env, u.week, state);
+    await ghPut(env, repo, "README.md", readme, `index: ${label}`);
   } catch (e) {
     console.error(`[notes] push failed (kept in KV): ${e}`);
   }
@@ -1255,6 +1310,19 @@ function stateForUi(state) {
     byType,
     tracks: tracksData(state),
     learned: learnedData(state),
+    priority: {
+      total: PRIORITY.length,
+      done: PRIORITY.filter((u) => String(u.id) in state.done).length,
+      active: priorityPending(state).length > 0,
+      repo: "cv",
+      sessions: PRIORITY.map((u) => ({
+        id: u.id,
+        session: u.session,
+        title: u.title,
+        text: u.text,
+        done: String(u.id) in state.done,
+      })),
+    },
     grounded: state.recaps || {},
     current: cur
       ? { id: cur.id, week: cur.week, dow: cur.dow, type: cur.type, title: cur.title, text: cur.text, effort: EFFORT[cur.type] }

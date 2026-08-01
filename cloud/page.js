@@ -178,6 +178,21 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
   margin-top:.75rem; font-family:var(--mono)}
 .mgraph-empty{font-size:.8rem; color:var(--faint); margin-top:.6rem}
 
+/* computer-vision priority track */
+.cv-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:.6rem; margin-top:1.1rem}
+@media(max-width:820px){.cv-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.cv-grid{grid-template-columns:1fr}}
+.cv-cell{display:flex; align-items:center; gap:.6rem; padding:.6rem .7rem; border-radius:10px; cursor:pointer;
+  border:1px solid var(--line); background:rgba(255,255,255,.02); transition:.15s}
+.cv-cell:hover{border-color:var(--pink); transform:translateY(-1px)}
+.cv-cell.done{border-color:color-mix(in srgb,var(--green) 40%,transparent); background:color-mix(in srgb,var(--green) 8%,transparent)}
+.cv-cell.now{border-color:var(--pink); box-shadow:0 0 18px -6px var(--pink)}
+.cv-n{font-family:var(--mono); font-size:.7rem; font-weight:800; color:var(--pink); flex:none; width:26px}
+.cv-cell.done .cv-n{color:var(--green)}
+.cv-t{font-size:.82rem; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.cv-cell.done .cv-t, .cv-cell.now .cv-t{color:var(--txt)}
+.cv-repo{color:var(--pink); font-weight:600}
+
 /* filter chips (roadmap + projects) */
 .filter-chips{display:flex; flex-wrap:wrap; gap:.5rem; margin:0 0 1.1rem}
 .fchip{font-size:.78rem; font-weight:650; padding:.34rem .85rem; border-radius:999px; cursor:pointer;
@@ -437,6 +452,8 @@ footer .r{margin-left:auto}
     </div>
   </section>
 
+  <div id="priority-wrap"></div>
+
   <div class="sec reveal"><h2>🛠 Skills &amp; tech stack</h2><span class="sub">every technology in the 62-week roadmap · each lights up in its track colour as I build with it</span></div>
   <div class="card reveal"><div id="learned" class="skills"></div></div>
 
@@ -540,6 +557,7 @@ function render(s){
   if(hp){ if(s.backlog){ hp.className="hstat behind"; hp.textContent="● "+s.backlog+" behind"; }
     else { hp.className="hstat ok"; hp.textContent="● On track"; } }
   renderOwnerBar(s);
+  renderPriority(s);
   renderTracks(s);
   renderGraph(s);
   renderLearned(s);
@@ -741,6 +759,30 @@ function renderGraph(s){
   c.appendChild(cap);
   if(!s.done){ c.appendChild(el("div","mgraph-empty","🚀 The dashed line is your target pace — your own line lifts off the moment you log Day 1.")); }
 }
+function renderPriority(s){
+  var c=$("priority-wrap"); if(!c) return; c.replaceChildren();
+  var p=s.priority; if(!p||!p.total) return;
+  if(!p.active && p.done===0) return; // no priority track pending or started
+  var sec=el("div","sec reveal"); sec.appendChild(el("h2",null,"🎯 Computer Vision — priority track"));
+  var sub=el("span","sub"); sub.appendChild(document.createTextNode("16 sessions · "+p.done+"/"+p.total+" done · served before the roadmap · "));
+  var a=document.createElement("a"); a.className="cv-repo"; a.href="https://github.com/astroboy1183/"+p.repo; a.target="_blank"; a.rel="noopener"; a.textContent="📂 cv repo ↗";
+  sub.appendChild(a); sec.appendChild(sub); c.appendChild(sec);
+  var card=el("div","card reveal");
+  var bar=el("div","tbar"); var fill=el("i"); fill.style.width=(p.total?p.done/p.total*100:0)+"%"; fill.style.background="linear-gradient(90deg,var(--pink),var(--blue))"; bar.appendChild(fill); card.appendChild(bar);
+  var curId=null; for(var i=0;i<p.sessions.length;i++){ if(!p.sessions[i].done){ curId=p.sessions[i].id; break; } }
+  var grid=el("div","cv-grid");
+  p.sessions.forEach(function(ss){
+    var isNow=p.active && ss.id===curId;
+    var cell=el("div","cv-cell"+(ss.done?" done":"")+(isNow?" now":""));
+    cell.appendChild(el("span","cv-n",(ss.done?"✅":"S"+ss.session)));
+    cell.appendChild(el("span","cv-t", ss.title.replace(/^Session \\d+ · /,"")));
+    cell.setAttribute("aria-label", ss.title+(ss.done?" — done":isNow?" — up next":""));
+    clickable(cell, function(){ openUnit(ss.id); });
+    grid.appendChild(cell);
+  });
+  card.appendChild(grid);
+  c.appendChild(card);
+}
 function renderTracks(s){
   var c=$("tracks"); if(!c) return; c.replaceChildren();
   (s.tracks||[]).forEach(function(t){
@@ -828,7 +870,8 @@ function ytHref(q){
 function daySlug(title){ return (title||"").replace(/[^\\w\\- ]/g,"").trim().replace(/\\s+/g,"-").toLowerCase().slice(0,50); }
 function weekRepo(w){ if(w<=18)return "de"; if(w<=33)return "ml"; if(w<=48)return "ai"; return "linux"; }
 function unitHtml(d){
-  var out="<div class='rm-meta'>Day "+d.id+" · Week "+d.week+" · "+d.type+"</div>";
+  var isCV=d.type==="cv"; var sess=isCV?parseInt((""+d.id).replace(/\\D/g,""),10):0;
+  var out="<div class='rm-meta'>"+(isCV?("🎯 Computer Vision · Session "+sess+"/16"):("Day "+d.id+" · Week "+d.week+" · "+d.type))+"</div>";
   if(/\\[Block [A-Z]\\]/.test(d.text||"")){
     out+=stepsHtml(d.text);
   } else {
@@ -837,13 +880,19 @@ function unitHtml(d){
       if(mw) return "<b>🎥 Watch:</b> <a class='ytlink' href='"+ytHref(mw[1])+"' target='_blank' rel='noopener'>"+esc(mw[1])+" ▶</a>";
       var mc=line.match(/^💻 Code:\\s*(.+)$/);
       if(mc) return "<b>💻 Code:</b> "+esc(mc[1]);
+      var ml=line.match(/^📚 Learn:\\s*(.+)$/);
+      if(ml) return "<b>📚 Learn:</b> "+esc(ml[1]);
+      var mk=line.match(/^✅ Checkpoint:\\s*(.+)$/);
+      if(mk) return "<b>✅ Checkpoint:</b> "+esc(mk[1]);
       return esc(line);
     }).join("<br>");
     out+="<p style='line-height:1.75'>"+html+"</p>";
   }
   if(d.type!=="consolidate"){
-    var wk=pad(d.week), dd=("00"+d.id).slice(-3), repo=weekRepo(d.week);
-    out+="<div class='codepath'>📂 Commit today's code to <code>week-"+wk+"/day-"+dd+"-"+daySlug(d.title)+"/</code> in <a href='https://github.com/astroboy1183/"+repo+"' target='_blank' rel='noopener'>"+repo+"</a> <b>before you check in</b> — the auto-note then <b>reads your code</b> and reviews it, and drops <code>notes.md</code> in the same folder.</div>";
+    var repo, folder;
+    if(isCV){ repo="cv"; folder="session-"+("0"+sess).slice(-2)+"-"+daySlug(d.title.replace(/^Session \\d+ · /,"")); }
+    else { repo=weekRepo(d.week); folder="week-"+pad(d.week)+"/day-"+("00"+d.id).slice(-3)+"-"+daySlug(d.title); }
+    out+="<div class='codepath'>📂 Commit today's code to <code>"+folder+"/</code> in <a href='https://github.com/astroboy1183/"+repo+"' target='_blank' rel='noopener'>"+repo+"</a> <b>before you check in</b> — the auto-note then <b>reads your code</b> and reviews it, and drops <code>notes.md</code> in the same folder.</div>";
   }
   if(d.mastery) out+="<div class='rm-mastery'>🎯 <b>Mastery (answer aloud):</b> "+esc(d.mastery)+"</div>";
   return out;
@@ -994,7 +1043,7 @@ function renderOwnerBar(s){
   var ob=$("owner-bar"); if(!ob) return; ob.replaceChildren();
   if(!EDIT_KEY || !s || !s.current) return;
   var bar=el("div","owner-bar");
-  bar.appendChild(el("span","ob-l","\u{1F4CC} Today · Day "+s.current.id+" — "+s.current.title));
+  bar.appendChild(el("span","ob-l", s.current.type==="cv" ? ("\u{1F3AF} Today · "+s.current.title) : ("\u{1F4CC} Today · Day "+s.current.id+" — "+s.current.title)));
   var btn=el("button","ob-btn","✓ I studied it");
   btn.addEventListener("click", function(){ markStudied(btn); });
   bar.appendChild(btn);
