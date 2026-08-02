@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build plan_v2.json (62 weeks x 7 days = 434 units) for the study agent.
+"""Build plan_v2.json (the full multi-track roadmap, 7 units/week) for the study agent.
 
 Each week: 5 weekday theory units (Mon-Fri) each = concept + a curated video +
 a coding rep; a Saturday deep-build project (blocks A/B/C); a Sunday
@@ -1681,7 +1681,7 @@ WEEKS = [
    {"t": "Ansible & configuration management",
     "concept": "Configuring servers idempotently with Ansible (playbooks, roles, inventory) — the config half of IaC.",
     "watch": "Search 'Ansible tutorial'; TechWorld with Nana.",
-    "code": "Write an Ansible playbook that provisions + hardens a server (reuse Week 52) idempotently."},
+    "code": "Write an Ansible playbook that provisions + hardens a server (reuse your server-provisioning + hardening work) idempotently."},
    {"t": "GitOps with ArgoCD / Flux",
     "concept": "GitOps: git as the single source of truth, with ArgoCD/Flux continuously reconciling the cluster to match.",
     "watch": "Search 'GitOps explained ArgoCD'; TechWorld with Nana.",
@@ -1724,7 +1724,7 @@ WEEKS = [
     "watch": "Google SRE book — incident management + postmortems.",
     "code": "Run a game-day: break your service, respond, and write a blameless postmortem."},
   ], "build": {"title": "Observability & alerting stack for the platform",
-    "A": "Instrument your platform (DE/ML/AI services) with metrics, logs and traces; deploy Prometheus + Grafana.",
+    "A": "Instrument your platform (CV/DE/ML/AI services) with metrics, logs and traces; deploy Prometheus + Grafana.",
     "B": "Define SLIs/SLOs + error budgets and symptom-based alerting for the key user journeys.",
     "C": "Run a game-day incident and write the postmortem — a portfolio SRE piece that shows operational maturity."},
   "cons": {"title": "Running systems reliably",
@@ -1761,10 +1761,10 @@ WEEKS = [
     "mastery": "Walk the USE method to find a bottleneck, and name three ways you'd harden a container running untrusted code."}},
 
  {"title": "Grand Capstone — Productionize", "days": [
-   {"t": "Integrate the DE, ML & AI layers",
-    "concept": "Bring the three capstones together into one intelligent platform: data flows into features, models serve predictions, an AI layer (RAG/agent) sits on top.",
-    "watch": "Review your three capstone architectures and sketch the unified one.",
-    "code": "Design + wire the integration: the DE platform feeds the ML models feed the AI layer, end to end."},
+   {"t": "Integrate the CV, DE, ML & AI layers",
+    "concept": "Bring the four track capstones together into one intelligent platform: data flows into features, models serve predictions, and a vision + AI layer (document-AI/CV + RAG/agent) sits on top.",
+    "watch": "Review your four capstone architectures and sketch the unified one.",
+    "code": "Design + wire the integration: the DE platform feeds the ML models, which feed the vision + AI layer, end to end."},
    {"t": "Deploy on Kubernetes with IaC",
     "concept": "Deploy the whole platform reproducibly: Terraform for infra, Helm/GitOps for the services.",
     "watch": "Reuse your K8s + IaC + GitOps work.",
@@ -1782,9 +1782,9 @@ WEEKS = [
     "watch": "Reuse your performance + security work.",
     "code": "Load-test the platform, inject failures (kill pods/deps) to verify resilience, and run a security pass."},
   ], "build": {"title": "Ship the intelligent platform to production",
-    "A": "Deploy the fully integrated DE + ML + AI platform on K8s via IaC + GitOps, with CI/CD.",
+    "A": "Deploy the fully integrated CV + DE + ML + AI platform on K8s via IaC + GitOps, with CI/CD.",
     "B": "Add full observability + SLOs, then load-test, chaos-test and security-harden it.",
-    "C": "This is your capstone: the whole 62-week journey, running in production. Record a demo + architecture walkthrough."},
+    "C": "This is your capstone: the whole journey, running in production. Record a demo + architecture walkthrough."},
   "cons": {"title": "Everything, together, in production",
     "text": "Integration, K8s + IaC deploy, CI/CD + GitOps, observability + SLOs and resilience/security are the difference between projects and a platform. Step back and see the whole thing.",
     "mastery": "Give the full architecture tour of your platform — data to features to models to AI to serving — and how it's deployed, observed and kept reliable."}},
@@ -1807,7 +1807,7 @@ WEEKS = [
     "watch": "Study strong engineering blog posts for structure.",
     "code": "Write one deep technical blog post on a flagship project ('I built a GPT/container/platform from scratch')."},
    {"t": "Interview & narrative prep",
-    "concept": "Turn 62 weeks into a story: the portfolio site, the resume update, and the interview narrative across DE/ML/AI/systems.",
+    "concept": "Turn the whole journey into a story: the portfolio site, the resume update, and the interview narrative across computer vision, DE, ML, AI and systems.",
     "watch": "Review your projects and prep the STAR stories.",
     "code": "Update your portfolio + resume and rehearse the 3-minute story for each flagship project."},
   ], "build": {"title": "Portfolio launch — case studies & demos",
@@ -1815,8 +1815,8 @@ WEEKS = [
     "B": "Polish the top 6-8 flagship projects into strong case studies (problem -> approach -> result).",
     "C": "Launch it publicly (this dashboard, GitHub, LinkedIn) — the capstone of the whole journey and your new professional story."},
   "cons": {"title": "Mastery review & what's next",
-    "text": "Writeups, diagrams, demos, blog posts and your narrative turn 62 weeks of work into a career step. Look back at Week 1, then decide what you go deep on next.",
-    "mastery": "Deliver your story: who you are now across Data Engineering, ML, AI and systems, and the three projects that prove it."}},
+    "text": "Writeups, diagrams, demos, blog posts and your narrative turn the whole journey into a career step. Look back at where you started, then decide what you go deep on next.",
+    "mastery": "Deliver your story: who you are now across computer vision, Data Engineering, ML, AI and systems, and the three projects that prove it."}},
 ]
 
 # Per-project metadata keyed by week: tech tags, flagship flag, and a resume line
@@ -1882,7 +1882,7 @@ PROJECT_META = {
  58: {"tech": ["Terraform", "ArgoCD", "GitOps"], "flag": True, "demo": "Infrastructure-as-code + GitOps: Terraform + ArgoCD, reproducible from git."},
  59: {"tech": ["Prometheus", "Grafana", "SRE"]},
  60: {"tech": ["perf", "eBPF", "security"]},
- 61: {"tech": ["Kubernetes", "Terraform", "CI/CD"], "flag": True, "demo": "Intelligent data platform (DE + ML + AI) shipped to production on Kubernetes."},
+ 61: {"tech": ["Kubernetes", "Terraform", "CI/CD"], "flag": True, "demo": "Intelligent platform (CV + DE + ML + AI) shipped to production on Kubernetes."},
  62: {"tech": ["portfolio", "docs", "demos"]},
 }
 
@@ -2044,7 +2044,7 @@ CV_WEEKS = [
    {"t": "Semantic vs instance vs panoptic",
     "concept": "Segmentation is per-pixel labelling. Semantic labels every pixel by class; instance separates individual objects; panoptic unifies both. Choosing the right one is a problem-framing decision that drives the whole architecture and label format.",
     "watch": "'Image segmentation types explained'; Meta AI — 'Segment Anything (SAM)' overview.",
-    "code": "Take one labelled image and produce/visualize a semantic mask, an instance mask, and (conceptually) a panoptic one; write down which your Trigyan documents actually need."},
+    "code": "Take one labelled image and produce/visualize a semantic mask, an instance mask, and (conceptually) a panoptic one; write down which a document-understanding pipeline actually needs."},
    {"t": "Masks, per-pixel loss & class balance",
     "concept": "A mask is a label image; segmentation is classification at every pixel, trained with per-pixel cross-entropy (often plus Dice loss). Background dominates, so class weighting and Dice matter even more than in classification.",
     "watch": "DigitalSreeni — 'Loss functions for segmentation'; 'Dice loss vs cross-entropy'.",
@@ -2088,7 +2088,7 @@ CV_WEEKS = [
     "watch": "Aladdin Persson — 'YOLO from scratch' (concepts); Yannic Kilcher — 'DETR'.",
     "code": "Run pretrained YOLOv8 inference on your images; parse the output tensor (boxes/scores/classes) yourself and draw the boxes; time it vs Faster R-CNN."},
    {"t": "Text detection & the document bridge",
-    "concept": "Text detection IS object detection — EAST/DBNet find text regions before recognition. This is the bridge from natural-image CV to document AI: detect regions -> recognize -> lay out, which your Trigyan work lives on.",
+    "concept": "Text detection IS object detection — EAST/DBNet find text regions before recognition. This is the bridge from natural-image CV to document AI: detect regions -> recognize -> lay out, which document-AI pipelines are built on.",
     "watch": "'EAST / DBNet text detection explained'; a 'scene text detection' overview.",
     "code": "Run a text detector on document/scene images; visualize the detected text boxes; feed one crop into an OCR recognizer and read the text out."},
   ], "build": {"title": "Detection pipeline on your own images",
@@ -2192,7 +2192,7 @@ CV_WEEKS = [
  # ---- CV11 ----
  {"title": "Computer Vision XI — Document AI & VLMs", "days": [
    {"t": "OCR anatomy end to end",
-    "concept": "OCR is a pipeline, not a model: text detection -> recognition -> layout analysis -> reading order -> table structure. Each stage is a CV problem you've already met. Knowing the stages is how you debug a bad extraction to the right component — the core of your Trigyan work.",
+    "concept": "OCR is a pipeline, not a model: text detection -> recognition -> layout analysis -> reading order -> table structure. Each stage is a CV problem you've already met. Knowing the stages is how you debug a bad extraction to the right component — the core of real document-AI work.",
     "watch": "'How OCR works' overview; 'Document layout analysis explained'.",
     "code": "Run an OCR engine (Tesseract or PaddleOCR) on a real document; dump the per-stage intermediates (boxes, text, layout) and inspect where errors originate."},
    {"t": "Where classical CV plugs in",
@@ -2214,7 +2214,7 @@ CV_WEEKS = [
   ], "build": {"title": "Document-AI: Docling vs a quantized VLM",
     "A": "Dissect a Docling run on real documents (intermediate outputs, per-stage errors) and quantify where it wins and where it breaks.",
     "B": "Run a small quantized VLM (Qwen2-VL-2B GGUF) on the same documents for structured extraction; build a side-by-side comparison with a grounding/accuracy check.",
-    "C": "Ship: a comparison report + a small extraction service, and a README mapping every OCR stage back to the CV weeks that own it — your Trigyan-facing capstone piece."},
+    "C": "Ship: a comparison report + a small extraction service, and a README mapping every OCR stage back to the CV weeks that own it — a strong document-AI capstone piece."},
   "cons": {"title": "Where it all converges",
     "text": "OCR anatomy, classical-CV front-ends, Docling internals and VLM architecture tie the whole track to your actual work. Re-run your comparison on a fresh document and narrate the architecture file by file.",
     "mastery": "Map each OCR stage onto the CV weeks that own it, sketch the VLM encoder->projector->LLM flow, and say how you'd stop a VLM from hallucinating a field that isn't on the page."}},
@@ -2262,7 +2262,7 @@ CV_PROJECT_META = {
  8:  {"tech": ["PyTorch", "ViT", "attention", "timm"], "flag": True, "demo": "Vision Transformer built from scratch and fine-tuned, benchmarked head-to-head against a ResNet."},
  9:  {"tech": ["CLIP", "open_clip", "contrastive learning"]},
  10: {"tech": ["VAE", "Stable Diffusion", "PyTorch"], "flag": True, "demo": "VAE from scratch + Stable Diffusion 1.5 running locally on a 4 GB GPU, with a prompt/guidance study."},
- 11: {"tech": ["Docling", "Qwen-VL", "OCR", "quantization"], "flag": True, "demo": "Document-AI pipeline: Docling vs a quantized VLM for structured extraction, with grounding checks (Trigyan-facing)."},
+ 11: {"tech": ["Docling", "Qwen-VL", "OCR", "quantization"], "flag": True, "demo": "Document-AI pipeline: Docling vs a quantized VLM for structured extraction, with grounding checks."},
  12: {"tech": ["computer vision", "document AI", "portfolio"], "flag": True, "demo": "End-to-end vision capstone: a document-understanding system shipped with a demo and honest evaluation."},
 }
 
@@ -2288,6 +2288,48 @@ DEEP_WEEKS = {16, 25, 28, 46, 53, 54, 59, 60}
 WEEKS = CV_WEEKS + WEEKS
 PROJECT_META = {**CV_PROJECT_META, **{k + 12: v for k, v in PROJECT_META.items()}}
 DEEP_WEEKS = {w + 12 for w in DEEP_WEEKS}
+
+# A dedicated cloud week for the DevOps & Cloud Infrastructure track — Azure-first
+# (leans on my existing Azure Databricks + Microsoft Fabric background). Inserted
+# right after IaC & GitOps (week 70); everything from week 71 on shifts down by one.
+AZURE_WEEK = {
+  "title": "Cloud Platform — Azure", "days": [
+   {"t": "Azure fundamentals & the resource model",
+    "concept": "Azure's hierarchy — tenant -> subscription -> resource group -> resource — with Azure Resource Manager (ARM) as the control plane and tags on everything. Regions and availability zones decide resilience. This mental model comes before any single service.",
+    "watch": "John Savill's Technical Training — 'Azure fundamentals'; Microsoft Learn — AZ-900 core concepts.",
+    "code": "Create a resource group and deploy one small resource three ways — portal, Azure CLI (az), and a Bicep/ARM template — and compare; tag everything by environment."},
+   {"t": "Identity & access: Entra ID + RBAC",
+    "concept": "Microsoft Entra ID (formerly Azure AD) is the identity backbone: users, groups, service principals and managed identities. RBAC roles + scopes decide who can do what — the single most important thing to get right, and the most common way cloud gets breached.",
+    "watch": "John Savill — 'Entra ID' and 'Azure RBAC'; Microsoft Learn — RBAC.",
+    "code": "Create a service principal and a managed identity; grant a least-privilege RBAC role at resource-group scope; have an app use the managed identity to reach a resource with no stored secret."},
+   {"t": "Networking: VNets, NSGs, load balancing",
+    "concept": "Virtual networks, subnets, network security groups (NSGs), public vs private IPs, Azure Load Balancer vs Application Gateway (L7), and private endpoints that lock managed services to your VNet. Most 'why can't it connect' lives here.",
+    "watch": "John Savill — 'Azure networking' masterclass; Microsoft Learn — VNet.",
+    "code": "Build a VNet with public + private subnets, NSG rules, a load balancer over two VMs, and a private endpoint to a storage account."},
+   {"t": "Compute, storage & managed data (+ Databricks/Fabric)",
+    "concept": "The building blocks: VMs / VM Scale Sets, App Service, Azure Functions (serverless), Azure Storage (blob/files/disks, ADLS), and managed data (Azure SQL, Cosmos DB). This is where my existing Azure Databricks + Microsoft Fabric skills slot in as the lakehouse/analytics layer.",
+    "watch": "John Savill — 'Azure compute options' and 'Azure storage'; Microsoft Learn — Azure Databricks.",
+    "code": "Deploy an app on App Service or Functions reading from Blob Storage; connect an Azure Databricks workspace to ADLS and read/write a Delta table — the lakehouse on Azure."},
+   {"t": "AKS + Terraform + CI/CD on Azure",
+    "concept": "Managed Kubernetes (AKS) vs the cluster I built by hand — node pools, Entra + ACR integration, and Key Vault for secrets. Terraform (azurerm) provisions it all; CI/CD (GitHub Actions or Azure Pipelines) builds -> pushes to ACR -> deploys to AKS.",
+    "watch": "John Savill — 'AKS deep dive'; TechWorld with Nana — 'GitHub Actions / Azure Pipelines to AKS'.",
+    "code": "Terraform an AKS cluster + ACR + Key Vault; wire a GitHub Actions (or Azure Pipelines) pipeline that builds an image, pushes to ACR, and deploys to AKS on push."},
+  ], "build": {"title": "Deploy your platform to Azure (Terraform + AKS + CI/CD)",
+    "A": "Provision a real Azure footprint as code with Terraform: resource group, VNet + NSGs, AKS, ACR, Key Vault and a storage account (ADLS) — least-privilege via Entra managed identities, no plaintext secrets.",
+    "B": "Ship an app through CI/CD: a pipeline (GitHub Actions or Azure Pipelines) that builds, pushes to ACR and deploys to AKS, pulling secrets from Key Vault.",
+    "C": "Tie in the data layer (Azure Databricks / ADLS Delta), add cost tags + a budget alert, and document the architecture — a 'I can run a real cloud platform' piece that plays to my Databricks/Fabric strengths."},
+  "cons": {"title": "The cloud, as a system",
+    "text": "Azure's resource + identity model, VNet networking, managed compute/storage, AKS and Terraform + CI/CD turn 'a Linux box' into a real cloud platform. Re-read my Terraform and confirm every secret comes from Key Vault, not the repo.",
+    "mastery": "Sketch the Azure hierarchy (tenant -> subscription -> resource group -> resource), explain why a managed identity beats a stored secret, and say when I'd reach for AKS over the cluster I built by hand."},
+}
+CLOUD_INSERT_AFTER = 70  # final week number to insert the cloud week after (IaC & GitOps)
+WEEKS.insert(CLOUD_INSERT_AFTER, AZURE_WEEK)  # becomes week 71
+PROJECT_META = {(k + 1 if k > CLOUD_INSERT_AFTER else k): v for k, v in PROJECT_META.items()}
+PROJECT_META[CLOUD_INSERT_AFTER + 1] = {
+  "tech": ["Azure", "AKS", "Terraform", "Entra ID", "CI/CD"], "flag": True,
+  "demo": "Cloud platform on Azure: Terraform-provisioned AKS + ACR + Key Vault + ADLS, deployed via CI/CD with least-privilege managed identity.",
+}
+DEEP_WEEKS = {(w + 1 if w > CLOUD_INSERT_AFTER else w) for w in DEEP_WEEKS}
 
 units = []
 weeks_meta = []

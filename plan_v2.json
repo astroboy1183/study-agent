@@ -358,7 +358,7 @@
    "dow": 0,
    "type": "theory",
    "title": "Semantic vs instance vs panoptic",
-   "text": "Segmentation is per-pixel labelling. Semantic labels every pixel by class; instance separates individual objects; panoptic unifies both. Choosing the right one is a problem-framing decision that drives the whole architecture and label format.\n🎥 Watch: 'Image segmentation types explained'; Meta AI — 'Segment Anything (SAM)' overview.\n💻 Code: Take one labelled image and produce/visualize a semantic mask, an instance mask, and (conceptually) a panoptic one; write down which your Trigyan documents actually need.",
+   "text": "Segmentation is per-pixel labelling. Semantic labels every pixel by class; instance separates individual objects; panoptic unifies both. Choosing the right one is a problem-framing decision that drives the whole architecture and label format.\n🎥 Watch: 'Image segmentation types explained'; Meta AI — 'Segment Anything (SAM)' overview.\n💻 Code: Take one labelled image and produce/visualize a semantic mask, an instance mask, and (conceptually) a panoptic one; write down which a document-understanding pipeline actually needs.",
    "mastery": null,
    "id": 36
   },
@@ -465,7 +465,7 @@
    "dow": 4,
    "type": "theory",
    "title": "Text detection & the document bridge",
-   "text": "Text detection IS object detection — EAST/DBNet find text regions before recognition. This is the bridge from natural-image CV to document AI: detect regions -> recognize -> lay out, which your Trigyan work lives on.\n🎥 Watch: 'EAST / DBNet text detection explained'; a 'scene text detection' overview.\n💻 Code: Run a text detector on document/scene images; visualize the detected text boxes; feed one crop into an OCR recognizer and read the text out.",
+   "text": "Text detection IS object detection — EAST/DBNet find text regions before recognition. This is the bridge from natural-image CV to document AI: detect regions -> recognize -> lay out, which document-AI pipelines are built on.\n🎥 Watch: 'EAST / DBNet text detection explained'; a 'scene text detection' overview.\n💻 Code: Run a text detector on document/scene images; visualize the detected text boxes; feed one crop into an OCR recognizer and read the text out.",
    "mastery": null,
    "id": 47
   },
@@ -710,7 +710,7 @@
    "dow": 0,
    "type": "theory",
    "title": "OCR anatomy end to end",
-   "text": "OCR is a pipeline, not a model: text detection -> recognition -> layout analysis -> reading order -> table structure. Each stage is a CV problem you've already met. Knowing the stages is how you debug a bad extraction to the right component — the core of your Trigyan work.\n🎥 Watch: 'How OCR works' overview; 'Document layout analysis explained'.\n💻 Code: Run an OCR engine (Tesseract or PaddleOCR) on a real document; dump the per-stage intermediates (boxes, text, layout) and inspect where errors originate.",
+   "text": "OCR is a pipeline, not a model: text detection -> recognition -> layout analysis -> reading order -> table structure. Each stage is a CV problem you've already met. Knowing the stages is how you debug a bad extraction to the right component — the core of real document-AI work.\n🎥 Watch: 'How OCR works' overview; 'Document layout analysis explained'.\n💻 Code: Run an OCR engine (Tesseract or PaddleOCR) on a real document; dump the per-stage intermediates (boxes, text, layout) and inspect where errors originate.",
    "mastery": null,
    "id": 71
   },
@@ -755,7 +755,7 @@
    "dow": 5,
    "type": "build",
    "title": "Document-AI: Docling vs a quantized VLM",
-   "text": "[Block A] Dissect a Docling run on real documents (intermediate outputs, per-stage errors) and quantify where it wins and where it breaks. [Block B] Run a small quantized VLM (Qwen2-VL-2B GGUF) on the same documents for structured extraction; build a side-by-side comparison with a grounding/accuracy check. [Block C] Ship: a comparison report + a small extraction service, and a README mapping every OCR stage back to the CV weeks that own it — your Trigyan-facing capstone piece.",
+   "text": "[Block A] Dissect a Docling run on real documents (intermediate outputs, per-stage errors) and quantify where it wins and where it breaks. [Block B] Run a small quantized VLM (Qwen2-VL-2B GGUF) on the same documents for structured extraction; build a side-by-side comparison with a grounding/accuracy check. [Block C] Ship: a comparison report + a small extraction service, and a README mapping every OCR stage back to the CV weeks that own it — a strong document-AI capstone piece.",
    "mastery": null,
    "id": 76,
    "tech": [
@@ -765,7 +765,7 @@
     "quantization"
    ],
    "flag": true,
-   "demo": "Document-AI pipeline: Docling vs a quantized VLM for structured extraction, with grounding checks (Trigyan-facing)."
+   "demo": "Document-AI pipeline: Docling vs a quantized VLM for structured extraction, with grounding checks."
   },
   {
    "week": 11,
@@ -4854,7 +4854,7 @@
    "dow": 1,
    "type": "theory",
    "title": "Ansible & configuration management",
-   "text": "Configuring servers idempotently with Ansible (playbooks, roles, inventory) — the config half of IaC.\n🎥 Watch: Search 'Ansible tutorial'; TechWorld with Nana.\n💻 Code: Write an Ansible playbook that provisions + hardens a server (reuse Week 52) idempotently.",
+   "text": "Configuring servers idempotently with Ansible (playbooks, roles, inventory) — the config half of IaC.\n🎥 Watch: Search 'Ansible tutorial'; TechWorld with Nana.\n💻 Code: Write an Ansible playbook that provisions + hardens a server (reuse your server-provisioning + hardening work) idempotently.",
    "mastery": null,
    "id": 485
   },
@@ -4914,8 +4914,8 @@
    "week": 71,
    "dow": 0,
    "type": "theory",
-   "title": "Metrics, logs & traces",
-   "text": "The three pillars of observability — metrics (what), logs (why), traces (where) — and when to use each.\n🎥 Watch: Google SRE book (monitoring); search 'observability three pillars'.\n💻 Code: Instrument an app to emit metrics, structured logs and traces for one request path.",
+   "title": "Azure fundamentals & the resource model",
+   "text": "Azure's hierarchy — tenant -> subscription -> resource group -> resource — with Azure Resource Manager (ARM) as the control plane and tags on everything. Regions and availability zones decide resilience. This mental model comes before any single service.\n🎥 Watch: John Savill's Technical Training — 'Azure fundamentals'; Microsoft Learn — AZ-900 core concepts.\n💻 Code: Create a resource group and deploy one small resource three ways — portal, Azure CLI (az), and a Bicep/ARM template — and compare; tag everything by environment.",
    "mastery": null,
    "id": 491
   },
@@ -4923,8 +4923,8 @@
    "week": 71,
    "dow": 1,
    "type": "theory",
-   "title": "Prometheus & Grafana",
-   "text": "Metrics collection with Prometheus (scraping, PromQL) and dashboards/alerts with Grafana.\n🎥 Watch: TechWorld with Nana — Prometheus/Grafana; search 'Prometheus tutorial'.\n💻 Code: Scrape your app's metrics with Prometheus and build a Grafana dashboard for it.",
+   "title": "Identity & access: Entra ID + RBAC",
+   "text": "Microsoft Entra ID (formerly Azure AD) is the identity backbone: users, groups, service principals and managed identities. RBAC roles + scopes decide who can do what — the single most important thing to get right, and the most common way cloud gets breached.\n🎥 Watch: John Savill — 'Entra ID' and 'Azure RBAC'; Microsoft Learn — RBAC.\n💻 Code: Create a service principal and a managed identity; grant a least-privilege RBAC role at resource-group scope; have an app use the managed identity to reach a resource with no stored secret.",
    "mastery": null,
    "id": 492
   },
@@ -4932,8 +4932,8 @@
    "week": 71,
    "dow": 2,
    "type": "theory",
-   "title": "SLOs, SLIs & error budgets",
-   "text": "Defining reliability: SLIs (measured), SLOs (targets) and error budgets that balance reliability vs velocity — the heart of SRE.\n🎥 Watch: Google SRE book — SLOs; search 'SLI SLO error budget explained'.\n💻 Code: Define SLIs + an SLO for your service and compute its error budget from real metrics.",
+   "title": "Networking: VNets, NSGs, load balancing",
+   "text": "Virtual networks, subnets, network security groups (NSGs), public vs private IPs, Azure Load Balancer vs Application Gateway (L7), and private endpoints that lock managed services to your VNet. Most 'why can't it connect' lives here.\n🎥 Watch: John Savill — 'Azure networking' masterclass; Microsoft Learn — VNet.\n💻 Code: Build a VNet with public + private subnets, NSG rules, a load balancer over two VMs, and a private endpoint to a storage account.",
    "mastery": null,
    "id": 493
   },
@@ -4941,8 +4941,8 @@
    "week": 71,
    "dow": 3,
    "type": "theory",
-   "title": "Alerting & on-call",
-   "text": "Actionable, symptom-based alerting (not noise), on-call practices, and alert fatigue.\n🎥 Watch: Google SRE book — alerting/on-call.\n💻 Code: Write symptom-based alerts (latency/error-rate SLO burn) with Alertmanager, not CPU-noise alerts.",
+   "title": "Compute, storage & managed data (+ Databricks/Fabric)",
+   "text": "The building blocks: VMs / VM Scale Sets, App Service, Azure Functions (serverless), Azure Storage (blob/files/disks, ADLS), and managed data (Azure SQL, Cosmos DB). This is where my existing Azure Databricks + Microsoft Fabric skills slot in as the lakehouse/analytics layer.\n🎥 Watch: John Savill — 'Azure compute options' and 'Azure storage'; Microsoft Learn — Azure Databricks.\n💻 Code: Deploy an app on App Service or Functions reading from Blob Storage; connect an Azure Databricks workspace to ADLS and read/write a Delta table — the lakehouse on Azure.",
    "mastery": null,
    "id": 494
   },
@@ -4950,8 +4950,8 @@
    "week": 71,
    "dow": 4,
    "type": "theory",
-   "title": "Incident response & postmortems",
-   "text": "Handling incidents (roles, comms, mitigation) and blameless postmortems that turn failures into improvements.\n🎥 Watch: Google SRE book — incident management + postmortems.\n💻 Code: Run a game-day: break your service, respond, and write a blameless postmortem.",
+   "title": "AKS + Terraform + CI/CD on Azure",
+   "text": "Managed Kubernetes (AKS) vs the cluster I built by hand — node pools, Entra + ACR integration, and Key Vault for secrets. Terraform (azurerm) provisions it all; CI/CD (GitHub Actions or Azure Pipelines) builds -> pushes to ACR -> deploys to AKS.\n🎥 Watch: John Savill — 'AKS deep dive'; TechWorld with Nana — 'GitHub Actions / Azure Pipelines to AKS'.\n💻 Code: Terraform an AKS cluster + ACR + Key Vault; wire a GitHub Actions (or Azure Pipelines) pipeline that builds an image, pushes to ACR, and deploys to AKS on push.",
    "mastery": null,
    "id": 495
   },
@@ -4959,10 +4959,82 @@
    "week": 71,
    "dow": 5,
    "type": "build",
-   "title": "Observability & alerting stack for the platform",
-   "text": "[Block A] Instrument your platform (DE/ML/AI services) with metrics, logs and traces; deploy Prometheus + Grafana. [Block B] Define SLIs/SLOs + error budgets and symptom-based alerting for the key user journeys. [Block C] Run a game-day incident and write the postmortem — a portfolio SRE piece that shows operational maturity.",
+   "title": "Deploy your platform to Azure (Terraform + AKS + CI/CD)",
+   "text": "[Block A] Provision a real Azure footprint as code with Terraform: resource group, VNet + NSGs, AKS, ACR, Key Vault and a storage account (ADLS) — least-privilege via Entra managed identities, no plaintext secrets. [Block B] Ship an app through CI/CD: a pipeline (GitHub Actions or Azure Pipelines) that builds, pushes to ACR and deploys to AKS, pulling secrets from Key Vault. [Block C] Tie in the data layer (Azure Databricks / ADLS Delta), add cost tags + a budget alert, and document the architecture — a 'I can run a real cloud platform' piece that plays to my Databricks/Fabric strengths.",
    "mastery": null,
    "id": 496,
+   "tech": [
+    "Azure",
+    "AKS",
+    "Terraform",
+    "Entra ID",
+    "CI/CD"
+   ],
+   "flag": true,
+   "demo": "Cloud platform on Azure: Terraform-provisioned AKS + ACR + Key Vault + ADLS, deployed via CI/CD with least-privilege managed identity."
+  },
+  {
+   "week": 71,
+   "dow": 6,
+   "type": "consolidate",
+   "title": "The cloud, as a system",
+   "text": "Azure's resource + identity model, VNet networking, managed compute/storage, AKS and Terraform + CI/CD turn 'a Linux box' into a real cloud platform. Re-read my Terraform and confirm every secret comes from Key Vault, not the repo.",
+   "mastery": "Sketch the Azure hierarchy (tenant -> subscription -> resource group -> resource), explain why a managed identity beats a stored secret, and say when I'd reach for AKS over the cluster I built by hand.",
+   "id": 497
+  },
+  {
+   "week": 72,
+   "dow": 0,
+   "type": "theory",
+   "title": "Metrics, logs & traces",
+   "text": "The three pillars of observability — metrics (what), logs (why), traces (where) — and when to use each.\n🎥 Watch: Google SRE book (monitoring); search 'observability three pillars'.\n💻 Code: Instrument an app to emit metrics, structured logs and traces for one request path.",
+   "mastery": null,
+   "id": 498
+  },
+  {
+   "week": 72,
+   "dow": 1,
+   "type": "theory",
+   "title": "Prometheus & Grafana",
+   "text": "Metrics collection with Prometheus (scraping, PromQL) and dashboards/alerts with Grafana.\n🎥 Watch: TechWorld with Nana — Prometheus/Grafana; search 'Prometheus tutorial'.\n💻 Code: Scrape your app's metrics with Prometheus and build a Grafana dashboard for it.",
+   "mastery": null,
+   "id": 499
+  },
+  {
+   "week": 72,
+   "dow": 2,
+   "type": "theory",
+   "title": "SLOs, SLIs & error budgets",
+   "text": "Defining reliability: SLIs (measured), SLOs (targets) and error budgets that balance reliability vs velocity — the heart of SRE.\n🎥 Watch: Google SRE book — SLOs; search 'SLI SLO error budget explained'.\n💻 Code: Define SLIs + an SLO for your service and compute its error budget from real metrics.",
+   "mastery": null,
+   "id": 500
+  },
+  {
+   "week": 72,
+   "dow": 3,
+   "type": "theory",
+   "title": "Alerting & on-call",
+   "text": "Actionable, symptom-based alerting (not noise), on-call practices, and alert fatigue.\n🎥 Watch: Google SRE book — alerting/on-call.\n💻 Code: Write symptom-based alerts (latency/error-rate SLO burn) with Alertmanager, not CPU-noise alerts.",
+   "mastery": null,
+   "id": 501
+  },
+  {
+   "week": 72,
+   "dow": 4,
+   "type": "theory",
+   "title": "Incident response & postmortems",
+   "text": "Handling incidents (roles, comms, mitigation) and blameless postmortems that turn failures into improvements.\n🎥 Watch: Google SRE book — incident management + postmortems.\n💻 Code: Run a game-day: break your service, respond, and write a blameless postmortem.",
+   "mastery": null,
+   "id": 502
+  },
+  {
+   "week": 72,
+   "dow": 5,
+   "type": "build",
+   "title": "Observability & alerting stack for the platform",
+   "text": "[Block A] Instrument your platform (CV/DE/ML/AI services) with metrics, logs and traces; deploy Prometheus + Grafana. [Block B] Define SLIs/SLOs + error budgets and symptom-based alerting for the key user journeys. [Block C] Run a game-day incident and write the postmortem — a portfolio SRE piece that shows operational maturity.",
+   "mastery": null,
+   "id": 503,
    "tech": [
     "Prometheus",
     "Grafana",
@@ -4972,67 +5044,67 @@
    "demo": ""
   },
   {
-   "week": 71,
+   "week": 72,
    "dow": 6,
    "type": "consolidate",
    "title": "Running systems reliably",
    "text": "The three pillars, Prometheus/Grafana, SLOs/error budgets, alerting and incident response are how you run systems like an SRE. Re-read your postmortem.",
    "mastery": "What's the difference between an SLI, SLO and error budget, and why should alerts be symptom-based?",
-   "id": 497
+   "id": 504
   },
   {
-   "week": 72,
+   "week": 73,
    "dow": 0,
    "type": "theory",
    "title": "perf & eBPF tooling",
    "text": "Deep performance analysis: perf, flame graphs, and eBPF (bpftrace/BCC) to observe the kernel + apps with almost no overhead.\n🎥 Watch: Brendan Gregg — perf/eBPF; search 'flame graphs explained'.\n💻 Code: Profile a CPU-bound app with perf, generate a flame graph, find the hotspot, and try one bpftrace one-liner.",
    "mastery": null,
-   "id": 498
+   "id": 505
   },
   {
-   "week": 72,
+   "week": 73,
    "dow": 1,
    "type": "theory",
    "title": "System & network tuning",
    "text": "Finding + fixing bottlenecks across CPU/memory/disk/network using the USE method (Utilization, Saturation, Errors).\n🎥 Watch: Brendan Gregg — the USE method; 'Linux performance tools'.\n💻 Code: Apply the USE method to a loaded system, identify the bottleneck resource, and tune it.",
    "mastery": null,
-   "id": 499
+   "id": 506
   },
   {
-   "week": 72,
+   "week": 73,
    "dow": 2,
    "type": "theory",
    "title": "Linux security: SELinux, seccomp",
    "text": "Mandatory access control (SELinux/AppArmor), seccomp to restrict syscalls, and defense-in-depth for services/containers.\n🎥 Watch: Search 'SELinux explained' and 'seccomp containers'.\n💻 Code: Apply a seccomp profile to a container to block dangerous syscalls and observe SELinux/AppArmor denials.",
    "mastery": null,
-   "id": 500
+   "id": 507
   },
   {
-   "week": 72,
+   "week": 73,
    "dow": 3,
    "type": "theory",
    "title": "Hardening & secrets",
    "text": "Server/container hardening (least privilege, minimal surface, updates) and secrets hygiene end to end.\n🎥 Watch: Search 'Linux server hardening checklist'; CIS benchmarks.\n💻 Code: Run a hardening checklist against your server + containers and fix the top findings.",
    "mastery": null,
-   "id": 501
+   "id": 508
   },
   {
-   "week": 72,
+   "week": 73,
    "dow": 4,
    "type": "theory",
    "title": "Cost & resource accounting",
    "text": "Measuring where compute/cost goes (cgroups accounting, cloud cost), right-sizing, and FinOps for infra.\n🎥 Watch: Search 'Linux resource accounting cgroups' and cloud cost basics.\n💻 Code: Attribute resource usage per service (cgroups/cloud tags) and right-size one over-provisioned component.",
    "mastery": null,
-   "id": 502
+   "id": 509
   },
   {
-   "week": 72,
+   "week": 73,
    "dow": 5,
    "type": "build",
    "title": "Profile, tune & harden the platform",
    "text": "[Block A] Profile your platform under load (perf/eBPF, USE method) and fix the top performance bottleneck. [Block B] Harden it: seccomp/AppArmor on containers, a server hardening checklist, least-privilege everywhere. [Block C] Add cost/resource accounting and right-size; document the perf + security + cost wins — a rounded SRE piece.",
    "mastery": null,
-   "id": 503,
+   "id": 510,
    "tech": [
     "perf",
     "eBPF",
@@ -5042,90 +5114,20 @@
    "demo": ""
   },
   {
-   "week": 72,
+   "week": 73,
    "dow": 6,
    "type": "consolidate",
    "title": "Fast and defensible",
    "text": "perf/eBPF, the USE method, SELinux/seccomp, hardening and cost accounting make systems fast, secure and affordable. Re-read your flame graph.",
    "mastery": "Walk the USE method to find a bottleneck, and name three ways you'd harden a container running untrusted code.",
-   "id": 504
-  },
-  {
-   "week": 73,
-   "dow": 0,
-   "type": "theory",
-   "title": "Integrate the DE, ML & AI layers",
-   "text": "Bring the three capstones together into one intelligent platform: data flows into features, models serve predictions, an AI layer (RAG/agent) sits on top.\n🎥 Watch: Review your three capstone architectures and sketch the unified one.\n💻 Code: Design + wire the integration: the DE platform feeds the ML models feed the AI layer, end to end.",
-   "mastery": null,
-   "id": 505
-  },
-  {
-   "week": 73,
-   "dow": 1,
-   "type": "theory",
-   "title": "Deploy on Kubernetes with IaC",
-   "text": "Deploy the whole platform reproducibly: Terraform for infra, Helm/GitOps for the services.\n🎥 Watch: Reuse your K8s + IaC + GitOps work.\n💻 Code: Deploy every component to K8s via IaC + GitOps; one command from zero to running.",
-   "mastery": null,
-   "id": 506
-  },
-  {
-   "week": 73,
-   "dow": 2,
-   "type": "theory",
-   "title": "CI/CD & GitOps",
-   "text": "Automated build/test/deploy for the whole platform, with GitOps reconciliation and safe rollouts.\n🎥 Watch: Reuse your CI/CD + GitOps work.\n💻 Code: Wire CI/CD (test + build + deploy) and GitOps auto-sync for the platform.",
-   "mastery": null,
-   "id": 507
-  },
-  {
-   "week": 73,
-   "dow": 3,
-   "type": "theory",
-   "title": "Observability, alerting & SLOs",
-   "text": "Full-stack observability + SLOs for the integrated platform, so you'd know the moment anything degrades.\n🎥 Watch: Reuse your observability/SRE work.\n💻 Code: Add metrics/logs/traces, dashboards, SLOs and alerting across the whole platform.",
-   "mastery": null,
-   "id": 508
-  },
-  {
-   "week": 73,
-   "dow": 4,
-   "type": "theory",
-   "title": "Load & failure testing, security",
-   "text": "Prove it holds up: load testing, chaos/failure injection, and a security pass before you call it production.\n🎥 Watch: Reuse your performance + security work.\n💻 Code: Load-test the platform, inject failures (kill pods/deps) to verify resilience, and run a security pass.",
-   "mastery": null,
-   "id": 509
-  },
-  {
-   "week": 73,
-   "dow": 5,
-   "type": "build",
-   "title": "Ship the intelligent platform to production",
-   "text": "[Block A] Deploy the fully integrated DE + ML + AI platform on K8s via IaC + GitOps, with CI/CD. [Block B] Add full observability + SLOs, then load-test, chaos-test and security-harden it. [Block C] This is your capstone: the whole 62-week journey, running in production. Record a demo + architecture walkthrough.",
-   "mastery": null,
-   "id": 510,
-   "tech": [
-    "Kubernetes",
-    "Terraform",
-    "CI/CD"
-   ],
-   "flag": true,
-   "demo": "Intelligent data platform (DE + ML + AI) shipped to production on Kubernetes."
-  },
-  {
-   "week": 73,
-   "dow": 6,
-   "type": "consolidate",
-   "title": "Everything, together, in production",
-   "text": "Integration, K8s + IaC deploy, CI/CD + GitOps, observability + SLOs and resilience/security are the difference between projects and a platform. Step back and see the whole thing.",
-   "mastery": "Give the full architecture tour of your platform — data to features to models to AI to serving — and how it's deployed, observed and kept reliable.",
    "id": 511
   },
   {
    "week": 74,
    "dow": 0,
    "type": "theory",
-   "title": "System-design writeup",
-   "text": "Write the definitive system-design doc for your platform: the problem, architecture, tradeoffs and lessons.\n🎥 Watch: Study strong engineering system-design writeups for structure.\n💻 Code: Write the full system-design doc (architecture, decisions, tradeoffs, what you'd do next).",
+   "title": "Integrate the CV, DE, ML & AI layers",
+   "text": "Bring the four track capstones together into one intelligent platform: data flows into features, models serve predictions, and a vision + AI layer (document-AI/CV + RAG/agent) sits on top.\n🎥 Watch: Review your four capstone architectures and sketch the unified one.\n💻 Code: Design + wire the integration: the DE platform feeds the ML models, which feed the vision + AI layer, end to end.",
    "mastery": null,
    "id": 512
   },
@@ -5133,8 +5135,8 @@
    "week": 74,
    "dow": 1,
    "type": "theory",
-   "title": "Architecture diagrams",
-   "text": "Communicate the system visually: clear architecture + data-flow diagrams a stranger can follow.\n🎥 Watch: Search 'good architecture diagrams C4 model'.\n💻 Code: Produce clean architecture + data-flow diagrams for the platform and every capstone.",
+   "title": "Deploy on Kubernetes with IaC",
+   "text": "Deploy the whole platform reproducibly: Terraform for infra, Helm/GitOps for the services.\n🎥 Watch: Reuse your K8s + IaC + GitOps work.\n💻 Code: Deploy every component to K8s via IaC + GitOps; one command from zero to running.",
    "mastery": null,
    "id": 513
   },
@@ -5142,8 +5144,8 @@
    "week": 74,
    "dow": 2,
    "type": "theory",
-   "title": "Demo & video walkthrough",
-   "text": "Show, don't tell: a crisp demo + recorded walkthrough that proves the work is real.\n🎥 Watch: Study good project demo videos for pacing.\n💻 Code: Record a tight demo/walkthrough of the platform and 2-3 flagship projects.",
+   "title": "CI/CD & GitOps",
+   "text": "Automated build/test/deploy for the whole platform, with GitOps reconciliation and safe rollouts.\n🎥 Watch: Reuse your CI/CD + GitOps work.\n💻 Code: Wire CI/CD (test + build + deploy) and GitOps auto-sync for the platform.",
    "mastery": null,
    "id": 514
   },
@@ -5151,8 +5153,8 @@
    "week": 74,
    "dow": 3,
    "type": "theory",
-   "title": "Blog posts / talks",
-   "text": "Teach what you built: writeups/talks on the standout projects (GPT from scratch, RAG, the platform) that build your reputation.\n🎥 Watch: Study strong engineering blog posts for structure.\n💻 Code: Write one deep technical blog post on a flagship project ('I built a GPT/container/platform from scratch').",
+   "title": "Observability, alerting & SLOs",
+   "text": "Full-stack observability + SLOs for the integrated platform, so you'd know the moment anything degrades.\n🎥 Watch: Reuse your observability/SRE work.\n💻 Code: Add metrics/logs/traces, dashboards, SLOs and alerting across the whole platform.",
    "mastery": null,
    "id": 515
   },
@@ -5160,8 +5162,8 @@
    "week": 74,
    "dow": 4,
    "type": "theory",
-   "title": "Interview & narrative prep",
-   "text": "Turn 62 weeks into a story: the portfolio site, the resume update, and the interview narrative across DE/ML/AI/systems.\n🎥 Watch: Review your projects and prep the STAR stories.\n💻 Code: Update your portfolio + resume and rehearse the 3-minute story for each flagship project.",
+   "title": "Load & failure testing, security",
+   "text": "Prove it holds up: load testing, chaos/failure injection, and a security pass before you call it production.\n🎥 Watch: Reuse your performance + security work.\n💻 Code: Load-test the platform, inject failures (kill pods/deps) to verify resilience, and run a security pass.",
    "mastery": null,
    "id": 516
   },
@@ -5169,10 +5171,80 @@
    "week": 74,
    "dow": 5,
    "type": "build",
+   "title": "Ship the intelligent platform to production",
+   "text": "[Block A] Deploy the fully integrated CV + DE + ML + AI platform on K8s via IaC + GitOps, with CI/CD. [Block B] Add full observability + SLOs, then load-test, chaos-test and security-harden it. [Block C] This is your capstone: the whole journey, running in production. Record a demo + architecture walkthrough.",
+   "mastery": null,
+   "id": 517,
+   "tech": [
+    "Kubernetes",
+    "Terraform",
+    "CI/CD"
+   ],
+   "flag": true,
+   "demo": "Intelligent platform (CV + DE + ML + AI) shipped to production on Kubernetes."
+  },
+  {
+   "week": 74,
+   "dow": 6,
+   "type": "consolidate",
+   "title": "Everything, together, in production",
+   "text": "Integration, K8s + IaC deploy, CI/CD + GitOps, observability + SLOs and resilience/security are the difference between projects and a platform. Step back and see the whole thing.",
+   "mastery": "Give the full architecture tour of your platform — data to features to models to AI to serving — and how it's deployed, observed and kept reliable.",
+   "id": 518
+  },
+  {
+   "week": 75,
+   "dow": 0,
+   "type": "theory",
+   "title": "System-design writeup",
+   "text": "Write the definitive system-design doc for your platform: the problem, architecture, tradeoffs and lessons.\n🎥 Watch: Study strong engineering system-design writeups for structure.\n💻 Code: Write the full system-design doc (architecture, decisions, tradeoffs, what you'd do next).",
+   "mastery": null,
+   "id": 519
+  },
+  {
+   "week": 75,
+   "dow": 1,
+   "type": "theory",
+   "title": "Architecture diagrams",
+   "text": "Communicate the system visually: clear architecture + data-flow diagrams a stranger can follow.\n🎥 Watch: Search 'good architecture diagrams C4 model'.\n💻 Code: Produce clean architecture + data-flow diagrams for the platform and every capstone.",
+   "mastery": null,
+   "id": 520
+  },
+  {
+   "week": 75,
+   "dow": 2,
+   "type": "theory",
+   "title": "Demo & video walkthrough",
+   "text": "Show, don't tell: a crisp demo + recorded walkthrough that proves the work is real.\n🎥 Watch: Study good project demo videos for pacing.\n💻 Code: Record a tight demo/walkthrough of the platform and 2-3 flagship projects.",
+   "mastery": null,
+   "id": 521
+  },
+  {
+   "week": 75,
+   "dow": 3,
+   "type": "theory",
+   "title": "Blog posts / talks",
+   "text": "Teach what you built: writeups/talks on the standout projects (GPT from scratch, RAG, the platform) that build your reputation.\n🎥 Watch: Study strong engineering blog posts for structure.\n💻 Code: Write one deep technical blog post on a flagship project ('I built a GPT/container/platform from scratch').",
+   "mastery": null,
+   "id": 522
+  },
+  {
+   "week": 75,
+   "dow": 4,
+   "type": "theory",
+   "title": "Interview & narrative prep",
+   "text": "Turn the whole journey into a story: the portfolio site, the resume update, and the interview narrative across computer vision, DE, ML, AI and systems.\n🎥 Watch: Review your projects and prep the STAR stories.\n💻 Code: Update your portfolio + resume and rehearse the 3-minute story for each flagship project.",
+   "mastery": null,
+   "id": 523
+  },
+  {
+   "week": 75,
+   "dow": 5,
+   "type": "build",
    "title": "Portfolio launch — case studies & demos",
    "text": "[Block A] Assemble everything: the portfolio site, project case studies, diagrams, demos and blog posts. [Block B] Polish the top 6-8 flagship projects into strong case studies (problem -> approach -> result). [Block C] Launch it publicly (this dashboard, GitHub, LinkedIn) — the capstone of the whole journey and your new professional story.",
    "mastery": null,
-   "id": 517,
+   "id": 524,
    "tech": [
     "portfolio",
     "docs",
@@ -5182,13 +5254,13 @@
    "demo": ""
   },
   {
-   "week": 74,
+   "week": 75,
    "dow": 6,
    "type": "consolidate",
    "title": "Mastery review & what's next",
-   "text": "Writeups, diagrams, demos, blog posts and your narrative turn 62 weeks of work into a career step. Look back at Week 1, then decide what you go deep on next.",
-   "mastery": "Deliver your story: who you are now across Data Engineering, ML, AI and systems, and the three projects that prove it.",
-   "id": 518
+   "text": "Writeups, diagrams, demos, blog posts and your narrative turn the whole journey into a career step. Look back at where you started, then decide what you go deep on next.",
+   "mastery": "Deliver your story: who you are now across computer vision, Data Engineering, ML, AI and systems, and the three projects that prove it.",
+   "id": 525
   }
  ],
  "weeks": [
@@ -5614,24 +5686,30 @@
   },
   {
    "n": 71,
+   "title": "Cloud Platform — Azure",
+   "phase": "Linux & Systems",
+   "core": true
+  },
+  {
+   "n": 72,
    "title": "Observability & SRE",
    "phase": "Linux & Systems",
    "core": false
   },
   {
-   "n": 72,
+   "n": 73,
    "title": "Performance & Security",
    "phase": "Linux & Systems",
    "core": false
   },
   {
-   "n": 73,
+   "n": 74,
    "title": "Grand Capstone — Productionize",
    "phase": "Linux & Systems",
    "core": true
   },
   {
-   "n": 74,
+   "n": 75,
    "title": "Launch & Portfolio",
    "phase": "Linux & Systems",
    "core": true

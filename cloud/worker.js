@@ -433,7 +433,7 @@ const TRACK_BOUNDS = [
   { name: "Data Engineering", lo: 13, hi: 30, envKey: "NOTES_REPO_DE" },
   { name: "Data Science & ML", lo: 31, hi: 45, envKey: "NOTES_REPO_ML" },
   { name: "Deep Learning & AI", lo: 46, hi: 60, envKey: "NOTES_REPO_AI" },
-  { name: "Linux & Systems", lo: 61, hi: 74, envKey: "NOTES_REPO_LINUX" },
+  { name: "Linux & Systems", lo: 61, hi: 75, envKey: "NOTES_REPO_LINUX" },
 ];
 const DASHBOARD_URL = "https://study-agent.jayanthapalla.workers.dev";
 function phaseName(week) {
@@ -495,7 +495,7 @@ function trackReadme(env, week, state) {
     "study coach that serves me one topic a day and, when I check in, auto-writes the " +
     "`notes.md` deep-dives you see here. The code is mine; the notes are generated.  \n" +
     `> **[▶ Start at study-agent](${agent})**  ·  **[📊 Live dashboard](${DASHBOARD_URL})**\n\n` +
-    `My **code + written notes**, day by day, for **Weeks ${b.lo}–${b.hi}** of my 74-week ` +
+    `My **code + written notes**, day by day, for **Weeks ${b.lo}–${b.hi}** of my 75-week ` +
     "Computer Vision · Data · ML · AI · Linux mastery roadmap.\n\n" +
     "**How it works:** each day I commit my code into that day's folder — " +
     "`week-NN/day-NNN-slug/` — and my study agent auto-writes a `notes.md` deep-dive in the " +
@@ -1304,13 +1304,13 @@ function ogSvg() {
 <rect width="1200" height="630" fill="url(#bg)"/>
 <circle cx="1060" cy="110" r="270" fill="#6366f1" opacity=".13"/>
 <circle cx="140" cy="580" r="230" fill="#f472b6" opacity=".08"/>
-<text x="80" y="150" font-family="system-ui,Segoe UI,sans-serif" font-size="26" font-weight="700" letter-spacing="4" fill="#a855f7">74-WEEK MASTERY ROADMAP</text>
+<text x="80" y="150" font-family="system-ui,Segoe UI,sans-serif" font-size="26" font-weight="700" letter-spacing="4" fill="#a855f7">75-WEEK MASTERY ROADMAP</text>
 <text x="76" y="272" font-family="system-ui,Segoe UI,sans-serif" font-size="98" font-weight="850" fill="#eef1fb">Jayanth Appalla</text>
 <text x="80" y="332" font-family="system-ui,Segoe UI,sans-serif" font-size="40" font-weight="700" fill="url(#tx)">Data &amp; AI Engineer · learning in public</text>
 <text x="80" y="428" font-family="system-ui,Segoe UI,sans-serif" font-size="30" fill="#9aa3c7">Computer Vision · Data Engineering · ML · AI · Linux &amp; Systems</text>
 <g font-family="system-ui,Segoe UI,sans-serif">
 <text x="80" y="548" font-size="54" font-weight="800" fill="#eef1fb">74</text><text x="82" y="582" font-size="22" fill="#646a86">projects</text>
-<text x="320" y="548" font-size="54" font-weight="800" fill="#eef1fb">518</text><text x="322" y="582" font-size="22" fill="#646a86">days</text>
+<text x="320" y="548" font-size="54" font-weight="800" fill="#eef1fb">525</text><text x="322" y="582" font-size="22" fill="#646a86">days</text>
 <text x="560" y="548" font-size="54" font-weight="800" fill="#eef1fb">5</text><text x="562" y="582" font-size="22" fill="#646a86">domains</text>
 </g>
 <text x="1120" y="585" text-anchor="end" font-family="ui-monospace,monospace" font-size="22" fill="#646a86">study-agent.jayanthapalla.workers.dev</text>

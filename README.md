@@ -1,6 +1,6 @@
 # study-agent
 
-A personal study coach that turns a **74-week, 518-day mastery roadmap** —
+A personal study coach that turns a **75-week, 525-day mastery roadmap** —
 Computer Vision → Data Engineering → Data Science & ML → Deep Learning & AI →
 Linux & Systems — into **one topic a day**, delivered over Telegram, tracked on a
 **public dashboard**, and written up as a **deep-dive note pushed to GitHub**
@@ -32,10 +32,10 @@ I commit code **and** the agent auto-commits notes — organised day by day
 | **Data Engineering** | 13–30 | Python, storage internals, SQL & dimensional modeling, dbt, Spark/PySpark, Databricks lakehouse, Kafka streaming, orchestration | **[data-engineering](https://github.com/astroboy1183/data-engineering)** |
 | **Data Science & ML** | 31–45 | stats & A/B testing, ML from scratch, gradient boosting, feature stores, evaluation, forecasting, recommenders, MLflow, deployment | **[data-science-ml](https://github.com/astroboy1183/data-science-ml)** |
 | **Deep Learning & AI** | 46–60 | neural nets, training at scale (DDP/FSDP), graph neural nets, transformers from scratch, training GPTs, LLM apps, RAG, LoRA fine-tuning, agents & MCP, GraphRAG | **[deep-learning-ai](https://github.com/astroboy1183/deep-learning-ai)** |
-| **Linux & Systems** | 61–74 | shell & automation, server hardening, systems programming, a container runtime from scratch, Kubernetes, IaC/GitOps, observability | **[linux-systems](https://github.com/astroboy1183/linux-systems)** |
+| **Linux & Systems** | 61–75 | shell & automation, server hardening, systems programming, a container runtime from scratch, Kubernetes, IaC/GitOps, Azure cloud (AKS · Entra · Terraform), observability & SRE | **[linux-systems](https://github.com/astroboy1183/linux-systems)** |
 
 Each week is **5 theory days (weekdays) + 1 build (Saturday) + 1 consolidation
-(Sunday)** — 74 flagship builds in all, from a document scanner and a from-scratch
+(Sunday)** — 75 flagship builds in all, from a document scanner and a from-scratch
 ViT to a mini LSM-tree engine, a production RAG app, and a container runtime.
 
 ---
@@ -221,7 +221,7 @@ sequenceDiagram
 
 Each note is routed to the right repo by week (`1–12 → computer-vision`,
 `13–30 → data-engineering`, `31–45 → data-science-ml`, `46–60 → deep-learning-ai`,
-`61–74 → linux-systems`), lands in that day's folder as `notes.md` next to my
+`61–75 → linux-systems`), lands in that day's folder as `notes.md` next to my
 code, and carries the topic,
 the day's work, a mastery check, and a model-written deep dive. All GitHub
 commits are made with a personal access token and are authored under my own
@@ -231,7 +231,7 @@ account.
 
 ## The schedule (day-of-week + pointer)
 
-The plan is 518 ordered units served by **day of week**, never by calendar
+The plan is 525 ordered units served by **day of week**, never by calendar
 date. A pointer walks the queue; finishing a day advances it, missing one
 doesn't.
 
@@ -273,7 +273,7 @@ A **public** single page (synthwave theme, rendered client-side from
 `/api/state`) — built for anyone visiting to see the work at a glance:
 
 - Hero **% complete**, **honest streak**, current week, domains, builds.
-- A **74-week board** heatmap of every day, colored by type; click a finished
+- A **75-week board** heatmap of every day, colored by type; click a finished
   cell to reread its brief.
 - The full **roadmap browser**, **projects** (the 74 builds, with owner-attached
   repo/demo links), and a **presence heatmap**.
@@ -291,8 +291,8 @@ require an HMAC device token minted by Telegram `/login` and signed with
 
 ```
 study-agent/
-├── plan.json               # the 518-unit roadmap (source of truth for content)
-├── generate_plan_v2.py     # regenerates plan.json (74 weeks, 5 tracks)
+├── plan.json               # the 525-unit roadmap (source of truth for content)
+├── generate_plan_v2.py     # regenerates plan.json (75 weeks, 5 tracks)
 ├── daily-plan.md           # human-readable roadmap
 ├── cloud/                  # ← the live deployment
 │   ├── worker.js           #   backend: webhook + cron + dashboard API + notes push

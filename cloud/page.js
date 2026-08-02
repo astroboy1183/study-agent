@@ -11,14 +11,14 @@ export const PAGE = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jayanth Appalla — Learning in Public</title>
-<meta name="description" content="Jayanth Appalla — Data &amp; AI Engineer. A 74-week mastery roadmap across Computer Vision, Data Engineering, ML, AI and Linux, with portfolio projects, built and shipped in public.">
+<meta name="description" content="Jayanth Appalla — Data &amp; AI Engineer. A 75-week mastery roadmap across Computer Vision, Data Engineering, ML, AI and Linux, with portfolio projects, built and shipped in public.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Jayanth Appalla — Data &amp; AI Engineer, learning in public">
-<meta property="og:description" content="A 74-week mastery roadmap · Computer Vision · Data Engineering · ML · AI · Linux — built and shipped in public.">
+<meta property="og:description" content="A 75-week mastery roadmap · Computer Vision · Data Engineering · ML · AI · Linux — built and shipped in public.">
 <meta property="og:image" content="https://study-agent.jayanthapalla.workers.dev/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Jayanth Appalla — Data &amp; AI Engineer, learning in public">
-<meta name="twitter:description" content="A 74-week mastery roadmap · CV · DE · ML · AI · Linux — in public.">
+<meta name="twitter:description" content="A 75-week mastery roadmap · CV · DE · ML · AI · Linux — in public.">
 <meta name="twitter:image" content="https://study-agent.jayanthapalla.workers.dev/og.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
 <style>
@@ -426,10 +426,10 @@ footer .r{margin-left:auto}
 <div class="wrap">
   <section class="hero">
     <div class="hero-l">
-      <div class="eyebrow">74-Week Mastery Roadmap <span id="hero-status" class="hstat"></span></div>
+      <div class="eyebrow">75-Week Mastery Roadmap <span id="hero-status" class="hstat"></span></div>
       <h1>Jayanth Appalla</h1>
       <div class="role">Data &amp; AI Engineer</div>
-      <p class="tagline">A 518-day climb through computer vision, data engineering, machine learning,
+      <p class="tagline">A 525-day climb through computer vision, data engineering, machine learning,
         AI, and Linux systems — studied and shipped in public, one day at a time.</p>
       <div class="creds">ex-AWS DynamoDB · Data Engineer @ trigyan.io · MS CS, UIC · Databricks + Fabric certified</div>
       <div class="links">
@@ -445,7 +445,7 @@ footer .r{margin-left:auto}
     </div>
   </section>
 
-  <div class="sec reveal"><h2>🛠 Skills &amp; tech stack</h2><span class="sub">every technology in the 74-week roadmap · each lights up in its track colour as I build with it</span></div>
+  <div class="sec reveal"><h2>🛠 Skills &amp; tech stack</h2><span class="sub">every technology in the 75-week roadmap · each lights up in its track colour as I build with it</span></div>
   <div class="card reveal"><div id="learned" class="skills"></div></div>
 
   <div class="kpis reveal" id="kpis"></div>
@@ -467,7 +467,7 @@ footer .r{margin-left:auto}
   <div class="sub-min reveal" style="margin-top:1.7rem">All builds</div>
   <div id="all-projects" class="pgrid-c reveal"></div>
 
-  <div class="sec reveal"><h2>📚 The roadmap</h2><span class="sub">all 74 weeks · click any day for its concept, video &amp; coding rep</span></div>
+  <div class="sec reveal"><h2>📚 The roadmap</h2><span class="sub">all 75 weeks · click any day for its concept, video &amp; coding rep</span></div>
   <div id="rm-filter" class="filter-chips reveal"></div>
   <div class="card reveal"><div id="roadmap"></div></div>
 
@@ -655,7 +655,7 @@ function setCue(wrap, cue, label){
   apply();
 }
 function updateScrollCues(){
-  var bd=$("board"); if(bd) setCue(bd.parentNode, $("board-cue"), "scroll for all 74 weeks →");
+  var bd=$("board"); if(bd) setCue(bd.parentNode, $("board-cue"), "scroll for all 75 weeks →");
   var hm=document.querySelector(".hm-wrap"); var hc=$("hm-cue");
   if(hm && hc) setCue(hm, hc, "scroll for full history →");
 }
@@ -736,7 +736,7 @@ function renderLearned(s){
 function renderGraph(s){
   var c=$("graph"); if(!c) return; c.replaceChildren();
   var W=820,H=230,pl=10,pr=10,pt=16,pb=10;
-  var total=s.total||518, weeks=s.weeks||74;
+  var total=s.total||525, weeks=s.weeks||75;
   var cum=0, actual=[];
   (s.board||[]).forEach(function(wk){ (wk.cells||[]).forEach(function(cc){ if(cc.status==="done") cum++; }); actual.push(cum); });
   var n=actual.length; if(n<2){ c.appendChild(el("div","mgraph-empty","Chart appears as weeks are logged.")); return; }
