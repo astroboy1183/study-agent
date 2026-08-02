@@ -28,11 +28,11 @@ I commit code **and** the agent auto-commits notes — organised day by day
 
 | Track | Weeks | Focus | 📂 Repo |
 |---|---|---|---|
-| **Computer Vision** | 1–12 | images as tensors, classical CV & document pipelines, CNNs & PyTorch, transfer learning, segmentation, detection, ViT, CLIP, diffusion, Document AI + VLMs, video/3D | **[cv](https://github.com/astroboy1183/cv)** |
-| **Data Engineering** | 13–30 | Python, storage internals, SQL & dimensional modeling, dbt, Spark/PySpark, Databricks lakehouse, Kafka streaming, orchestration | **[de](https://github.com/astroboy1183/de)** |
-| **Data Science & ML** | 31–45 | stats & A/B testing, ML from scratch, gradient boosting, feature stores, evaluation, forecasting, recommenders, MLflow, deployment | **[ml](https://github.com/astroboy1183/ml)** |
-| **Deep Learning & AI** | 46–60 | neural nets, training at scale (DDP/FSDP), graph neural nets, transformers from scratch, training GPTs, LLM apps, RAG, LoRA fine-tuning, agents & MCP, GraphRAG | **[ai](https://github.com/astroboy1183/ai)** |
-| **Linux & Systems** | 61–74 | shell & automation, server hardening, systems programming, a container runtime from scratch, Kubernetes, IaC/GitOps, observability | **[linux](https://github.com/astroboy1183/linux)** |
+| **Computer Vision** | 1–12 | images as tensors, classical CV & document pipelines, CNNs & PyTorch, transfer learning, segmentation, detection, ViT, CLIP, diffusion, Document AI + VLMs, video/3D | **[computer-vision](https://github.com/astroboy1183/computer-vision)** |
+| **Data Engineering** | 13–30 | Python, storage internals, SQL & dimensional modeling, dbt, Spark/PySpark, Databricks lakehouse, Kafka streaming, orchestration | **[data-engineering](https://github.com/astroboy1183/data-engineering)** |
+| **Data Science & ML** | 31–45 | stats & A/B testing, ML from scratch, gradient boosting, feature stores, evaluation, forecasting, recommenders, MLflow, deployment | **[data-science-ml](https://github.com/astroboy1183/data-science-ml)** |
+| **Deep Learning & AI** | 46–60 | neural nets, training at scale (DDP/FSDP), graph neural nets, transformers from scratch, training GPTs, LLM apps, RAG, LoRA fine-tuning, agents & MCP, GraphRAG | **[deep-learning-ai](https://github.com/astroboy1183/deep-learning-ai)** |
+| **Linux & Systems** | 61–74 | shell & automation, server hardening, systems programming, a container runtime from scratch, Kubernetes, IaC/GitOps, observability | **[linux-systems](https://github.com/astroboy1183/linux-systems)** |
 
 Each week is **5 theory days (weekdays) + 1 build (Saturday) + 1 consolidation
 (Sunday)** — 74 flagship builds in all, from a document scanner and a from-scratch
@@ -218,9 +218,10 @@ sequenceDiagram
   W-->>You: recap in Telegram
 ```
 
-Each note is routed to the right repo by week (`1–12 → cv`, `13–30 → de`,
-`31–45 → ml`, `46–60 → ai`, `61–74 → linux`), lands in that day's folder as
-`notes.md` next to my code, and carries the topic,
+Each note is routed to the right repo by week (`1–12 → computer-vision`,
+`13–30 → data-engineering`, `31–45 → data-science-ml`, `46–60 → deep-learning-ai`,
+`61–74 → linux-systems`), lands in that day's folder as `notes.md` next to my
+code, and carries the topic,
 the day's work, a mastery check, and a model-written deep dive. All GitHub
 commits are made with a personal access token and are authored under my own
 account.

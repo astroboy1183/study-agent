@@ -663,11 +663,11 @@ window.addEventListener("resize", updateScrollCues);
 
 /* four-track overview */
 var TRACK_META={
-  "Computer Vision":{c:"var(--cv)",repo:"cv"},
-  "Data Engineering":{c:"var(--blue)",repo:"de"},
-  "Data Science & ML":{c:"var(--green)",repo:"ml"},
-  "Deep Learning & AI":{c:"var(--pink)",repo:"ai"},
-  "Linux & Systems":{c:"var(--violet)",repo:"linux"}
+  "Computer Vision":{c:"var(--cv)",repo:"computer-vision"},
+  "Data Engineering":{c:"var(--blue)",repo:"data-engineering"},
+  "Data Science & ML":{c:"var(--green)",repo:"data-science-ml"},
+  "Deep Learning & AI":{c:"var(--pink)",repo:"deep-learning-ai"},
+  "Linux & Systems":{c:"var(--violet)",repo:"linux-systems"}
 };
 // Recruiter-friendly DISPLAY names for the tracks (internal keys/content unchanged).
 var TRACK_LABEL={
@@ -849,7 +849,7 @@ function ytHref(q){
   return "https://www.youtube.com/results?search_query="+encodeURIComponent(c).replace(/\\(/g,"%28").replace(/\\)/g,"%29");
 }
 function daySlug(title){ return (title||"").replace(/[^\\w\\- ]/g,"").trim().replace(/\\s+/g,"-").toLowerCase().slice(0,50); }
-function weekRepo(w){ if(w<=12)return "cv"; if(w<=30)return "de"; if(w<=45)return "ml"; if(w<=60)return "ai"; return "linux"; }
+function weekRepo(w){ if(w<=12)return "computer-vision"; if(w<=30)return "data-engineering"; if(w<=45)return "data-science-ml"; if(w<=60)return "deep-learning-ai"; return "linux-systems"; }
 function unitHtml(d){
   var out="<div class='rm-meta'>Day "+d.id+" · Week "+d.week+" · "+d.type+"</div>";
   if(/\\[Block [A-Z]\\]/.test(d.text||"")){
