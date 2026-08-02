@@ -490,13 +490,17 @@ function trackReadme(env, week, state) {
   const agent = env.REPO ? `https://github.com/${env.REPO}` : DASHBOARD_URL;
   return (
     `# ${b.name}\n\n` +
+    `> **📦 Not a standalone repo — this is part of [study-agent](${agent}).**  ` +
+    `It's one of **${TRACK_BOUNDS.length} track repos** in my learning-in-public roadmap: a Telegram ` +
+    "study coach that serves me one topic a day and, when I check in, auto-writes the " +
+    "`notes.md` deep-dives you see here. The code is mine; the notes are generated.  \n" +
+    `> **[▶ Start at study-agent](${agent})**  ·  **[📊 Live dashboard](${DASHBOARD_URL})**\n\n` +
     `My **code + written notes**, day by day, for **Weeks ${b.lo}–${b.hi}** of my 74-week ` +
     "Computer Vision · Data · ML · AI · Linux mastery roadmap.\n\n" +
     "**How it works:** each day I commit my code into that day's folder — " +
     "`week-NN/day-NNN-slug/` — and my study agent auto-writes a `notes.md` deep-dive in the " +
     "same folder when I check in. Builds are the 🔨 Saturday projects.\n\n" +
-    `📊 **[Live progress dashboard](${DASHBOARD_URL})**  ·  ⚙️ **[The study agent](${agent})**\n\n` +
-    `🧭 **Tracks:** ${siblings}\n\n` +
+    `🧭 **All tracks:** ${siblings}\n\n` +
     "---\n\n" +
     `### ${days.length} day${days.length === 1 ? "" : "s"} done\n\n` +
     (rows.length
