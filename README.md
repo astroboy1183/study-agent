@@ -45,17 +45,17 @@ ViT to a mini LSM-tree engine, a production RAG app, and a container runtime.
 <!-- PROGRESS:START -->
 `░░░░░░░░░░░░░░░░░░░░░░░░`
 
-**0/518** days done · **0.0%**
+**0/525** days done · **0.0%**
 
 <sub>▓ done · ▒ in progress (½ credit) · ░ to go</sub>
 
-- **Current:** Week 1/74
+- **Current:** Week 1/75
 - **Streak:** 0 days
-- **Pending builds:** 74
+- **Pending builds:** 75
 - **Last completed:** —
-- **Updated:** 2026-08-02 18:23 IST
+- **Updated:** 2026-08-02 19:08 IST
 
-<details><summary>74-week board (✅ done · 🟨 partial · ⬜ pending · Mon→Sun)</summary>
+<details><summary>75-week board (✅ done · 🟨 partial · ⬜ pending · Mon→Sun)</summary>
 
 `W01` ⬜⬜⬜⬜⬜⬜⬜
 `W02` ⬜⬜⬜⬜⬜⬜⬜
@@ -131,6 +131,7 @@ ViT to a mini LSM-tree engine, a production RAG app, and a container runtime.
 `W72` ⬜⬜⬜⬜⬜⬜⬜
 `W73` ⬜⬜⬜⬜⬜⬜⬜
 `W74` ⬜⬜⬜⬜⬜⬜⬜
+`W75` ⬜⬜⬜⬜⬜⬜⬜
 
 </details>
 <!-- PROGRESS:END -->
