@@ -1054,7 +1054,7 @@ const SHOWCASE = [
     blurb: "An agent that turns plain-English questions into validated, read-only SQL against a real warehouse, executes them safely (guarded, LIMIT-enforced), and returns results with an auto-generated chart and a natural-language summary. Add schema-awareness, error self-correction, and a chat UI. One of the most demo-able, hire-me AI projects you can ship." },
   { id: "s2", name: "AI research assistant (multi-agent + MCP)", tech: ["multi-agent", "MCP", "RAG", "tools"],
     demo: "Give it a topic; specialized agents plan, search, use tools, and produce a cited report.",
-    blurb: "A multi-agent system where an orchestrator delegates to specialized workers (search, read, summarize, critique) that use tools via MCP and RAG over real sources, then synthesize a cited report. Add evals, guardrails, and cost controls. On-brand with your bot fleet and a strong centerpiece." },
+    blurb: "A multi-agent system where an orchestrator delegates to specialized workers (search, read, summarize, critique) that use tools via MCP and RAG over real sources, then synthesize a cited report. Add evals, guardrails, and cost controls. A strong, demo-able centerpiece." },
   { id: "s3", name: "Semantic search engine over a large corpus", tech: ["embeddings", "vector DB", "RAG", "web"],
     demo: "Fast hybrid (semantic + keyword) search over a big real corpus (arXiv/Wikipedia/docs), with a clean web UI.",
     blurb: "Ingest a large real corpus, embed it, and build hybrid search with reranking and a polished web UI — filters, highlighting, and 'ask a question' RAG on top. A genuinely useful, deployable product that shows retrieval + systems skills." },
@@ -1068,8 +1068,8 @@ const SHOWCASE = [
     demo: "Streaming features + a model scoring transactions in real time via an API, with monitoring.",
     blurb: "A real-time scoring service: streaming feature computation, a trained anomaly/fraud model, a low-latency API, and monitoring for drift + alert rates. Handle imbalance, thresholds, and a feedback loop. A high-signal ML-engineering product." },
   { id: "s7", name: "Code-review AI agent", tech: ["LLM", "GitHub API", "agents"],
-    demo: "Reviews GitHub PRs, leaves inline comments, and runs checks — like your fleet's repo-review.",
-    blurb: "An agent that watches PRs, reads the diff, runs static checks, and leaves useful inline review comments via the GitHub API — with guardrails so it's helpful, not noisy. Directly extends your fleet and demos beautifully on your own repos." },
+    demo: "Reviews GitHub PRs, leaves inline comments, and runs checks — automated PR review.",
+    blurb: "An agent that watches PRs, reads the diff, runs static checks, and leaves useful inline review comments via the GitHub API — with guardrails so it's helpful, not noisy. Demos beautifully on your own repos." },
   { id: "s8", name: "Fine-tuned domain LLM + serving + eval", tech: ["LoRA", "vLLM", "evals"],
     demo: "LoRA fine-tune an open model for a domain, serve it with vLLM, with a real eval harness.",
     blurb: "Curate an instruction dataset, LoRA/QLoRA fine-tune an open model, serve it efficiently with vLLM, and build an eval harness that proves it beats the base model and a prompted baseline. The full 'adapt a model' skill set few can do end to end." },
@@ -1087,6 +1087,11 @@ const SHOWCASE = [
     blurb: "A Kubernetes operator (Go + a CRD) that encodes real operational knowledge — automating backups, provisioning a data service, or managing your platform's lifecycle — with reconcile loops, status, and tests. Elite-tier infra credibility." },
 ];
 const SHOWCASE_IDS = new Set(SHOWCASE.map((s) => s.id));
+// Curated headliners for the "Featured" strip — a handful of the most impressive
+// pieces spread across all five tracks (not every flagged build). Everything else
+// lives in the collapsible "all builds" grid.
+const HEADLINE_WEEKS = new Set([12, 23, 50, 53, 68, 71, 74]);
+const HEADLINE_SHOWCASE = new Set(["s1", "s5"]);
 
 // Projects, auto-derived from the roadmap: every weekly BUILD unit is a project.
 function cleanName(title) {
@@ -1113,6 +1118,7 @@ function projectsData(state) {
       blurb: firstSentence(u.text),
       tech: u.tech || [],
       flag: !!u.flag,
+      headline: HEADLINE_WEEKS.has(u.week),
       demo: u.demo || "", // the resume line (what it demonstrates)
       repo, // owner-attached GitHub URL
       demoUrl: (lk.demo || "").trim(), // owner-attached live-demo URL
@@ -1129,7 +1135,7 @@ function projectsData(state) {
     const repo = (lk.repo || "").trim();
     return {
       id: sp.id, name: sp.name, blurb: sp.blurb, demo: sp.demo, tech: sp.tech,
-      flag: true, showcase: true, week: 0,
+      flag: true, showcase: true, headline: HEADLINE_SHOWCASE.has(sp.id), week: 0,
       repo, demoUrl: (lk.demo || "").trim(), status: repo ? "built" : "planned",
     };
   });
@@ -1150,7 +1156,7 @@ function projectsData(state) {
           theoryLeft: curLeft,
         }
       : null,
-    featured: all.filter((x) => x.flag),
+    featured: all.filter((x) => x.headline),
     all,
   };
 }

@@ -35,6 +35,7 @@ export const PAGE = `<!DOCTYPE html>
 @property --ang{syntax:'<angle>'; inherits:false; initial-value:120deg}
 @keyframes rot{to{--ang:480deg}}
 *{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth; scrollbar-color:#2c3354 #080911}
 body{font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;
   background:var(--bg); color:var(--txt); min-height:100vh; overflow-x:hidden}
@@ -305,10 +306,18 @@ footer .r{margin-left:auto}
 @media(prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 
 /* roadmap browser */
-.rm-phase{margin:1.4rem 0 .5rem;display:flex;align-items:center;gap:.7rem;scroll-margin-top:84px}
-.rm-phase:first-child{margin-top:.2rem}
+.rm-pgroup{margin:.2rem 0}
+summary.rm-phase{margin:1.1rem 0 .5rem;display:flex;align-items:center;gap:.6rem;scroll-margin-top:84px;
+  cursor:pointer;list-style:none;user-select:none}
+summary.rm-phase::-webkit-details-marker{display:none}
+.rm-pgroup:first-child>summary.rm-phase{margin-top:.2rem}
+.rm-pchev{font-family:var(--mono);font-size:.7rem;color:var(--pc);transition:transform .15s;flex:none}
+.rm-pgroup[open]>summary.rm-phase .rm-pchev{transform:rotate(90deg)}
 .rm-pname{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pc)}
-.rm-phase::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--pc) 45%,transparent),transparent)}
+.rm-pcount{font-family:var(--mono);font-size:.68rem;color:var(--faint);white-space:nowrap}
+summary.rm-phase::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--pc) 45%,transparent),transparent)}
+summary.rm-phase:hover .rm-pname{color:color-mix(in srgb,var(--pc) 75%,#fff)}
+.rm-pbody{padding-left:.1rem}
 .rm-week{border:1px solid var(--line);border-radius:10px;margin:.35rem 0;background:rgba(255,255,255,.015);overflow:hidden}
 .rm-week>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:.7rem;padding:.6rem .85rem}
 .rm-week>summary::-webkit-details-marker{display:none}
@@ -362,6 +371,9 @@ footer .r{margin-left:auto}
 .edit-btn:hover{color:var(--txt);border-color:var(--line2)}
 .edit-btn.on{color:var(--green);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.08)}
 .sub-min{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:.4rem 0 .8rem}
+.all-toggle{margin:1.6rem 0 0;font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--dim);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:.6rem 1rem;cursor:pointer;transition:.15s}
+.all-toggle:hover{color:var(--txt);border-color:var(--line2);background:rgba(255,255,255,.05)}
 .pgrid-c{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem}
 @media(max-width:820px){.pgrid-c{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.pgrid-c{grid-template-columns:1fr}}
@@ -462,10 +474,10 @@ footer .r{margin-left:auto}
 
   <div class="proj-head reveal"><h2>🚀 Projects</h2><span class="sub" id="proj-sub"></span><button id="edit-toggle" class="edit-btn">✎ Owner</button></div>
   <div id="proj-filter" class="filter-chips reveal"></div>
-  <div class="sub-min reveal">★ Featured — the pieces you'd headline</div>
+  <div class="sub-min reveal">★ Featured — the pieces I'd headline</div>
   <div id="featured" class="pgrid reveal"></div>
-  <div class="sub-min reveal" style="margin-top:1.7rem">All builds</div>
-  <div id="all-projects" class="pgrid-c reveal"></div>
+  <button id="all-toggle" class="all-toggle reveal"></button>
+  <div id="all-projects" class="pgrid-c" hidden></div>
 
   <div class="sec reveal"><h2>📚 The roadmap</h2><span class="sub">all 75 weeks · click any day for its concept, video &amp; coding rep</span></div>
   <div id="rm-filter" class="filter-chips reveal"></div>
@@ -735,8 +747,13 @@ function renderLearned(s){
 // cumulative-progress momentum chart (SVG, neon glow) — actual pace vs the ideal 7/week line
 function renderGraph(s){
   var c=$("graph"); if(!c) return; c.replaceChildren();
-  var W=820,H=230,pl=10,pr=10,pt=16,pb=10;
   var total=s.total||525, weeks=s.weeks||75;
+  // at zero progress the chart is an empty box — show a compact one-liner instead
+  if(!s.done){
+    c.appendChild(el("div","mgraph-empty","🚀 Your progress line lifts off the moment you log Day 1 — it'll climb here against the ideal 7-days-a-week pace (→ "+total+")."));
+    return;
+  }
+  var W=820,H=230,pl=10,pr=10,pt=16,pb=10;
   var cum=0, actual=[];
   (s.board||[]).forEach(function(wk){ (wk.cells||[]).forEach(function(cc){ if(cc.status==="done") cum++; }); actual.push(cum); });
   var n=actual.length; if(n<2){ c.appendChild(el("div","mgraph-empty","Chart appears as weeks are logged.")); return; }
@@ -790,6 +807,7 @@ function renderTracks(s){
 function goToPhase(name){
   var target=document.getElementById(phaseSlug(name));
   if(!target) return;
+  var grp=target.closest("details.rm-pgroup"); if(grp) grp.open=true; // expand the track first
   target.scrollIntoView({behavior:"smooth", block:"start"});
   target.classList.remove("flash"); void target.offsetWidth; target.classList.add("flash");
 }
@@ -800,32 +818,52 @@ function renderRoadmap(s){
   var rm=$("roadmap"); if(!rm) return; rm.replaceChildren();
   filterChips($("rm-filter"), trackFilterOpts([{key:"core",label:"⚡ Core path"}]), rmFilter, function(k){ rmFilter=k; renderRoadmap(s); });
   var byWeek={}; (s.board||[]).forEach(function(wk){ byWeek[wk.week]=wk.cells; });
-  var cur=null;
+  var curWeek=(s.current && s.current.week) || s.currentWeek || 1;
+  var curPhase=weekTrack(curWeek);
+  // group the (filtered) weeks by phase so each track is a collapsible section
+  var groups=[], byPhase={};
   (s.weeksMeta||[]).forEach(function(w){
     if(rmFilter==="core"){ if(w.core===false) return; }
     else if(rmFilter!=="all" && w.phase!==rmFilter) return;
-    if(w.phase!==cur){ cur=w.phase;
-      var ph=el("div","rm-phase"); ph.id=phaseSlug(w.phase); ph.style.setProperty("--pc", PHASE_COLOR[w.phase]||"var(--blue)");
-      ph.appendChild(el("span","rm-pname", trackLabel(w.phase))); rm.appendChild(ph); }
-    var cells=byWeek[w.n]||[];
-    var doneN=cells.filter(function(c){return c.status==="done";}).length;
-    var det=document.createElement("details"); det.className="rm-week";
-    var sum=document.createElement("summary");
-    sum.appendChild(el("span","rm-wn","W"+pad(w.n)));
-    sum.appendChild(el("span","rm-theme", w.title));
-    if(w.core===false) sum.appendChild(el("span","rm-deep","deep dive"));
-    sum.appendChild(el("span","rm-count", doneN?doneN+"/7":""));
-    det.appendChild(sum);
-    var days=el("div","rm-days");
-    cells.forEach(function(c){
-      var row=el("div","rm-day"+(c.status==="done"?" done":""));
-      row.appendChild(el("span","rm-dl", "Day "+c.id));
-      var dot=el("span","rm-dot"); dot.style.background="var(--"+c.type+")"; row.appendChild(dot);
-      row.appendChild(el("span","rm-dt", c.title));
-      clickable(row, function(){ openUnit(c.id); });
-      days.appendChild(row);
+    if(!byPhase[w.phase]){ byPhase[w.phase]={phase:w.phase, weeks:[]}; groups.push(byPhase[w.phase]); }
+    byPhase[w.phase].weeks.push(w);
+  });
+  groups.forEach(function(g){
+    var grp=document.createElement("details"); grp.className="rm-pgroup";
+    grp.style.setProperty("--pc", PHASE_COLOR[g.phase]||"var(--blue)");
+    // only the current track is open by default (or the one you filtered to)
+    if(g.phase===curPhase || rmFilter===g.phase) grp.open=true;
+    var sum=document.createElement("summary"); sum.className="rm-phase"; sum.id=phaseSlug(g.phase);
+    sum.appendChild(el("span","rm-pchev","▸"));
+    sum.appendChild(el("span","rm-pname", trackLabel(g.phase)));
+    var doneAll=0, totAll=0;
+    g.weeks.forEach(function(w){ var cs=byWeek[w.n]||[]; doneAll+=cs.filter(function(c){return c.status==="done";}).length; totAll+=cs.length; });
+    var lastW=g.weeks[g.weeks.length-1].n;
+    sum.appendChild(el("span","rm-pcount","W"+g.weeks[0].n+"–"+lastW+(doneAll?(" · "+doneAll+"/"+totAll+" done"):"")));
+    grp.appendChild(sum);
+    var body=el("div","rm-pbody");
+    g.weeks.forEach(function(w){
+      var cells=byWeek[w.n]||[];
+      var doneN=cells.filter(function(c){return c.status==="done";}).length;
+      var det=document.createElement("details"); det.className="rm-week";
+      var wsum=document.createElement("summary");
+      wsum.appendChild(el("span","rm-wn","W"+pad(w.n)));
+      wsum.appendChild(el("span","rm-theme", w.title));
+      if(w.core===false) wsum.appendChild(el("span","rm-deep","deep dive"));
+      wsum.appendChild(el("span","rm-count", doneN?doneN+"/7":""));
+      det.appendChild(wsum);
+      var days=el("div","rm-days");
+      cells.forEach(function(c){
+        var row=el("div","rm-day"+(c.status==="done"?" done":""));
+        row.appendChild(el("span","rm-dl", "Day "+c.id));
+        var dot=el("span","rm-dot"); dot.style.background="var(--"+c.type+")"; row.appendChild(dot);
+        row.appendChild(el("span","rm-dt", c.title));
+        clickable(row, function(){ openUnit(c.id); });
+        days.appendChild(row);
+      });
+      det.appendChild(days); body.appendChild(det);
     });
-    det.appendChild(days); rm.appendChild(det);
+    grp.appendChild(body); rm.appendChild(grp);
   });
 }
 function openUnit(id){
@@ -921,6 +959,7 @@ function projMatch(p){
   if(projFilter==="built") return p.status==="built";
   return weekTrack(p.week)===projFilter;
 }
+var projAllOpen=false;
 function renderProjects(s){
   var pr=s.projects;
   $("proj-sub").textContent = pr.built+" built · "+pr.studied+" studied · "+pr.total+" projects";
@@ -929,9 +968,15 @@ function renderProjects(s){
   var feat=$("featured"); feat.replaceChildren();
   if(!fl.length) feat.appendChild(el("div","empty","No featured projects match this filter."));
   fl.forEach(function(p){ feat.appendChild(projectCard(p, true)); });
+  // the full grid (all weekly builds + showcases) lives behind a toggle so the page stays short
   var all=$("all-projects"); all.replaceChildren();
   if(!al.length) all.appendChild(el("div","empty","No projects match this filter."));
   al.forEach(function(p){ all.appendChild(projectCard(p, false)); });
+  var tog=$("all-toggle");
+  all.hidden=!projAllOpen;
+  tog.textContent=(projAllOpen?"▾ Hide the full list":"▸ Show all "+al.length+" builds & showcases");
+  tog.onclick=function(){ projAllOpen=!projAllOpen; all.hidden=!projAllOpen;
+    tog.textContent=(projAllOpen?"▾ Hide the full list":"▸ Show all "+al.length+" builds & showcases"); };
 }
 function projectCard(p, big){
   var c=el("div","pcard"+(p.status==="planned"?" up":""));
