@@ -1,10 +1,10 @@
 # study-agent
 
-A personal study coach that turns a **62-week, 434-day mastery roadmap** —
-Data Engineering → Data Science & ML → Deep Learning & AI → Linux & Systems —
-into **one topic a day**, delivered over Telegram, tracked on a **public
-dashboard**, and written up as a **deep-dive note pushed to GitHub** every day
-I finish.
+A personal study coach that turns a **74-week, 518-day mastery roadmap** —
+Computer Vision → Data Engineering → Data Science & ML → Deep Learning & AI →
+Linux & Systems — into **one topic a day**, delivered over Telegram, tracked on a
+**public dashboard**, and written up as a **deep-dive note pushed to GitHub**
+every day I finish.
 
 It runs **24/7 on Cloudflare — no server, no always-on machine.** The whole
 thing is a single Worker: a Telegram webhook, two daily cron sends, a public
@@ -19,22 +19,24 @@ dashboard, and per-track note commits, all backed by a key-value store.
 
 ---
 
-## The four tracks
+## The five tracks
 
-The roadmap runs as four ordered tracks, each with **its own public repo** where
+The roadmap runs as five ordered tracks, each with **its own public repo** where
 I commit code **and** the agent auto-commits notes — organised day by day
 (`week-NN/day-NNN-slug/` holds my code + an auto-generated `notes.md`).
+**Computer Vision runs first** (a work priority), then the rest.
 
 | Track | Weeks | Focus | 📂 Repo |
 |---|---|---|---|
-| **Data Engineering** | 1–18 | Python, storage internals, SQL & dimensional modeling, dbt, Spark/PySpark, Databricks lakehouse, Kafka streaming, orchestration | **[de](https://github.com/astroboy1183/de)** |
-| **Data Science & ML** | 19–33 | stats & A/B testing, ML from scratch, gradient boosting, feature stores, evaluation, forecasting, recommenders, MLflow, deployment | **[ml](https://github.com/astroboy1183/ml)** |
-| **Deep Learning & AI** | 34–48 | neural nets → PyTorch, CNNs, transformers from scratch, training GPTs, LLM apps, RAG, LoRA fine-tuning, agents & MCP | **[ai](https://github.com/astroboy1183/ai)** |
-| **Linux & Systems** | 49–62 | shell & automation, server hardening, systems programming, a container runtime from scratch, Kubernetes, IaC/GitOps, observability | **[linux](https://github.com/astroboy1183/linux)** |
+| **Computer Vision** | 1–12 | images as tensors, classical CV & document pipelines, CNNs & PyTorch, transfer learning, segmentation, detection, ViT, CLIP, diffusion, Document AI + VLMs, video/3D | **[cv](https://github.com/astroboy1183/cv)** |
+| **Data Engineering** | 13–30 | Python, storage internals, SQL & dimensional modeling, dbt, Spark/PySpark, Databricks lakehouse, Kafka streaming, orchestration | **[de](https://github.com/astroboy1183/de)** |
+| **Data Science & ML** | 31–45 | stats & A/B testing, ML from scratch, gradient boosting, feature stores, evaluation, forecasting, recommenders, MLflow, deployment | **[ml](https://github.com/astroboy1183/ml)** |
+| **Deep Learning & AI** | 46–60 | neural nets, training at scale (DDP/FSDP), graph neural nets, transformers from scratch, training GPTs, LLM apps, RAG, LoRA fine-tuning, agents & MCP, GraphRAG | **[ai](https://github.com/astroboy1183/ai)** |
+| **Linux & Systems** | 61–74 | shell & automation, server hardening, systems programming, a container runtime from scratch, Kubernetes, IaC/GitOps, observability | **[linux](https://github.com/astroboy1183/linux)** |
 
 Each week is **5 theory days (weekdays) + 1 build (Saturday) + 1 consolidation
-(Sunday)** — 62 flagship builds in all, from a mini LSM-tree engine to a
-production RAG app to a container runtime.
+(Sunday)** — 74 flagship builds in all, from a document scanner and a from-scratch
+ViT to a mini LSM-tree engine, a production RAG app, and a container runtime.
 
 ---
 
@@ -178,7 +180,7 @@ flowchart LR
   Browser -->|"GET / and /api/*"| W
 
   W -->|"briefs &amp; Q&amp;A"| ANT["Anthropic Messages API"]
-  W -->|"notes + progress board"| GH["GitHub API<br/>4 notes repos + this README"]
+  W -->|"notes + progress board"| GH["GitHub API<br/>5 notes repos + this README"]
   W -->|"sendMessage / answerCallback"| TG
 ```
 
@@ -216,9 +218,9 @@ sequenceDiagram
   W-->>You: recap in Telegram
 ```
 
-Each note is routed to the right repo by week (`1–18 → de`, `19–33 → ml`,
-`34–48 → ai`, `49–62 → linux`), lands in that day's folder as `notes.md`
-next to my code, and carries the topic,
+Each note is routed to the right repo by week (`1–12 → cv`, `13–30 → de`,
+`31–45 → ml`, `46–60 → ai`, `61–74 → linux`), lands in that day's folder as
+`notes.md` next to my code, and carries the topic,
 the day's work, a mastery check, and a model-written deep dive. All GitHub
 commits are made with a personal access token and are authored under my own
 account.
@@ -227,7 +229,7 @@ account.
 
 ## The schedule (day-of-week + pointer)
 
-The plan is 434 ordered units served by **day of week**, never by calendar
+The plan is 518 ordered units served by **day of week**, never by calendar
 date. A pointer walks the queue; finishing a day advances it, missing one
 doesn't.
 
@@ -265,20 +267,21 @@ Any **non-command message** is treated as a question and answered in context.
 
 ## The dashboard
 
-A **public** single page (aurora theme, rendered client-side from
+A **public** single page (synthwave theme, rendered client-side from
 `/api/state`) — built for anyone visiting to see the work at a glance:
 
 - Hero **% complete**, **honest streak**, current week, domains, builds.
-- A **62-week board** heatmap of every day, colored by type; click a finished
+- A **74-week board** heatmap of every day, colored by type; click a finished
   cell to reread its brief.
-- The full **roadmap browser**, **projects** (the 62 builds, with owner-attached
+- The full **roadmap browser**, **projects** (the 74 builds, with owner-attached
   repo/demo links), and a **presence heatmap**.
-- An **owner edit mode** (passphrase-gated): attach project links and hit
+- An **owner mode** (passwordless): sign in via a one-tap Telegram `/login` link
+  (or a short cross-device code), then attach project links and hit
   **✓ I studied it** to check in. Everything else is read-only for visitors.
 
 Reads are public; **writes** (`/api/checkin`, `/api/project`, `/api/auth`)
-require the `STUDY_UI_KEY` passphrase — a wrong key returns 401 after a
-deliberate delay.
+require an HMAC device token minted by Telegram `/login` and signed with
+`STUDY_UI_KEY` — the old passphrase login is disabled.
 
 ---
 
@@ -286,8 +289,8 @@ deliberate delay.
 
 ```
 study-agent/
-├── plan.json               # the 434-unit roadmap (source of truth for content)
-├── generate_plan_v2.py     # regenerates plan.json (62 weeks, 4 tracks)
+├── plan.json               # the 518-unit roadmap (source of truth for content)
+├── generate_plan_v2.py     # regenerates plan.json (74 weeks, 5 tracks)
 ├── daily-plan.md           # human-readable roadmap
 ├── cloud/                  # ← the live deployment
 │   ├── worker.js           #   backend: webhook + cron + dashboard API + notes push
@@ -312,7 +315,7 @@ printf '%s' "<bot-token>"              | npx wrangler secret put STUDY_BOT_TOKEN
 printf '%s' "<numeric-chatid>"         | npx wrangler secret put STUDY_CHAT_ID
 printf '%s' "<anthropic-key>"          | npx wrangler secret put ANTHROPIC_API_KEY
 printf '%s' "$(openssl rand -hex 24)"  | npx wrangler secret put TG_SECRET
-printf '%s' "<dashboard-passphrase>"   | npx wrangler secret put STUDY_UI_KEY
+printf '%s' "$(openssl rand -hex 24)"  | npx wrangler secret put STUDY_UI_KEY  # signs owner device tokens
 printf '%s' "<github-pat>"             | npx wrangler secret put GH_PAT   # notes + board
 
 # 3. seed the initial state, then deploy (bundles ../plan.json + page.js)
@@ -329,9 +332,9 @@ curl -X POST "https://api.telegram.org/bot<token>/setWebhook" \
        "allowed_updates":["message","callback_query"]}'
 ```
 
-**Vars** (`wrangler.jsonc`) point the notes push at the four repos:
-`NOTES_REPO_DE`, `NOTES_REPO_ML`, `NOTES_REPO_AI`, `NOTES_REPO_LINUX`, plus
-`REPO` for this README's progress board.
+**Vars** (`wrangler.jsonc`) point the notes push at the five repos:
+`NOTES_REPO_CV`, `NOTES_REPO_DE`, `NOTES_REPO_ML`, `NOTES_REPO_AI`,
+`NOTES_REPO_LINUX`, plus `REPO` for this README's progress board.
 
 **Operations:** `npx wrangler tail` for live logs, `npx wrangler deploy` to
 redeploy, `npx wrangler kv key get/put state --remote` to inspect or edit
@@ -343,8 +346,9 @@ progress.
 
 - **Webhook** — rejects any request without the exact `TG_SECRET` header (403),
   and ignores any chat that isn't `STUDY_CHAT_ID`.
-- **Dashboard** — reads are public and data-only; **all writes** require the
-  `STUDY_UI_KEY` passphrase (wrong key → 401 after a deliberate delay).
+- **Dashboard** — reads are public and data-only; **all writes** require an HMAC
+  device token minted by a one-tap Telegram `/login` and signed with
+  `STUDY_UI_KEY` (invalid token → 401 after a deliberate delay).
 - **Page** — a strict Content-Security-Policy blocks external/cross-origin
   requests.
 - **Secrets** — never in the repo or bundle; stored encrypted in Cloudflare and

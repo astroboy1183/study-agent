@@ -30,12 +30,11 @@ import { PAGE } from "./page.js";
 
 const PLAN = PLAN_DATA.units || PLAN_DATA;
 const WEEKS_META = PLAN_DATA.weeks || []; // [{n, title, phase}] for the roadmap view
-// Computer Vision — a priority track (16 sessions) served BEFORE the main plan.
-const PRIORITY = PLAN_DATA.priority || [];
-const BY_ID = Object.fromEntries(PLAN.concat(PRIORITY).map((u) => [String(u.id), u]));
+// Computer Vision is now weeks 1-12 of the main plan (studied first), not a
+// separate priority sequence — see TRACK_BOUNDS.
+const BY_ID = Object.fromEntries(PLAN.map((u) => [String(u.id), u]));
 const TOTAL = PLAN.length;
 const WEEKS = PLAN.reduce((m, u) => Math.max(m, u.week), 0);
-const priorityPending = (state) => PRIORITY.filter((u) => !(String(u.id) in state.done));
 
 const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const ICON = { theory: "\u{1F4D6}", build: "\u{1F528}", consolidate: "\u{1F9E0}", cv: "\u{1F3AF}" };
@@ -168,9 +167,8 @@ function pending(state) {
 //   Saturday: overdue theory first (older in the queue), else this week's build
 //   Sunday  : the oldest pending unit, whatever it is, then consolidation
 function nextUnitFor(state, dow) {
-  // Computer Vision priority track comes first, in order, regardless of weekday.
-  const cv = priorityPending(state);
-  if (cv.length) return cv[0];
+  // Computer Vision is weeks 1-12 of the plan, so pending-order already serves it
+  // first; no special-casing needed.
   const p = pending(state);
   if (!p.length) return null;
   if (dow <= 4) {
@@ -202,14 +200,6 @@ function ytSearchUrl(q) {
   );
 }
 function fmtUnit(u, dow) {
-  if (u.type === "cv") {
-    let head =
-      `${ICON.cv} *Computer Vision (priority) · session ${u.session}/${PRIORITY.length} · ~${EFFORT.cv}*\n` +
-      `*${u.title}*\n\n${u.text}`;
-    const m = (u.text || "").match(/🎥 Watch: (.+)/);
-    if (m) head += `\n\n🔎 [Find today's video on YouTube ▶](${ytSearchUrl(m[1])})`;
-    return head;
-  }
   let carry = "";
   if (dow != null && u.dow !== dow && u.type === "theory")
     carry = `  _(catching up ${DOW[u.dow]}'s topic)_`;
@@ -263,7 +253,7 @@ async function generateSummary(env, u) {
   const code = env.GH_PAT && repo ? await fetchDayCode(env, repo, folder) : null;
   let system = summaryPrompt(u);
   let user =
-    `Topic (${u.type === "cv" ? u.title : `Day ${u.id}, Week ${u.week}`}, ${u.type}): ${u.title}\n\n` +
+    `Topic (Day ${u.id}, Week ${u.week}, ${u.type}): ${u.title}\n\n` +
     `Today's task/material:\n${u.text}`;
   if (code) {
     system +=
@@ -276,11 +266,8 @@ async function generateSummary(env, u) {
   const body = await askModel(env, system, user, Number(env.SUMMARY_MAX_TOKENS || 4000));
   if (!body) return { note: "", cached: false };
   const stamp = code ? " · 🔗 with a review of my code" : "";
-  const heading = u.type === "cv" ? u.title : `Day ${u.id} — ${u.title}`;
-  const meta =
-    u.type === "cv"
-      ? `> Computer Vision · session ${u.session}/${PRIORITY.length} · studied ${istToday().ymd}${stamp}`
-      : `> Week ${u.week} · ${phaseName(u.week)} · ${u.type} · studied ${istToday().ymd}${stamp}`;
+  const heading = `Day ${u.id} — ${u.title}`;
+  const meta = `> Week ${u.week} · ${phaseName(u.week)} · ${u.type} · studied ${istToday().ymd}${stamp}`;
   const note =
     `# ${heading}\n\n` +
     `${meta}\n\n` +
@@ -442,10 +429,11 @@ async function regenerateNote(env, state, u, input) {
 // On /done, the day's rich note is committed there and the repo's README index
 // is regenerated. Never throws — a failed push just keeps the note in KV.
 const TRACK_BOUNDS = [
-  { name: "Data Engineering", lo: 1, hi: 18, envKey: "NOTES_REPO_DE" },
-  { name: "Data Science & ML", lo: 19, hi: 33, envKey: "NOTES_REPO_ML" },
-  { name: "Deep Learning & AI", lo: 34, hi: 48, envKey: "NOTES_REPO_AI" },
-  { name: "Linux & Systems", lo: 49, hi: 62, envKey: "NOTES_REPO_LINUX" },
+  { name: "Computer Vision", lo: 1, hi: 12, envKey: "NOTES_REPO_CV" },
+  { name: "Data Engineering", lo: 13, hi: 30, envKey: "NOTES_REPO_DE" },
+  { name: "Data Science & ML", lo: 31, hi: 45, envKey: "NOTES_REPO_ML" },
+  { name: "Deep Learning & AI", lo: 46, hi: 60, envKey: "NOTES_REPO_AI" },
+  { name: "Linux & Systems", lo: 61, hi: 74, envKey: "NOTES_REPO_LINUX" },
 ];
 const DASHBOARD_URL = "https://study-agent.jayanthapalla.workers.dev";
 function phaseName(week) {
@@ -453,51 +441,18 @@ function phaseName(week) {
   return t ? t.name : "";
 }
 function trackRepo(env, week) {
-  if (week <= 18) return env.NOTES_REPO_DE;
-  if (week <= 33) return env.NOTES_REPO_ML;
-  if (week <= 48) return env.NOTES_REPO_AI;
-  return env.NOTES_REPO_LINUX;
+  const b = TRACK_BOUNDS.find((x) => week >= x.lo && week <= x.hi);
+  return b ? env[b.envKey] : env.NOTES_REPO_LINUX;
 }
 function noteSlug(u) {
   return u.title.replace(/[^\w\- ]/g, "").trim().replace(/\s+/g, "-").toLowerCase().slice(0, 50);
 }
-function cvFolder(u) {
-  const slug = noteSlug({ title: u.title.replace(/^Session \d+ · /, "") });
-  return `session-${String(u.session).padStart(2, "0")}-${slug}`;
-}
-// Which repo + folder a unit's code and notes.md live in.
+// Which repo + folder a unit's code and notes.md live in. Every track (incl.
+// Computer Vision, weeks 1-12 -> the cv repo) uses week-NN/day-NNN-slug/.
 function noteTarget(env, u) {
-  if (u.type === "cv") {
-    return { repo: env.NOTES_REPO_CV, folder: cvFolder(u) };
-  }
   const wk = String(u.week).padStart(2, "0");
   const day = String(u.id).padStart(3, "0");
   return { repo: trackRepo(env, u.week), folder: `week-${wk}/day-${day}-${noteSlug(u)}` };
-}
-// The Computer Vision repo's README — a full session roadmap + progress index.
-function cvReadme(env, state) {
-  const doneN = PRIORITY.filter((u) => String(u.id) in state.done).length;
-  const secs = PRIORITY.map((u) => {
-    const folder = cvFolder(u);
-    const isDone = String(u.id) in state.done;
-    const watch = ((u.text || "").match(/🎥 Watch: (.+)/) || [])[1] || "";
-    const code = ((u.text || "").match(/💻 Code: (.+)/) || [])[1] || "";
-    return (
-      `### ${isDone ? "✅" : "⬜"} ${u.title}\n` +
-      `📂 \`${folder}/\`${isDone ? ` · [notes](${folder}/notes.md)` : ""}\n` +
-      (watch ? `- 🎥 ${watch}\n` : "") +
-      (code ? `- 💻 ${code}\n` : "")
-    );
-  });
-  return (
-    "# Computer Vision — Ground-Up\n\n" +
-    "My priority CV track — 16 sessions from what-an-image-is to Document AI + VLMs. " +
-    "I commit each session's code to `session-NN-slug/`, and my study agent auto-writes " +
-    "`notes.md` in the same folder when I check in. Built to run on a 4 GB GTX 1650.\n\n" +
-    `📊 **[Live dashboard](${DASHBOARD_URL})** · ⚙️ **[The study agent](https://github.com/${env.REPO || "astroboy1183/study-agent"})**\n\n` +
-    `**${doneN}/${PRIORITY.length} sessions done.**\n\n---\n\n` +
-    secs.join("\n")
-  );
 }
 async function ghPut(env, repo, path, content, message) {
   const url = `https://api.github.com/repos/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
@@ -535,8 +490,8 @@ function trackReadme(env, week, state) {
   const agent = env.REPO ? `https://github.com/${env.REPO}` : DASHBOARD_URL;
   return (
     `# ${b.name}\n\n` +
-    `My **code + written notes**, day by day, for **Weeks ${b.lo}–${b.hi}** of my 62-week ` +
-    "Data · ML · AI · Linux mastery roadmap.\n\n" +
+    `My **code + written notes**, day by day, for **Weeks ${b.lo}–${b.hi}** of my 74-week ` +
+    "Computer Vision · Data · ML · AI · Linux mastery roadmap.\n\n" +
     "**How it works:** each day I commit my code into that day's folder — " +
     "`week-NN/day-NNN-slug/` — and my study agent auto-writes a `notes.md` deep-dive in the " +
     "same folder when I check in. Builds are the 🔨 Saturday projects.\n\n" +
@@ -552,7 +507,7 @@ function trackReadme(env, week, state) {
 async function commitNote(env, u, note) {
   const { repo, folder } = noteTarget(env, u);
   if (!env.GH_PAT || !repo) return;
-  const label = u.type === "cv" ? u.title : `Day ${u.id} — ${u.title}`;
+  const label = `Day ${u.id} — ${u.title}`;
   try {
     // notes.md lives INSIDE the day's folder, alongside the code Jayanth commits
     const ok = await ghPut(env, repo, `${folder}/notes.md`, note, `notes: ${label}`);
@@ -566,7 +521,7 @@ async function commitNote(env, u, note) {
     }
     await env.STUDY.put(`pushed:${u.id}`, "1"); // notes.md is up on GitHub
     const state = await loadState(env); // regenerate the index from current progress
-    const readme = u.type === "cv" ? cvReadme(env, state) : trackReadme(env, u.week, state);
+    const readme = trackReadme(env, u.week, state);
     await ghPut(env, repo, "README.md", readme, `index: ${label}`);
   } catch (e) {
     console.error(`[notes] push failed (kept in KV): ${e}`);
@@ -1240,6 +1195,9 @@ const SKILL_BLOCK = new Set([
   "sharding", "tuning", "warehouse", "function-calling", "guardrails", "multimodal",
   "transfer learning", "contrastive learning", "prompting", "evals",
   "syscalls", "namespaces", "cgroups", "epoll", "hardening", "security", "firewall", "sockets", "/proc",
+  // vision / DL meta-labels + low-signal internals (shown better as the track name)
+  "computer vision", "image processing", "document AI", "DataLoader", "mixed precision",
+  "profiling", "distributed", "open_clip", "timm", "graphs", "structured output", "attention",
   // duplicates / superseded
   "Delta", "LLM", "LLM API", "LLM agents", "nanoGPT", "seq2seq", "tokenizers",
   // low-signal / minor
@@ -1260,6 +1218,10 @@ const SKILL_RENAME = {
   "Prophet": "Forecasting (Prophet)",
   "pgvector": "Vector Search (pgvector)", "vLLM": "LLM Serving (vLLM)",
   "PEFT": "Fine-tuning", "ARIMA": "Time Series (ARIMA)",
+  // computer-vision + graph track names → clear, recognisable skill names
+  "SAM": "Segment Anything (SAM)", "VAE": "VAEs", "GNN": "GNNs", "GAT": "Graph Attention (GAT)",
+  "DDP": "Distributed Training (DDP)", "detection": "Object Detection", "segmentation": "Segmentation",
+  "quantization": "Quantization", "knowledge graph": "Knowledge Graphs", "OCR": "OCR",
 };
 function learnedData(state) {
   // Tech stack derived ENTIRELY from the 62-week roadmap's build tags — nothing
@@ -1310,19 +1272,6 @@ function stateForUi(state) {
     byType,
     tracks: tracksData(state),
     learned: learnedData(state),
-    priority: {
-      total: PRIORITY.length,
-      done: PRIORITY.filter((u) => String(u.id) in state.done).length,
-      active: priorityPending(state).length > 0,
-      repo: "cv",
-      sessions: PRIORITY.map((u) => ({
-        id: u.id,
-        session: u.session,
-        title: u.title,
-        text: u.text,
-        done: String(u.id) in state.done,
-      })),
-    },
     grounded: state.recaps || {},
     current: cur
       ? { id: cur.id, week: cur.week, dow: cur.dow, type: cur.type, title: cur.title, text: cur.text, effort: EFFORT[cur.type] }
@@ -1351,14 +1300,14 @@ function ogSvg() {
 <rect width="1200" height="630" fill="url(#bg)"/>
 <circle cx="1060" cy="110" r="270" fill="#6366f1" opacity=".13"/>
 <circle cx="140" cy="580" r="230" fill="#f472b6" opacity=".08"/>
-<text x="80" y="150" font-family="system-ui,Segoe UI,sans-serif" font-size="26" font-weight="700" letter-spacing="4" fill="#a855f7">62-WEEK MASTERY ROADMAP</text>
+<text x="80" y="150" font-family="system-ui,Segoe UI,sans-serif" font-size="26" font-weight="700" letter-spacing="4" fill="#a855f7">74-WEEK MASTERY ROADMAP</text>
 <text x="76" y="272" font-family="system-ui,Segoe UI,sans-serif" font-size="98" font-weight="850" fill="#eef1fb">Jayanth Appalla</text>
 <text x="80" y="332" font-family="system-ui,Segoe UI,sans-serif" font-size="40" font-weight="700" fill="url(#tx)">Data &amp; AI Engineer · learning in public</text>
-<text x="80" y="428" font-family="system-ui,Segoe UI,sans-serif" font-size="30" fill="#9aa3c7">Data Engineering · Machine Learning · AI · Linux &amp; Systems</text>
+<text x="80" y="428" font-family="system-ui,Segoe UI,sans-serif" font-size="30" fill="#9aa3c7">Computer Vision · Data Engineering · ML · AI · Linux &amp; Systems</text>
 <g font-family="system-ui,Segoe UI,sans-serif">
 <text x="80" y="548" font-size="54" font-weight="800" fill="#eef1fb">74</text><text x="82" y="582" font-size="22" fill="#646a86">projects</text>
-<text x="320" y="548" font-size="54" font-weight="800" fill="#eef1fb">434</text><text x="322" y="582" font-size="22" fill="#646a86">days</text>
-<text x="560" y="548" font-size="54" font-weight="800" fill="#eef1fb">4</text><text x="562" y="582" font-size="22" fill="#646a86">domains</text>
+<text x="320" y="548" font-size="54" font-weight="800" fill="#eef1fb">518</text><text x="322" y="582" font-size="22" fill="#646a86">days</text>
+<text x="560" y="548" font-size="54" font-weight="800" fill="#eef1fb">5</text><text x="562" y="582" font-size="22" fill="#646a86">domains</text>
 </g>
 <text x="1120" y="585" text-anchor="end" font-family="ui-monospace,monospace" font-size="22" fill="#646a86">study-agent.jayanthapalla.workers.dev</text>
 </svg>`;

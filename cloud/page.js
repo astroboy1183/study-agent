@@ -11,14 +11,14 @@ export const PAGE = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jayanth Appalla — Learning in Public</title>
-<meta name="description" content="Jayanth Appalla — Data &amp; AI Engineer. A 62-week mastery roadmap across Data Engineering, ML, AI and Linux, with 74 portfolio projects, built and shipped in public.">
+<meta name="description" content="Jayanth Appalla — Data &amp; AI Engineer. A 74-week mastery roadmap across Computer Vision, Data Engineering, ML, AI and Linux, with portfolio projects, built and shipped in public.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Jayanth Appalla — Data &amp; AI Engineer, learning in public">
-<meta property="og:description" content="A 62-week mastery roadmap · 74 projects · Data Engineering, ML, AI &amp; Linux — built and shipped in public.">
+<meta property="og:description" content="A 74-week mastery roadmap · Computer Vision · Data Engineering · ML · AI · Linux — built and shipped in public.">
 <meta property="og:image" content="https://study-agent.jayanthapalla.workers.dev/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Jayanth Appalla — Data &amp; AI Engineer, learning in public">
-<meta name="twitter:description" content="A 62-week mastery roadmap · 74 projects · DE, ML, AI &amp; Linux — in public.">
+<meta name="twitter:description" content="A 74-week mastery roadmap · CV · DE · ML · AI · Linux — in public.">
 <meta name="twitter:image" content="https://study-agent.jayanthapalla.workers.dev/og.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
 <style>
@@ -27,7 +27,7 @@ export const PAGE = `<!DOCTYPE html>
   --line:rgba(255,45,149,.18); --line2:rgba(0,229,255,.32);
   --txt:#f4eefb; --dim:#c3b2dd; --faint:#9f92c4;
   --indigo:#7a5cff; --blue:#00e5ff; --violet:#b026ff; --pink:#ff2d95;
-  --teal:#00e5ff; --green:#1dfc9b; --amber:#ffd54a; --red:#ff5c8a;
+  --teal:#00e5ff; --green:#1dfc9b; --amber:#ffd54a; --red:#ff5c8a; --cv:#ff8a3d;
   --theory:#22d3ee; --build:#ff2d95; --consolidate:#b026ff;
   --neon1:#ff2d95; --neon2:#00e5ff; --neon3:#b026ff;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
@@ -61,6 +61,15 @@ header nav a{font-size:.82rem; color:var(--dim); padding:.4rem .8rem; border-rad
 header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-color:var(--line)}
 #owner-nav{cursor:pointer}
 #owner-nav.on{color:var(--green); border-color:color-mix(in srgb,var(--green) 40%,transparent); background:rgba(52,211,153,.08)}
+/* phone header: drop the tagline, let the nav wrap to its own full-width row */
+@media(max-width:560px){
+  header{flex-wrap:wrap; gap:.45rem .6rem; padding:.55rem 1rem}
+  .brand{font-size:.98rem}
+  .brand span{display:none}
+  header nav{margin-left:auto; width:100%; gap:.35rem}
+  header nav a{flex:1; text-align:center; font-size:.76rem; padding:.4rem .3rem; border-radius:8px;
+    border-color:var(--line); background:rgba(255,255,255,.03)}
+}
 
 .wrap{max-width:1120px; margin:0 auto; padding:0 1.5rem 4rem}
 
@@ -178,21 +187,6 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
   margin-top:.75rem; font-family:var(--mono)}
 .mgraph-empty{font-size:.8rem; color:var(--faint); margin-top:.6rem}
 
-/* computer-vision priority track */
-.cv-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:.6rem; margin-top:1.1rem}
-@media(max-width:820px){.cv-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:520px){.cv-grid{grid-template-columns:1fr}}
-.cv-cell{display:flex; align-items:center; gap:.6rem; padding:.6rem .7rem; border-radius:10px; cursor:pointer;
-  border:1px solid var(--line); background:rgba(255,255,255,.02); transition:.15s}
-.cv-cell:hover{border-color:var(--pink); transform:translateY(-1px)}
-.cv-cell.done{border-color:color-mix(in srgb,var(--green) 40%,transparent); background:color-mix(in srgb,var(--green) 8%,transparent)}
-.cv-cell.now{border-color:var(--pink); box-shadow:0 0 18px -6px var(--pink)}
-.cv-n{font-family:var(--mono); font-size:.7rem; font-weight:800; color:var(--pink); flex:none; width:26px}
-.cv-cell.done .cv-n{color:var(--green)}
-.cv-t{font-size:.82rem; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.cv-cell.done .cv-t, .cv-cell.now .cv-t{color:var(--txt)}
-.cv-repo{color:var(--pink); font-weight:600}
-
 /* filter chips (roadmap + projects) */
 .filter-chips{display:flex; flex-wrap:wrap; gap:.5rem; margin:0 0 1.1rem}
 .fchip{font-size:.78rem; font-weight:650; padding:.34rem .85rem; border-radius:999px; cursor:pointer;
@@ -221,9 +215,8 @@ header nav a:hover{color:var(--txt); background:rgba(255,255,255,.05); border-co
 .cloud-legend b{color:var(--txt); font-weight:700}
 
 /* four-track overview */
-.tracks{display:grid; grid-template-columns:repeat(4,1fr); gap:1rem}
-@media(max-width:900px){.tracks{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:520px){.tracks{grid-template-columns:1fr}}
+.tracks{display:grid; grid-template-columns:repeat(auto-fit,minmax(175px,1fr)); gap:1rem}
+@media(max-width:440px){.tracks{grid-template-columns:1fr}}
 .tcard{position:relative; display:flex; flex-direction:column; gap:.55rem;
   border:1px solid transparent; border-radius:16px; padding:1.05rem 1.15rem;
   background:
@@ -433,11 +426,11 @@ footer .r{margin-left:auto}
 <div class="wrap">
   <section class="hero">
     <div class="hero-l">
-      <div class="eyebrow">62-Week Mastery Roadmap <span id="hero-status" class="hstat"></span></div>
+      <div class="eyebrow">74-Week Mastery Roadmap <span id="hero-status" class="hstat"></span></div>
       <h1>Jayanth Appalla</h1>
       <div class="role">Data &amp; AI Engineer</div>
-      <p class="tagline">A 434-day climb through data engineering, machine learning, AI, and
-        Linux systems — studied and shipped in public, one day at a time.</p>
+      <p class="tagline">A 518-day climb through computer vision, data engineering, machine learning,
+        AI, and Linux systems — studied and shipped in public, one day at a time.</p>
       <div class="creds">ex-AWS DynamoDB · Data Engineer @ trigyan.io · MS CS, UIC · Databricks + Fabric certified</div>
       <div class="links">
         <a class="primary" href="https://github.com/astroboy1183" target="_blank" rel="noopener">⚡ GitHub</a>
@@ -452,15 +445,13 @@ footer .r{margin-left:auto}
     </div>
   </section>
 
-  <div id="priority-wrap"></div>
-
-  <div class="sec reveal"><h2>🛠 Skills &amp; tech stack</h2><span class="sub">every technology in the 62-week roadmap · each lights up in its track colour as I build with it</span></div>
+  <div class="sec reveal"><h2>🛠 Skills &amp; tech stack</h2><span class="sub">every technology in the 74-week roadmap · each lights up in its track colour as I build with it</span></div>
   <div class="card reveal"><div id="learned" class="skills"></div></div>
 
   <div class="kpis reveal" id="kpis"></div>
   <div id="owner-bar"></div>
 
-  <div class="sec reveal"><h2>🧭 The four tracks</h2><span class="sub">progress by domain · click a track to jump to its weeks</span></div>
+  <div class="sec reveal"><h2>🧭 The five tracks</h2><span class="sub">progress by domain · click a track to jump to its weeks</span></div>
   <div class="tracks reveal" id="tracks"></div>
 
   <div class="sec reveal"><h2>📈 Momentum</h2><span class="sub">cumulative days completed vs the ideal 7-a-week pace</span></div>
@@ -476,7 +467,7 @@ footer .r{margin-left:auto}
   <div class="sub-min reveal" style="margin-top:1.7rem">All builds</div>
   <div id="all-projects" class="pgrid-c reveal"></div>
 
-  <div class="sec reveal"><h2>📚 The roadmap</h2><span class="sub">all 62 weeks · click any day for its concept, video &amp; coding rep</span></div>
+  <div class="sec reveal"><h2>📚 The roadmap</h2><span class="sub">all 74 weeks · click any day for its concept, video &amp; coding rep</span></div>
   <div id="rm-filter" class="filter-chips reveal"></div>
   <div class="card reveal"><div id="roadmap"></div></div>
 
@@ -524,8 +515,20 @@ function el(tag, cls, txt){ var e=document.createElement(tag); if(cls) e.classNa
 function pad(n){ return (n<10?"0":"")+n; }
 function prettyDate(s){ if(!s) return "—"; var d=new Date(s+"T12:00:00");
   return d.toLocaleDateString("en",{day:"numeric",month:"short",year:"numeric"}); }
-function reveals(){ var n=document.querySelectorAll(".reveal"); var d=0;
-  n.forEach(function(x){ setTimeout(function(){ x.classList.add("in"); }, d); d+=55; }); }
+// Reveal-on-scroll: elements fade up as they enter the viewport (anything already
+// on-screen at load reveals immediately). Robust — the priority section is never
+// left stuck hidden the way a blind time-stagger could leave it.
+var _revIO=null;
+function reveals(){
+  var n=document.querySelectorAll(".reveal:not(.in)");
+  if(REDUCED || !("IntersectionObserver" in window)){
+    n.forEach(function(x){ x.classList.add("in"); }); return;
+  }
+  if(!_revIO){ _revIO=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add("in"); _revIO.unobserve(e.target); } });
+  }, {rootMargin:"0px 0px -6% 0px", threshold:.03}); }
+  n.forEach(function(x){ _revIO.observe(x); });
+}
 
 var REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 /* make an element behave like a button: pointer, click, and (unless noTab) keyboard + focus */
@@ -552,12 +555,11 @@ function render(s){
   var rs=$("ring-stats"); rs.replaceChildren();
   rs.appendChild(stat(s.projects.total, "projects"));
   rs.appendChild(stat(s.weeks, "weeks"));
-  rs.appendChild(stat("4", "domains"));
+  rs.appendChild(stat("5", "domains"));
   var hp=$("hero-status");
   if(hp){ if(s.backlog){ hp.className="hstat behind"; hp.textContent="● "+s.backlog+" behind"; }
     else { hp.className="hstat ok"; hp.textContent="● On track"; } }
   renderOwnerBar(s);
-  renderPriority(s);
   renderTracks(s);
   renderGraph(s);
   renderLearned(s);
@@ -653,7 +655,7 @@ function setCue(wrap, cue, label){
   apply();
 }
 function updateScrollCues(){
-  var bd=$("board"); if(bd) setCue(bd.parentNode, $("board-cue"), "scroll for all 62 weeks →");
+  var bd=$("board"); if(bd) setCue(bd.parentNode, $("board-cue"), "scroll for all 74 weeks →");
   var hm=document.querySelector(".hm-wrap"); var hc=$("hm-cue");
   if(hm && hc) setCue(hm, hc, "scroll for full history →");
 }
@@ -661,6 +663,7 @@ window.addEventListener("resize", updateScrollCues);
 
 /* four-track overview */
 var TRACK_META={
+  "Computer Vision":{c:"var(--cv)",repo:"cv"},
   "Data Engineering":{c:"var(--blue)",repo:"de"},
   "Data Science & ML":{c:"var(--green)",repo:"ml"},
   "Deep Learning & AI":{c:"var(--pink)",repo:"ai"},
@@ -668,6 +671,7 @@ var TRACK_META={
 };
 // Recruiter-friendly DISPLAY names for the tracks (internal keys/content unchanged).
 var TRACK_LABEL={
+  "Computer Vision":"Computer Vision",
   "Data Engineering":"Data Engineering",
   "Data Science & ML":"Data Science & ML",
   "Deep Learning & AI":"AI & LLM Engineering",
@@ -676,8 +680,8 @@ var TRACK_LABEL={
 function trackLabel(n){ return TRACK_LABEL[n]||n; }
 // filter state + helpers (roadmap + projects)
 var rmFilter="all", projFilter="all";
-var TRACK_ORDER=["Data Engineering","Data Science & ML","Deep Learning & AI","Linux & Systems"];
-function weekTrack(w){ if(w>=1&&w<=18)return "Data Engineering"; if(w<=33)return "Data Science & ML"; if(w<=48)return "Deep Learning & AI"; if(w>=49&&w<=62)return "Linux & Systems"; return ""; }
+var TRACK_ORDER=["Computer Vision","Data Engineering","Data Science & ML","Deep Learning & AI","Linux & Systems"];
+function weekTrack(w){ if(w<=12)return "Computer Vision"; if(w<=30)return "Data Engineering"; if(w<=45)return "Data Science & ML"; if(w<=60)return "Deep Learning & AI"; return "Linux & Systems"; }
 function trackFilterOpts(extra){
   return [{key:"all",label:"All"}].concat(extra||[]).concat(TRACK_ORDER.map(function(t){ return {key:t,label:trackLabel(t)}; }));
 }
@@ -694,6 +698,7 @@ function phaseSlug(n){ return "phase-"+n.toLowerCase().replace(/[^a-z0-9]+/g,"-"
 // recruiter-facing tech stack: chips grouped by domain, coloured per track,
 // highlighted once shipped with. Reads as a clean, categorised skill set.
 var SKILL_GROUPS=[
+  {track:"Computer Vision",    label:"Computer Vision"},
   {track:"Data Engineering",   label:"Data Engineering"},
   {track:"Data Science & ML",  label:"Data Science & ML"},
   {track:"Deep Learning & AI", label:"AI & LLMs"},
@@ -722,7 +727,7 @@ function renderLearned(s){
     box.appendChild(chips); c.appendChild(box);
   });
   var lg=el("div","cloud-legend");
-  lg.innerHTML="<span><b>"+tot+"</b> technologies across 4 domains</span>"+
+  lg.innerHTML="<span><b>"+tot+"</b> technologies across 5 domains</span>"+
     "<span><b style='color:var(--green)'>"+shipped+"</b> / "+tot+" built with so far</span>"+
     "<span>dim = still ahead on the roadmap</span>";
   c.appendChild(lg);
@@ -731,7 +736,7 @@ function renderLearned(s){
 function renderGraph(s){
   var c=$("graph"); if(!c) return; c.replaceChildren();
   var W=820,H=230,pl=10,pr=10,pt=16,pb=10;
-  var total=s.total||434, weeks=s.weeks||62;
+  var total=s.total||518, weeks=s.weeks||74;
   var cum=0, actual=[];
   (s.board||[]).forEach(function(wk){ (wk.cells||[]).forEach(function(cc){ if(cc.status==="done") cum++; }); actual.push(cum); });
   var n=actual.length; if(n<2){ c.appendChild(el("div","mgraph-empty","Chart appears as weeks are logged.")); return; }
@@ -758,30 +763,6 @@ function renderGraph(s){
   cap.innerHTML="<span style='color:var(--pink)'>● your pace</span><span style='color:var(--dim)'>┄ ideal (7/week → "+total+")</span><span>Week 1 → "+weeks+" · "+s.done+"/"+total+" done</span>";
   c.appendChild(cap);
   if(!s.done){ c.appendChild(el("div","mgraph-empty","🚀 The dashed line is your target pace — your own line lifts off the moment you log Day 1.")); }
-}
-function renderPriority(s){
-  var c=$("priority-wrap"); if(!c) return; c.replaceChildren();
-  var p=s.priority; if(!p||!p.total) return;
-  if(!p.active && p.done===0) return; // no priority track pending or started
-  var sec=el("div","sec reveal"); sec.appendChild(el("h2",null,"🎯 Computer Vision — priority track"));
-  var sub=el("span","sub"); sub.appendChild(document.createTextNode("16 sessions · "+p.done+"/"+p.total+" done · served before the roadmap · "));
-  var a=document.createElement("a"); a.className="cv-repo"; a.href="https://github.com/astroboy1183/"+p.repo; a.target="_blank"; a.rel="noopener"; a.textContent="📂 cv repo ↗";
-  sub.appendChild(a); sec.appendChild(sub); c.appendChild(sec);
-  var card=el("div","card reveal");
-  var bar=el("div","tbar"); var fill=el("i"); fill.style.width=(p.total?p.done/p.total*100:0)+"%"; fill.style.background="linear-gradient(90deg,var(--pink),var(--blue))"; bar.appendChild(fill); card.appendChild(bar);
-  var curId=null; for(var i=0;i<p.sessions.length;i++){ if(!p.sessions[i].done){ curId=p.sessions[i].id; break; } }
-  var grid=el("div","cv-grid");
-  p.sessions.forEach(function(ss){
-    var isNow=p.active && ss.id===curId;
-    var cell=el("div","cv-cell"+(ss.done?" done":"")+(isNow?" now":""));
-    cell.appendChild(el("span","cv-n",(ss.done?"✅":"S"+ss.session)));
-    cell.appendChild(el("span","cv-t", ss.title.replace(/^Session \\d+ · /,"")));
-    cell.setAttribute("aria-label", ss.title+(ss.done?" — done":isNow?" — up next":""));
-    clickable(cell, function(){ openUnit(ss.id); });
-    grid.appendChild(cell);
-  });
-  card.appendChild(grid);
-  c.appendChild(card);
 }
 function renderTracks(s){
   var c=$("tracks"); if(!c) return; c.replaceChildren();
@@ -814,7 +795,7 @@ function goToPhase(name){
 }
 
 /* roadmap browser */
-var PHASE_COLOR={"Data Engineering":"var(--blue)","Data Science & ML":"var(--green)","Deep Learning & AI":"var(--pink)","Linux & Systems":"var(--violet)"};
+var PHASE_COLOR={"Computer Vision":"var(--cv)","Data Engineering":"var(--blue)","Data Science & ML":"var(--green)","Deep Learning & AI":"var(--pink)","Linux & Systems":"var(--violet)"};
 function renderRoadmap(s){
   var rm=$("roadmap"); if(!rm) return; rm.replaceChildren();
   filterChips($("rm-filter"), trackFilterOpts([{key:"core",label:"⚡ Core path"}]), rmFilter, function(k){ rmFilter=k; renderRoadmap(s); });
@@ -868,10 +849,9 @@ function ytHref(q){
   return "https://www.youtube.com/results?search_query="+encodeURIComponent(c).replace(/\\(/g,"%28").replace(/\\)/g,"%29");
 }
 function daySlug(title){ return (title||"").replace(/[^\\w\\- ]/g,"").trim().replace(/\\s+/g,"-").toLowerCase().slice(0,50); }
-function weekRepo(w){ if(w<=18)return "de"; if(w<=33)return "ml"; if(w<=48)return "ai"; return "linux"; }
+function weekRepo(w){ if(w<=12)return "cv"; if(w<=30)return "de"; if(w<=45)return "ml"; if(w<=60)return "ai"; return "linux"; }
 function unitHtml(d){
-  var isCV=d.type==="cv"; var sess=isCV?parseInt((""+d.id).replace(/\\D/g,""),10):0;
-  var out="<div class='rm-meta'>"+(isCV?("🎯 Computer Vision · Session "+sess+"/16"):("Day "+d.id+" · Week "+d.week+" · "+d.type))+"</div>";
+  var out="<div class='rm-meta'>Day "+d.id+" · Week "+d.week+" · "+d.type+"</div>";
   if(/\\[Block [A-Z]\\]/.test(d.text||"")){
     out+=stepsHtml(d.text);
   } else {
@@ -889,9 +869,8 @@ function unitHtml(d){
     out+="<p style='line-height:1.75'>"+html+"</p>";
   }
   if(d.type!=="consolidate"){
-    var repo, folder;
-    if(isCV){ repo="cv"; folder="session-"+("0"+sess).slice(-2)+"-"+daySlug(d.title.replace(/^Session \\d+ · /,"")); }
-    else { repo=weekRepo(d.week); folder="week-"+pad(d.week)+"/day-"+("00"+d.id).slice(-3)+"-"+daySlug(d.title); }
+    var repo=weekRepo(d.week);
+    var folder="week-"+pad(d.week)+"/day-"+("00"+d.id).slice(-3)+"-"+daySlug(d.title);
     out+="<div class='codepath'>📂 Commit today's code to <code>"+folder+"/</code> in <a href='https://github.com/astroboy1183/"+repo+"' target='_blank' rel='noopener'>"+repo+"</a> <b>before you check in</b> — the auto-note then <b>reads your code</b> and reviews it, and drops <code>notes.md</code> in the same folder.</div>";
   }
   if(d.mastery) out+="<div class='rm-mastery'>🎯 <b>Mastery (answer aloud):</b> "+esc(d.mastery)+"</div>";
@@ -1043,7 +1022,7 @@ function renderOwnerBar(s){
   var ob=$("owner-bar"); if(!ob) return; ob.replaceChildren();
   if(!EDIT_KEY || !s || !s.current) return;
   var bar=el("div","owner-bar");
-  bar.appendChild(el("span","ob-l", s.current.type==="cv" ? ("\u{1F3AF} Today · "+s.current.title) : ("\u{1F4CC} Today · Day "+s.current.id+" — "+s.current.title)));
+  bar.appendChild(el("span","ob-l", "\u{1F4CC} Today · Day "+s.current.id+" — "+s.current.title));
   var btn=el("button","ob-btn","✓ I studied it");
   btn.addEventListener("click", function(){ markStudied(btn); });
   bar.appendChild(btn);
