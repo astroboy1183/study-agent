@@ -1430,6 +1430,17 @@ export default {
       return new Response("ok"); // ack fast; work continues in the background
     }
 
+    // Slack Events API — URL-verification handshake now; full event routing is
+    // wired once the Slack app exists and its secrets are set (migration off Telegram).
+    if (path === "/slack/events" && request.method === "POST") {
+      const raw = await request.text();
+      let payload;
+      try { payload = JSON.parse(raw); } catch { return new Response("bad request", { status: 400 }); }
+      if (payload.type === "url_verification")
+        return new Response(JSON.stringify({ challenge: payload.challenge }), { headers: { "content-type": "application/json" } });
+      return new Response(""); // ack other events (handled after migration)
+    }
+
     // Dashboard shell (public; data is gated below)
     if (path === "/" && request.method === "GET") {
       return new Response(PAGE, {
