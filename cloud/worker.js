@@ -281,18 +281,34 @@ function ytSearchUrl(q) {
     encodeURIComponent(clean).replace(/\(/g, "%28").replace(/\)/g, "%29")
   );
 }
-function fmtUnit(u, dow) {
+// Gentler per-day framing for light pace: a small minimum, heavy work spread out.
+const EFFORT_LIGHT = {
+  theory: "~25 min core (extras optional)",
+  build: "one block/day — spread it out",
+  consolidate: "one block/day — spread it out",
+  cv: "45-60 min (relaxed)",
+};
+
+function fmtUnit(u, dow, pace = "light") {
+  const light = pace !== "normal";
   let carry = "";
   if (dow != null && u.dow !== dow && u.type === "theory")
     carry = `  _(catching up ${DOW[u.dow]}'s topic)_`;
+  const eff = light ? EFFORT_LIGHT[u.type] || EFFORT[u.type] : EFFORT[u.type];
   let head =
     `${ICON[u.type]} *Day ${u.id}/${TOTAL} · Week ${u.week} · ` +
-    `${DOW[u.dow]}-type · ~${EFFORT[u.type]}*${carry}\n` +
+    `${DOW[u.dow]}-type · ~${eff}*${carry}\n` +
     `*${u.title}*\n\n${u.text}`;
   const mw = (u.text || "").match(/🎥 Watch: (.+)/);
   if (mw) head += `\n\n🔎 [Find today's video on YouTube ▶](${ytSearchUrl(mw[1])})`;
   if (u.type === "consolidate" && u.mastery)
     head += `\n\n\u{1F3AF} *Mastery check (answer aloud):* ${u.mastery}`;
+  if (light) {
+    head +=
+      u.type === "build" || u.type === "consolidate"
+        ? "\n\n🪜 *Gentle pace:* just the first block (~1.5–2 hrs) today — then `partial` and I'll bring the next block tomorrow. No need to finish it all at once."
+        : "\n\n🎯 *Minimum today (~25 min):* the core above. The video + extra practice are optional — even the minimum keeps your streak.";
+  }
   return head;
 }
 
@@ -798,9 +814,9 @@ async function doCheckin(env, state, kind) {
     await send(env, "🌙 Rest day logged — no guilt. The plan just shifts forward, nothing is lost, and your streak stays safe. See you tomorrow.");
 }
 
-async function serveUnit(env, u, dow, header) {
+async function serveUnit(env, u, dow, header, pace = "light") {
   // Send a unit with inline Done/Partial buttons so it can be completed directly.
-  await send(env, `${header}\n\n${fmtUnit(u, dow)}`, {
+  await send(env, `${header}\n\n${fmtUnit(u, dow, pace)}`, {
     buttons: [
       [
         { text: "✅ Done", callback_data: `done:${u.id}` },
@@ -823,7 +839,7 @@ async function morning(env, state, dow) {
   const g = buildGate(state);
   if (g.locked && u.type === "theory")
     foot += `\n🔒 This week's build unlocks after ${g.theoryLeft} more theory topic${g.theoryLeft !== 1 ? "s" : ""}.`;
-  await send(env, `☀️ *Good morning — ${DOW[dow]} (${kind} plan):*\n\n${fmtUnit(u, dow)}${foot}`, {
+  await send(env, `☀️ *Good morning — ${DOW[dow]} (${kind} plan):*\n\n${fmtUnit(u, dow, state.pace)}${foot}`, {
     buttons: [
       [
         { text: "✅ On it", callback_data: "checkin:on" },
@@ -922,6 +938,7 @@ const COMMANDS = [
   ["partial", "Did part of it — carries over"],
   ["more", "Do the next unit now (get ahead)"],
   ["catchup", "Clear your backlog"],
+  ["pace", "light = smaller daily chunks · normal = full targets"],
   ["on", "Check in — studying today (streak-safe)"],
   ["off", "Log a rest day (streak-safe)"],
   ["skip", "Skip today (no evening nag)"],
@@ -984,7 +1001,7 @@ function toCommand(text) {
   if (t.startsWith("/")) return t; // already a slash command
   const bare = t.replace(/^\/+/, "");
   const first = bare.split(/\s+/)[0].toLowerCase();
-  if (first === "recap") return "/" + bare; // takes args
+  if (first === "recap" || first === "pace") return "/" + bare; // take args
   if (NOARG_CMDS.has(bare.toLowerCase())) return "/" + bare; // whole message is the command
   return t; // plain text → Q&A
 }
@@ -996,7 +1013,7 @@ async function handleMessage(env, state, text) {
   const { dow } = istToday();
   if (low.startsWith("/today")) {
     const u = nextUnitFor(state, dow);
-    await send(env, u ? fmtUnit(u, dow) : caughtUpMessage(state));
+    await send(env, u ? fmtUnit(u, dow, state.pace) : caughtUpMessage(state));
   } else if (low.startsWith("/done")) {
     const u = nextUnitFor(state, dow);
     if (u) await doDone(env, state, u.id);
@@ -1012,14 +1029,14 @@ async function handleMessage(env, state, text) {
     await doCheckin(env, state, "on");
   } else if (low.startsWith("/more")) {
     const p = pending(state);
-    if (p.length) await serveUnit(env, p[0], dow, "🔁 *Next up* — get ahead or catch up:");
+    if (p.length) await serveUnit(env, p[0], dow, "🔁 *Next up* — get ahead or catch up:", state.pace);
     else await send(env, caughtUpMessage(state));
   } else if (low.startsWith("/catchup")) {
     const owed = backlogOf(state);
     if (!owed.length)
       await send(env, "✅ Nothing owed — you're current. /more if you want to get ahead.");
     else
-      await serveUnit(env, owed[0], dow, `🧹 *Catch-up* — you owe ${owed.length} earlier topic(s). Start here:`);
+      await serveUnit(env, owed[0], dow, `🧹 *Catch-up* — you owe ${owed.length} earlier topic(s). Start here:`, state.pace);
   } else if (low.startsWith("/summary")) {
     if (state.last_done) await deliverSummary(env, BY_ID[String(state.last_done)]);
     else await send(env, "No completed unit yet — finish a day with /done and the brief follows.");
@@ -1058,6 +1075,23 @@ async function handleMessage(env, state, text) {
     state.paused = false;
     await saveState(env, state);
     await send(env, "▶️ Resumed. The pointer waited for you — that's the whole design.");
+  } else if (low.startsWith("/pace")) {
+    const arg = low.replace(/^\/pace(@\S+)?\s*/, "").trim();
+    if (arg === "light" || arg === "normal") {
+      state.pace = arg;
+      await saveState(env, state);
+      await send(
+        env,
+        arg === "light"
+          ? "🪜 *Gentle pace on.* Smaller daily asks — a ~25-min minimum on theory days, and heavy builds spread one block at a time (do a block, type `partial`, I bring the rest tomorrow). The streak survives on the minimum. Back to full with `pace normal`."
+          : "⚡ *Normal pace on.* Full daily targets restored. Switch to `pace light` anytime.",
+      );
+    } else {
+      await send(
+        env,
+        `Current pace: *${state.pace || "light"}*.\n\`pace light\` — smaller daily chunks (~25-min minimum; builds one block/day).\n\`pace normal\` — full daily targets.`,
+      );
+    }
   } else if (low.startsWith("/help") || low.startsWith("/start")) {
     await send(env, HELP_TEXT);
   } else if (low.startsWith("/")) {
