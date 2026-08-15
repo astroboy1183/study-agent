@@ -116,27 +116,44 @@ function toSlackMrkdwn(s) {
     .replace(/^\s{0,3}#{1,6}\s+(.+)$/gm, "*$1*"); // # Heading → *Heading*
 }
 
-// Slack DMs have no inline callback buttons, so fold Telegram button rows into
-// text: url buttons become links; tap-to-act buttons become a "Reply: /cmd" hint
-// (every such action already has an equivalent slash command).
-function buttonsToText(buttons) {
-  if (!buttons) return "";
-  const CMD = { done: "/done", partial: "/partial", skip: "/skip", "checkin:on": "/on", "checkin:off": "/off" };
-  const links = [];
-  const cmds = [];
+// Telegram button rows → Slack Block Kit action elements. Tap-to-act buttons
+// carry their action_id (handled at /slack/interact); url buttons become link
+// buttons (no callback needed).
+function slackActions(buttons) {
+  const elements = [];
   for (const row of buttons) {
     for (const btn of row) {
-      if (btn.url) links.push(`<${btn.url}|${btn.text}>`);
-      else if (btn.callback_data) {
-        const key = btn.callback_data.startsWith("checkin:") ? btn.callback_data : btn.callback_data.split(":")[0];
-        if (CMD[key]) cmds.push(CMD[key]);
+      const el = { type: "button", text: { type: "plain_text", text: btn.text, emoji: true } };
+      if (btn.url) {
+        el.url = btn.url;
+      } else if (btn.callback_data) {
+        el.action_id = btn.callback_data;
+        el.value = btn.callback_data;
+        if (btn.callback_data.startsWith("done")) el.style = "primary";
+        else if (btn.callback_data.startsWith("skip")) el.style = "danger";
       }
+      elements.push(el);
     }
   }
-  let out = "";
-  if (links.length) out += "\n" + links.join("   ");
-  if (cmds.length) out += `\n_Reply: ${[...new Set(cmds)].join(" · ")}_`;
-  return out;
+  return elements.length ? [{ type: "actions", elements }] : [];
+}
+
+async function slackPost(env, channel, { text, blocks }) {
+  const payload = { channel, mrkdwn: true, unfurl_links: false, unfurl_media: false, text };
+  if (blocks) payload.blocks = blocks; // `text` stays as the notification fallback
+  try {
+    const r = await fetch("https://slack.com/api/chat.postMessage", {
+      method: "POST",
+      headers: { "content-type": "application/json; charset=utf-8", authorization: `Bearer ${env.SLACK_BOT_TOKEN}` },
+      body: JSON.stringify(payload),
+    });
+    const j = await r.json();
+    if (!j.ok) console.error(`[slack] send failed: ${JSON.stringify(j)}`);
+    return j;
+  } catch (e) {
+    console.error(`[slack] send error: ${e}`);
+    return { ok: false };
+  }
 }
 
 async function send(env, text, { buttons = null, markdown = true } = {}) {
@@ -145,25 +162,19 @@ async function send(env, text, { buttons = null, markdown = true } = {}) {
     console.log("[slack] no target channel yet — DM the bot once to capture it");
     return { ok: false };
   }
-  let body = (markdown ? toSlackMrkdwn(text) : text) + buttonsToText(buttons);
-  // Slack accepts up to 40k chars per message; chunk anyway for readability.
-  const chunks = body.match(new RegExp(`[\\s\\S]{1,${TG_CHUNK}}`, "g")) || [""];
+  const body = markdown ? toSlackMrkdwn(text) : text;
+  // A Block Kit section tops out at 3000 chars — chunk with margin; buttons ride
+  // the last chunk as an actions block.
+  const LIMIT = 2900;
+  const chunks = body.match(new RegExp(`[\\s\\S]{1,${LIMIT}}`, "g")) || [""];
   let result = { ok: false };
-  for (const chunk of chunks) {
-    try {
-      const r = await fetch("https://slack.com/api/chat.postMessage", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json; charset=utf-8",
-          authorization: `Bearer ${env.SLACK_BOT_TOKEN}`,
-        },
-        body: JSON.stringify({ channel, text: chunk, mrkdwn: true, unfurl_links: false, unfurl_media: false }),
-      });
-      result = await r.json();
-      if (!result.ok) console.error(`[slack] send failed: ${JSON.stringify(result)}`);
-    } catch (e) {
-      console.error(`[slack] send error: ${e}`);
-      result = { ok: false };
+  for (let i = 0; i < chunks.length; i++) {
+    const last = i === chunks.length - 1;
+    if (last && buttons) {
+      const blocks = [{ type: "section", text: { type: "mrkdwn", text: chunks[i] } }, ...slackActions(buttons)];
+      result = await slackPost(env, channel, { text: chunks[i], blocks });
+    } else {
+      result = await slackPost(env, channel, { text: chunks[i] });
     }
   }
   return result;
@@ -853,14 +864,13 @@ async function status(env, state) {
 
 // ------------------------------------------------------------- free Q&A ---
 const QA_SYSTEM =
-  "You are Jayanth's personal study assistant, reachable over Telegram. " +
-  "Jayanth is a data/AI engineer working through a structured mastery roadmap. " +
-  "Answer his questions directly and concretely: teach from first principles, " +
-  "use small examples or code sketches where they help, and keep it tight " +
-  "enough to read on a phone — a few short paragraphs, not an essay, unless he " +
-  "explicitly asks you to go deep. Precision over politeness; dry humour and the " +
-  "occasional cricket analogy are welcome. If a question relates to his current " +
-  "study topic, connect it. Plain text or light Markdown only.";
+  "You are Jayanth's personal study assistant, reachable over Slack DM. " +
+  "Jayanth is a data/AI engineer working through a structured 525-day mastery roadmap that YOU run for him. " +
+  "You DO have a live web dashboard (progress board, streaks, per-day notes) — to open it he sends the `/login` command and you reply with a one-tap signed link; the public board is at " +
+  DASHBOARD_URL + ". You also drive his plan through these commands: /today /done /partial /more /catchup /on /off /skip /summary /recap /login /status /pause /resume /help. " +
+  "Never claim you lack a dashboard, tracker, or access to his roadmap — you ARE the tracker. If he asks for the dashboard or a link, point him to /login. " +
+  "Answer questions directly and concretely: teach from first principles, use small examples or code sketches where they help, and keep it tight enough to read on a phone — a few short paragraphs, not an essay, unless he explicitly asks you to go deep. " +
+  "Precision over politeness; dry humour and the occasional cricket analogy are welcome. If a question relates to his current study topic, connect it. Use Slack mrkdwn (single *bold*, _italic_, `code`).";
 
 function studyContext(state) {
   const done = Object.keys(state.done).length;
@@ -920,6 +930,37 @@ const HELP_TEXT =
   COMMANDS.map(([c, d]) => `/${c} — ${d}`).join("\n") +
   "\n\n_Or just send any question in plain text and I'll answer it._";
 
+// Mint a one-tap signed dashboard link (+ a cross-device code). Shared by the
+// /login command and the "link to dashboard?" intent.
+async function sendLoginLink(env) {
+  if (!env.STUDY_UI_KEY) {
+    await send(env, "Sign-in isn't configured yet (STUDY_UI_KEY secret is unset).");
+    return;
+  }
+  const token = await signToken(env, { k: "login", exp: Date.now() + 600000, n: crypto.randomUUID() });
+  const url = `${DASHBOARD_URL}/owner?t=${encodeURIComponent(token)}`;
+  const code = shortCode(6);
+  await env.STUDY.put(`logincode:${code}`, "1", { expirationTtl: 600 });
+  await send(
+    env,
+    "🔐 *Sign in to your dashboard*\n\n" +
+      "• *On this device* — tap the button below.\n" +
+      "• *On another device* (your laptop) — open the dashboard, click *Owner*, and enter this code:\n\n" +
+      "`" + code + "`\n\n" +
+      "_Valid 10 minutes; the device then stays signed in for a year._",
+    { buttons: [[{ text: "✅ Open dashboard here (signed in)", url }]] }
+  );
+}
+
+// "link to dashboard?", "open my board", "show my progress page" → treat as /login.
+function wantsDashboard(text) {
+  return (
+    /\bdashboard\b|\bmy board\b|\bprogress (page|board)\b/i.test(text) &&
+    /\b(link|open|show|see|access|go to|where|my|get)\b/i.test(text) &&
+    text.length < 90
+  );
+}
+
 async function handleMessage(env, state, text) {
   text = text || "";
   const low = text.trim().toLowerCase();
@@ -978,23 +1019,7 @@ async function handleMessage(env, state, text) {
       }
     }
   } else if (low.startsWith("/login")) {
-    if (!env.STUDY_UI_KEY) {
-      await send(env, "Sign-in isn't configured yet (STUDY_UI_KEY secret is unset).");
-    } else {
-      const token = await signToken(env, { k: "login", exp: Date.now() + 600000, n: crypto.randomUUID() });
-      const url = `${DASHBOARD_URL}/owner?t=${encodeURIComponent(token)}`;
-      const code = shortCode(6);
-      await env.STUDY.put(`logincode:${code}`, "1", { expirationTtl: 600 });
-      await send(
-        env,
-        "🔐 *Sign in to your dashboard*\n\n" +
-          "• *On this device* — tap the button below.\n" +
-          "• *On another device* (your laptop) — open the dashboard, click *Owner*, and enter this code:\n\n" +
-          "`" + code + "`\n\n" +
-          "_Valid 10 minutes; the device then stays signed in for a year._",
-        { buttons: [[{ text: "✅ Open dashboard here (signed in)", url }]] }
-      );
-    }
+    await sendLoginLink(env);
   } else if (low.startsWith("/status")) {
     await status(env, state);
   } else if (low.startsWith("/pause")) {
@@ -1013,6 +1038,8 @@ async function handleMessage(env, state, text) {
       "Not a command I know — /help for the list. (Or just send a plain-text " +
         "question and I'll answer it.)"
     );
+  } else if (wantsDashboard(text)) {
+    await sendLoginLink(env);
   } else {
     await answerQuery(env, state, text);
   }
@@ -1511,6 +1538,19 @@ export default {
       return new Response(""); // ack fast; Slack retries on any non-200
     }
 
+    // Slack interactivity — Block Kit button clicks (block_actions).
+    if (path === "/slack/interact" && request.method === "POST") {
+      const raw = await request.text();
+      const ts = request.headers.get("x-slack-request-timestamp");
+      const sig = request.headers.get("x-slack-signature");
+      if (!(await verifySlack(env, ts, raw, sig))) return new Response("forbidden", { status: 403 });
+      let payload;
+      try { payload = JSON.parse(new URLSearchParams(raw).get("payload") || "{}"); }
+      catch { return new Response("bad request", { status: 400 }); }
+      if (payload.type === "block_actions") ctx.waitUntil(processSlackAction(env, payload));
+      return new Response(""); // ack within 3s
+    }
+
     // Dashboard shell (public; data is gated below)
     if (path === "/" && request.method === "GET") {
       return new Response(PAGE, {
@@ -1708,5 +1748,26 @@ async function processSlackEvent(env, event, eventId) {
     await handleMessage(env, state, text);
   } catch (e) {
     console.error(`[slack event] ${e && e.stack ? e.stack : e}`);
+  }
+}
+
+// Inbound Slack button click → the same actions Telegram callbacks drove.
+async function processSlackAction(env, payload) {
+  try {
+    const action = payload.actions && payload.actions[0];
+    if (!action) return;
+    const channel = payload.channel && payload.channel.id;
+    if (channel && (await env.STUDY.get("slack_dm_channel")) !== channel)
+      await env.STUDY.put("slack_dm_channel", channel);
+    const state = await loadState(env);
+    const [act, arg] = (action.action_id || action.value || "").split(":");
+    if (act === "checkin") {
+      await doCheckin(env, state, arg === "off" ? "off" : "on");
+      return;
+    }
+    const fn = { done: doDone, partial: doPartial, skip: doSkip }[act];
+    if (fn && /^\d+$/.test(arg || "") && arg in BY_ID) await fn(env, state, Number(arg));
+  } catch (e) {
+    console.error(`[slack action] ${e && e.stack ? e.stack : e}`);
   }
 }
