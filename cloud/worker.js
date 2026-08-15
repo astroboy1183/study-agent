@@ -431,14 +431,14 @@ async function regenerateNote(env, state, u, input) {
 // Strict basics -> advanced: 8 phases. Notes map to the 5 existing per-domain
 // repos (some phases share one) until dedicated repos exist.
 const TRACK_BOUNDS = [
-  { name: "Foundations", lo: 1, hi: 5, envKey: "NOTES_REPO_LINUX" },
-  { name: "Math Foundations", lo: 6, hi: 8, envKey: "NOTES_REPO_ML" },
+  { name: "Foundations", lo: 1, hi: 5, envKey: "NOTES_REPO_FOUNDATIONS" },
+  { name: "Math Foundations", lo: 6, hi: 8, envKey: "NOTES_REPO_MATH" },
   { name: "Data Engineering", lo: 9, hi: 24, envKey: "NOTES_REPO_DE" },
-  { name: "Data Science & ML", lo: 25, hi: 36, envKey: "NOTES_REPO_ML" },
-  { name: "Deep Learning", lo: 37, hi: 39, envKey: "NOTES_REPO_AI" },
+  { name: "Data Science & ML", lo: 25, hi: 36, envKey: "NOTES_REPO_DS" },
+  { name: "Deep Learning", lo: 37, hi: 39, envKey: "NOTES_REPO_DL" },
   { name: "Computer Vision", lo: 40, hi: 51, envKey: "NOTES_REPO_CV" },
   { name: "AI & LLMs", lo: 52, hi: 63, envKey: "NOTES_REPO_AI" },
-  { name: "Systems & DevOps", lo: 64, hi: 75, envKey: "NOTES_REPO_LINUX" },
+  { name: "Systems & DevOps", lo: 64, hi: 75, envKey: "NOTES_REPO_DEVOPS" },
 ];
 const DASHBOARD_URL = "https://study-agent.jayanthapalla.workers.dev";
 function phaseName(week) {

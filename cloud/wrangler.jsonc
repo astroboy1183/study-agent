@@ -18,11 +18,14 @@
     "MODEL": "claude-sonnet-5",
     "SUMMARY_MAX_TOKENS": "4000",
     "REPO": "astroboy1183/study-agent",
+    "NOTES_REPO_FOUNDATIONS": "astroboy1183/foundations",
+    "NOTES_REPO_MATH": "astroboy1183/math-foundations",
     "NOTES_REPO_DE": "astroboy1183/data-engineering",
-    "NOTES_REPO_ML": "astroboy1183/data-science-ml",
-    "NOTES_REPO_AI": "astroboy1183/deep-learning-ai",
-    "NOTES_REPO_LINUX": "astroboy1183/linux-systems",
-    "NOTES_REPO_CV": "astroboy1183/computer-vision"
+    "NOTES_REPO_DS": "astroboy1183/data-science-ml",
+    "NOTES_REPO_DL": "astroboy1183/deep-learning",
+    "NOTES_REPO_CV": "astroboy1183/computer-vision",
+    "NOTES_REPO_AI": "astroboy1183/ai-llm-engineering",
+    "NOTES_REPO_DEVOPS": "astroboy1183/devops-cloud"
   },
   "observability": { "enabled": true }
   // Secrets (wrangler secret put): STUDY_BOT_TOKEN, STUDY_CHAT_ID,
