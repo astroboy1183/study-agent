@@ -61,7 +61,7 @@ function istToday() {
 
 // ----------------------------------------------------------------- state ---
 async function loadState(env) {
-  const s = { done: {}, partials: {}, paused: false, skipped_today: null, last_done: null, presence: {}, projectLinks: {}, recaps: {} };
+  const s = { done: {}, partials: {}, paused: false, skipped_today: null, last_done: null, presence: {}, projectLinks: {}, recaps: {}, recall: [], recall_pending: null };
   const raw = await env.STUDY.get("state");
   if (raw) Object.assign(s, JSON.parse(raw));
   return s;
@@ -745,6 +745,91 @@ async function publishProgress(env, state) {
   }
 }
 
+// ---------------------------------------------------------- active recall ---
+// Spaced repetition: on completing a day, generate one recall question about it,
+// then resurface it at widening intervals. Answering (graded by the model) is the
+// difference between "I read it" and "I retained it" — and gives a daily reason
+// to open the bot beyond the new assignment.
+const RECALL_STAGES = [1, 3, 7, 16, 35]; // days to next review, per stage
+
+function istAddDays(ymd, n) {
+  const d = new Date(ymd + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+function jsonFrom(text) {
+  const m = text && text.match(/\{[\s\S]*\}/);
+  if (!m) return null;
+  try { return JSON.parse(m[0]); } catch { return null; }
+}
+
+async function scheduleRecall(env, state, u) {
+  if (!env.ANTHROPIC_API_KEY || !u) return;
+  state.recall = state.recall || [];
+  if (state.recall.some((r) => r.unitId === u.id)) return; // one per unit
+  const sys =
+    "You write ONE short active-recall question (with its answer) to test whether a learner retained a topic days later. " +
+    "It must be answerable in 1-3 sentences from understanding, not lookup or trivia. Return ONLY JSON: {\"q\":\"...\",\"a\":\"...\"}";
+  const obj = jsonFrom(await askModel(env, sys, `Topic: ${u.title}\n\n${(u.text || "").slice(0, 1200)}`, 400));
+  if (!obj || !obj.q) return;
+  state.recall.push({ unitId: u.id, topic: u.title, q: obj.q, a: obj.a || "", stage: 0, due: istAddDays(istToday().ymd, RECALL_STAGES[0]) });
+  await saveState(env, state);
+}
+
+function dueRecall(state) {
+  const today = istToday().ymd;
+  return (state.recall || [])
+    .filter((r) => r.due <= today)
+    .sort((a, b) => (a.due < b.due ? -1 : 1))[0] || null;
+}
+
+async function serveRecall(env, state) {
+  const item = dueRecall(state);
+  if (!item) {
+    await send(env, "🧠 No recall due right now — you're on top of it. I'll resurface topics as they come due.");
+    return;
+  }
+  state.recall_pending = item.unitId;
+  await saveState(env, state);
+  await send(
+    env,
+    `🧠 *Active recall — Day ${item.unitId}: ${item.topic}*\n\n${item.q}\n\n_Answer in your own words (a sentence or two). Type your answer, or \`pass\` to bring it back tomorrow._`
+  );
+}
+
+async function gradeRecall(env, state, answer) {
+  const id = state.recall_pending;
+  state.recall_pending = null;
+  const item = (state.recall || []).find((r) => r.unitId === id);
+  if (!item) { await saveState(env, state); return; }
+  if (answer.trim().toLowerCase() === "pass") {
+    item.due = istAddDays(istToday().ymd, 1);
+    await saveState(env, state);
+    await send(env, "⏭ No worries — I'll bring it back tomorrow.");
+    return;
+  }
+  let verdict = "partial", feedback = "";
+  if (env.ANTHROPIC_API_KEY) {
+    const sys =
+      "Grade a learner's active-recall answer against the reference answer. Be fair — reward correct understanding even if worded differently. " +
+      "Return ONLY JSON: {\"verdict\":\"correct|partial|incorrect\",\"feedback\":\"one short encouraging sentence naming what to reinforce\"}";
+    const o = jsonFrom(await askModel(env, sys, `Question: ${item.q}\nReference answer: ${item.a}\nLearner's answer: ${answer}`, 300));
+    if (o && o.verdict) { verdict = o.verdict; feedback = o.feedback || ""; }
+  }
+  if (verdict === "correct") item.stage = Math.min(item.stage + 1, RECALL_STAGES.length - 1);
+  else if (verdict === "incorrect") item.stage = 0;
+  const retired = verdict === "correct" && item.stage >= RECALL_STAGES.length - 1;
+  const nextIn = verdict === "incorrect" ? 1 : RECALL_STAGES[item.stage];
+  if (retired) state.recall = state.recall.filter((r) => r.unitId !== id);
+  else item.due = istAddDays(istToday().ymd, nextIn);
+  await saveState(env, state);
+  const icon = verdict === "correct" ? "✅" : verdict === "partial" ? "🟨" : "❌";
+  const head = verdict === "correct" ? "Got it" : verdict === "partial" ? "Close" : "Not quite";
+  let msg = `${icon} *${head}.*${feedback ? " " + feedback : ""}\n\n📖 *Model answer:* ${item.a}`;
+  msg += retired ? "\n\n🎓 Locked in — retired from review." : `\n\n_Next review in ${nextIn} day${nextIn > 1 ? "s" : ""}._`;
+  await send(env, msg);
+}
+
 // --------------------------------------------------------------- actions ---
 async function mark(env, state, uid, status) {
   state.done[String(uid)] = { date: istToday().ymd, status };
@@ -759,6 +844,7 @@ async function doDone(env, state, uid) {
   await send(env, `✅ Day ${uid} done. Here's your recap to read ↓`);
   await deliverSummary(env, BY_ID[String(uid)]);
   await publishProgress(env, state);
+  try { await scheduleRecall(env, state, BY_ID[String(uid)]); } catch (e) { console.error(`[recall] ${e}`); }
 }
 
 async function doPartial(env, state, uid) {
@@ -839,6 +925,7 @@ async function morning(env, state, dow) {
   const g = buildGate(state);
   if (g.locked && u.type === "theory")
     foot += `\n🔒 This week's build unlocks after ${g.theoryLeft} more theory topic${g.theoryLeft !== 1 ? "s" : ""}.`;
+  if (dueRecall(state)) foot += "\n🧠 A 2-min recall from a past topic is due — type `recall` when you're ready.";
   await send(env, `☀️ *Good morning — ${DOW[dow]} (${kind} plan):*\n\n${fmtUnit(u, dow, state.pace)}${foot}`, {
     buttons: [
       [
@@ -878,10 +965,14 @@ async function status(env, state) {
       ? "No backlog — you're current ✅"
       : `${backlog} earlier topic(s) to catch up — they surface first on the ` +
         "next matching day (theory on weekdays/Sat, anything on Sun).";
+  const recallDue = (state.recall || []).filter((r) => r.due <= istToday().ymd).length;
+  const recallLine = (state.recall || []).length
+    ? `\n🧠 Recall: ${recallDue} due now · ${state.recall.length} in rotation${recallDue ? " — type `recall`" : ""}`
+    : "";
   await send(
     env,
     `\u{1F4CA} *Progress*\n${bar} ${done}/${TOTAL} days (${((done / TOTAL) * 100).toFixed(0)}%)\n` +
-      `Current: Week ${curWeek}/${WEEKS} · pending builds: ${buildsLeft}\n${catch_}`
+      `Current: Week ${curWeek}/${WEEKS} · pending builds: ${buildsLeft}\n${catch_}${recallLine}`
   );
 }
 
@@ -890,7 +981,7 @@ const QA_SYSTEM =
   "You are Jayanth's personal study assistant, reachable over Slack DM. " +
   "Jayanth is a data/AI engineer working through a structured 525-day mastery roadmap that YOU run for him. " +
   "You DO have a live web dashboard (progress board, streaks, per-day notes) — to open it he types `login` and you reply with a one-tap signed link; the public board is at " +
-  DASHBOARD_URL + ". You also drive his plan through these commands: today, done, partial, more, catchup, on, off, skip, summary, recap, login, status, pause, resume, help. " +
+  DASHBOARD_URL + ". You also drive his plan through these commands: today, done, partial, more, catchup, recall (active-recall quiz on a past topic), pace (light/normal daily load), on, off, skip, summary, recap, login, status, pause, resume, help. " +
   "IMPORTANT: Slack blocks messages that start with a slash, so commands are typed WITHOUT the slash (e.g. `login`, not `/login`) — always refer to them that way. " +
   "Never claim you lack a dashboard, tracker, or access to his roadmap — you ARE the tracker. If he asks for the dashboard or a link, tell him to type `login`. " +
   "Answer questions directly and concretely: teach from first principles, use small examples or code sketches where they help, and keep it tight enough to read on a phone — a few short paragraphs, not an essay, unless he explicitly asks you to go deep. " +
@@ -942,6 +1033,7 @@ const COMMANDS = [
   ["on", "Check in — studying today (streak-safe)"],
   ["off", "Log a rest day (streak-safe)"],
   ["skip", "Skip today (no evening nag)"],
+  ["recall", "Active-recall question on a past topic (spaced repetition)"],
   ["summary", "Re-send the last study brief"],
   ["recap", "Rewrite the last recap from your real work (notes or a repo URL)"],
   ["login", "Sign in to the dashboard on this device (no password)"],
@@ -994,7 +1086,7 @@ function wantsDashboard(text) {
 // recap carries free-text args — everything else falls through to plain-text Q&A.
 const NOARG_CMDS = new Set([
   "today", "done", "partial", "more", "catchup", "on", "off", "skip",
-  "summary", "status", "pause", "resume", "help", "start", "login",
+  "summary", "recall", "status", "pause", "resume", "help", "start", "login",
 ]);
 function toCommand(text) {
   const t = (text || "").trim();
@@ -1007,7 +1099,14 @@ function toCommand(text) {
 }
 
 async function handleMessage(env, state, text) {
-  text = toCommand(text);
+  const raw = (text || "").trim();
+  text = toCommand(raw);
+  // A recall answer is awaited: grade any plain-text reply; a command abandons it.
+  if (state.recall_pending) {
+    if (!text.startsWith("/")) { await gradeRecall(env, state, raw); return; }
+    state.recall_pending = null;
+    await saveState(env, state);
+  }
   const low = text.toLowerCase();
   if (!low) return;
   const { dow } = istToday();
@@ -1037,6 +1136,8 @@ async function handleMessage(env, state, text) {
       await send(env, "✅ Nothing owed — you're current. /more if you want to get ahead.");
     else
       await serveUnit(env, owed[0], dow, `🧹 *Catch-up* — you owe ${owed.length} earlier topic(s). Start here:`, state.pace);
+  } else if (low.startsWith("/recall")) {
+    await serveRecall(env, state);
   } else if (low.startsWith("/summary")) {
     if (state.last_done) await deliverSummary(env, BY_ID[String(state.last_done)]);
     else await send(env, "No completed unit yet — finish a day with /done and the brief follows.");
