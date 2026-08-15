@@ -113,7 +113,14 @@ function toSlackMrkdwn(s) {
   return String(s ?? "")
     .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, "<$2|$1>") // [t](url) → <url|t>
     .replace(/\*\*(.+?)\*\*/g, "*$1*") // **bold** → *bold*
-    .replace(/^\s{0,3}#{1,6}\s+(.+)$/gm, "*$1*"); // # Heading → *Heading*
+    .replace(/^\s{0,3}#{1,6}\s+(.+)$/gm, "*$1*") // # Heading → *Heading*
+    // Slack blocks "/command" messages, so the bot takes bare words. Render any
+    // "/cmd" reference in our copy as a backticked bare word (never inside a URL —
+    // the char before the slash must be start/space/punctuation, not "/" or a letter).
+    .replace(
+      /(^|[\s(·*_>])\/(today|done|partial|more|catchup|on|off|skip|summary|recap|login|status|pause|resume|help|start)\b/gi,
+      "$1`$2`",
+    );
 }
 
 // Telegram button rows → Slack Block Kit action elements. Tap-to-act buttons
@@ -810,7 +817,7 @@ async function morning(env, state, dow) {
     return;
   }
   const kind = dow >= 5 ? "weekend" : "weekday";
-  let foot = "\n\n_Finished: /done · part of it: /partial · another: /more_";
+  let foot = "\n\n_Tap a button below, or type: `done` · `partial` · `more`_";
   const back = backlogOf(state).length;
   if (back >= 2) foot += `\n📌 You owe ${back} earlier topic(s) — /catchup to clear them.`;
   const g = buildGate(state);
@@ -866,9 +873,10 @@ async function status(env, state) {
 const QA_SYSTEM =
   "You are Jayanth's personal study assistant, reachable over Slack DM. " +
   "Jayanth is a data/AI engineer working through a structured 525-day mastery roadmap that YOU run for him. " +
-  "You DO have a live web dashboard (progress board, streaks, per-day notes) — to open it he sends the `/login` command and you reply with a one-tap signed link; the public board is at " +
-  DASHBOARD_URL + ". You also drive his plan through these commands: /today /done /partial /more /catchup /on /off /skip /summary /recap /login /status /pause /resume /help. " +
-  "Never claim you lack a dashboard, tracker, or access to his roadmap — you ARE the tracker. If he asks for the dashboard or a link, point him to /login. " +
+  "You DO have a live web dashboard (progress board, streaks, per-day notes) — to open it he types `login` and you reply with a one-tap signed link; the public board is at " +
+  DASHBOARD_URL + ". You also drive his plan through these commands: today, done, partial, more, catchup, on, off, skip, summary, recap, login, status, pause, resume, help. " +
+  "IMPORTANT: Slack blocks messages that start with a slash, so commands are typed WITHOUT the slash (e.g. `login`, not `/login`) — always refer to them that way. " +
+  "Never claim you lack a dashboard, tracker, or access to his roadmap — you ARE the tracker. If he asks for the dashboard or a link, tell him to type `login`. " +
   "Answer questions directly and concretely: teach from first principles, use small examples or code sketches where they help, and keep it tight enough to read on a phone — a few short paragraphs, not an essay, unless he explicitly asks you to go deep. " +
   "Precision over politeness; dry humour and the occasional cricket analogy are welcome. If a question relates to his current study topic, connect it. Use Slack mrkdwn (single *bold*, _italic_, `code`).";
 
@@ -926,8 +934,9 @@ const COMMANDS = [
   ["help", "Show this command list"],
 ];
 const HELP_TEXT =
-  "*Study agent — commands*\n\n" +
-  COMMANDS.map(([c, d]) => `/${c} — ${d}`).join("\n") +
+  "*Study agent — commands*\n" +
+  "_Slack blocks messages that start with “/”, so type the word on its own — e.g. `today`, `done`, `login`._\n\n" +
+  COMMANDS.map(([c, d]) => `• *${c}* — ${d}`).join("\n") +
   "\n\n_Or just send any question in plain text and I'll answer it._";
 
 // Mint a one-tap signed dashboard link (+ a cross-device code). Shared by the
@@ -961,9 +970,28 @@ function wantsDashboard(text) {
   );
 }
 
+// Slack intercepts any real "/command" message as a (missing) slash command, so
+// it never reaches the bot. In Slack the user types commands WITHOUT the slash
+// ("login", "today"). Re-add the slash when a message is a bare command word, so
+// the "/cmd" dispatch below works. Single-word commands must be sent alone; only
+// recap carries free-text args — everything else falls through to plain-text Q&A.
+const NOARG_CMDS = new Set([
+  "today", "done", "partial", "more", "catchup", "on", "off", "skip",
+  "summary", "status", "pause", "resume", "help", "start", "login",
+]);
+function toCommand(text) {
+  const t = (text || "").trim();
+  if (t.startsWith("/")) return t; // already a slash command
+  const bare = t.replace(/^\/+/, "");
+  const first = bare.split(/\s+/)[0].toLowerCase();
+  if (first === "recap") return "/" + bare; // takes args
+  if (NOARG_CMDS.has(bare.toLowerCase())) return "/" + bare; // whole message is the command
+  return t; // plain text → Q&A
+}
+
 async function handleMessage(env, state, text) {
-  text = text || "";
-  const low = text.trim().toLowerCase();
+  text = toCommand(text);
+  const low = text.toLowerCase();
   if (!low) return;
   const { dow } = istToday();
   if (low.startsWith("/today")) {
