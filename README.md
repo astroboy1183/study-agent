@@ -1,46 +1,14 @@
-# study-agent
+# 📘 Study Agent
 
-A personal study coach that turns a **75-week, 525-day mastery roadmap** —
-Computer Vision → Data Engineering → Data Science & ML → Deep Learning & AI →
-Linux & Systems — into **one topic a day**, delivered over Telegram, tracked on a
-**public dashboard**, and written up as a **deep-dive note pushed to GitHub**
-every day I finish.
+> A personal AI study companion that runs a strict, basics-to-advanced Data → AI → DevOps mastery roadmap — assigning one focused thing a day, writing me a study brief when I finish, quizzing me on old topics via spaced repetition, and publishing my progress in public.
 
-It runs **24/7 on Cloudflare — no server, no always-on machine.** The whole
-thing is a single Worker: a Telegram webhook, two daily cron sends, a public
-dashboard, and per-track note commits, all backed by a key-value store.
+Built as a single **Cloudflare Worker + KV**, with a self-updating dashboard and a Slack DM bot. It holds a **75-week / 525-unit curriculum**, serves it day by day at a pace that flexes to my real life, and turns "I watched a tutorial once" into durable, examined understanding.
 
-| | |
-|---|---|
-| 🤖 **Bot** | `@jayanth_study_bot` on Telegram |
-| 📊 **Dashboard** | **[study-agent.jayanthapalla.workers.dev](https://study-agent.jayanthapalla.workers.dev)** — public & live |
-| ⚙️ **Runtime** | Cloudflare Workers · KV · Cron Triggers (free tier) |
-| 🧠 **Model** | study briefs & Q&A via the Anthropic Messages API |
+**It is the discipline I don't have to summon.** It decides what I study today, adapts when I fall behind (nothing is ever lost), teaches the topic, checks that I retained it days later, and keeps a public progress board so I'm accountable.
 
 ---
 
-## The five tracks
-
-The roadmap runs as five ordered tracks, each with **its own public repo** where
-I commit code **and** the agent auto-commits notes — organised day by day
-(`week-NN/day-NNN-slug/` holds my code + an auto-generated `notes.md`).
-**Computer Vision runs first** (a work priority), then the rest.
-
-| Track | Weeks | Focus | 📂 Repo |
-|---|---|---|---|
-| **Computer Vision** | 1–12 | images as tensors, classical CV & document pipelines, CNNs & PyTorch, transfer learning, segmentation, detection, ViT, CLIP, diffusion, Document AI + VLMs, video/3D | **[computer-vision](https://github.com/astroboy1183/computer-vision)** |
-| **Data Engineering** | 13–30 | Python, storage internals, SQL & dimensional modeling, dbt, Spark/PySpark, Databricks lakehouse, Kafka streaming, orchestration | **[data-engineering](https://github.com/astroboy1183/data-engineering)** |
-| **Data Science & ML** | 31–45 | stats & A/B testing, ML from scratch, gradient boosting, feature stores, evaluation, forecasting, recommenders, MLflow, deployment | **[data-science-ml](https://github.com/astroboy1183/data-science-ml)** |
-| **Deep Learning & AI** | 46–60 | neural nets, training at scale (DDP/FSDP), graph neural nets, transformers from scratch, training GPTs, LLM apps, RAG, LoRA fine-tuning, agents & MCP, GraphRAG | **[deep-learning-ai](https://github.com/astroboy1183/deep-learning-ai)** |
-| **Linux & Systems** | 61–75 | shell & automation, server hardening, systems programming, a container runtime from scratch, Kubernetes, IaC/GitOps, Azure cloud (AKS · Entra · Terraform), observability & SRE | **[linux-systems](https://github.com/astroboy1183/linux-systems)** |
-
-Each week is **5 theory days (weekdays) + 1 build (Saturday) + 1 consolidation
-(Sunday)** — 75 flagship builds in all, from a document scanner and a from-scratch
-ViT to a mini LSM-tree engine, a production RAG app, and a container runtime.
-
----
-
-## Progress
+## 📈 Live progress
 
 <!-- PROGRESS:START -->
 `░░░░░░░░░░░░░░░░░░░░░░░░`
@@ -136,231 +104,202 @@ ViT to a mini LSM-tree engine, a production RAG app, and a container runtime.
 </details>
 <!-- PROGRESS:END -->
 
-_The board and notes repos are rewritten automatically from the Worker (via the
-GitHub API) after each completed day._
+---
+
+## Table of contents
+
+- [Why it exists](#why-it-exists)
+- [How it helps me every day](#how-it-helps-me-every-day)
+- [The curriculum](#the-curriculum)
+- [Architecture](#architecture)
+- [The daily loop](#the-daily-loop)
+- [Scheduling model](#scheduling-model-no-dates-just-a-pointer)
+- [Active recall](#active-recall-spaced-repetition)
+- [Adaptive pacing](#adaptive-pacing)
+- [Learning in public](#learning-in-public)
+- [Commands](#commands)
+- [The intelligence layer](#the-intelligence-layer)
+- [State model](#state-model)
+- [Tech stack](#tech-stack)
+- [Setup](#setup)
 
 ---
 
-## What it does
+## Why it exists
 
-- **07:30 IST** — sends today's assignment (the next pending unit for the day).
-- **21:30 IST** — an evening check with ✅ Done / 🔸 Partial / ⏭ Skip buttons.
-- **On Done** — writes a ~20–30 min study brief with the model, sends it to
-  Telegram, **commits a rich deep-dive note to the track's GitHub repo**, and
-  caches it so re-reading never re-bills the API.
-- **Check in from anywhere** — mark a day done from Telegram (`/done`) **or**
-  the dashboard's owner-only **✓ I studied it** button; both trigger the note.
-- **Ask anything** — send plain text and it answers, grounded in where you are
-  in the plan, with short follow-up memory.
-- **Public dashboard** — anyone can watch progress, browse the full roadmap,
-  and read every finished-day brief.
+Self-directed learning fails in predictable ways: no clear order (jumping to the advanced thing before the basics), no daily forcing function, no check that anything stuck, and no accountability. A 500-topic roadmap in a Notion doc is where motivation goes to die.
 
----
+This agent fixes each failure mode structurally:
 
-## Architecture
+- **Order** → a single strict hierarchy, basics → advanced, that unlocks in sequence.
+- **Forcing function** → one assignment lands every morning; an evening check nudges if I went quiet.
+- **Retention** → spaced-repetition recall questions resurface old topics and grade my answers.
+- **Accountability** → every completion updates a public GitHub progress board.
+- **Sustainability** → gentle pacing + a pointer that waits, so a bad week bends the plan instead of breaking it.
 
-One Worker on Cloudflare's edge. Nothing runs between events; each trigger
-spins up the Worker for a few milliseconds, then it's gone.
+## How it helps me every day
+
+| Moment | What the agent does |
+|---|---|
+| **07:30 every morning** | The day's assignment arrives in Slack — one focused topic with a concept, a video to watch, and a code task. |
+| **While I learn** | A gentle "minimum for today (~25 min)" keeps the bar reachable; heavy builds are spread one block at a time. |
+| **When I finish (`done`)** | Claude writes me a ~25-minute study brief on the topic, saves it to my notes vault, and pushes my progress live. |
+| **Days later** | It quizzes me on a *past* topic and grades my answer — so I actually retain, not just consume. |
+| **If I fall behind** | Missed topics cascade forward automatically; the pointer waits. Nothing is lost, no guilt. |
+| **Anytime** | I ask any question in plain English and get a first-principles answer connected to where I am in the roadmap. |
+
+## The curriculum
+
+**8 phases, strictly ordered basics → advanced** (each phase builds on the last — e.g. Computer Vision comes *after* Deep Learning, not before):
 
 ```mermaid
 flowchart LR
-  phone["📱 Telegram"] -->|you type| TG["Telegram servers"]
-  Cron["⏰ Cloudflare Cron<br/>02:00 &amp; 16:00 UTC"]
-  Browser["🌐 Anyone's browser"]
-
-  subgraph Edge["Cloudflare edge (global)"]
-    W[["study-agent Worker<br/>fetch() + scheduled()"]]
-    KV[("KV: STUDY<br/>state · brief:N · qa")]
-    Bundle["bundled at build<br/>plan.json · page.js"]
-    W <--> KV
-    W --- Bundle
-  end
-
-  TG -->|"webhook POST /tg"| W
-  Cron -->|"morning / evening"| W
-  Browser -->|"GET / and /api/*"| W
-
-  W -->|"briefs &amp; Q&amp;A"| ANT["Anthropic Messages API"]
-  W -->|"notes + progress board"| GH["GitHub API<br/>5 notes repos + this README"]
-  W -->|"sendMessage / answerCallback"| TG
+    A["🐧 Foundations<br/>Linux · shell · Python"] --> B["📐 Math<br/>Foundations"]
+    B --> C["🗄️ Data<br/>Engineering"]
+    C --> D["📊 Data Science<br/>& ML"]
+    D --> E["🧠 Deep<br/>Learning"]
+    E --> F["👁️ Computer<br/>Vision"]
+    F --> G["🤖 AI &<br/>LLMs"]
+    G --> H["⚙️ Systems<br/>& DevOps"]
 ```
 
-**Key idea:** the *plan* is code (bundled from `plan.json`, changes only on
-redeploy) and your *progress* is data (lives in KV, changes as you study). They
-never touch — redeploying never affects progress, and studying never affects
-the plan.
+Each week is broken into daily **units** typed as *theory* (weekday, ~25–60 min), *build* (weekend project, blocks A/B/C), and *consolidate* (review + a mastery check). Weekday theory unlocks the weekend build; each phase has its own public notes repository.
 
-**How it stays up 24/7 with no server:** a Worker isn't a machine you rent and
-keep alive — it's a code bundle on every Cloudflare edge plus data in KV.
-Between events, **zero compute runs**: nothing to crash, patch, or keep up.
-When an event arrives, Cloudflare spins a V8 isolate (~5 ms) on the nearest
-edge, runs the handler, and tears it down. This replaced an earlier design — a
-Python `getUpdates` loop under `systemd` on a laptop, only as available as the
-laptop. That code still lives in [`study_agent.py`](study_agent.py) as a
-fallback.
+## Architecture
 
----
+A single Cloudflare Worker is the whole bot — Slack webhook, scheduled morning/evening sends, the dashboard board, and a passwordless sign-in flow. The curriculum is bundled at build time; mutable progress lives in KV.
 
-## Daily notes → GitHub
+```mermaid
+flowchart TD
+    subgraph Worker["Cloudflare Worker - single deploy"]
+      WH["/slack/events - commands + Q&A"]
+      IN["/slack/interact - Block Kit taps"]
+      SEL["selection engine - pointer, overflow, gating"]
+      BRIEF["brief writer - Claude study briefs"]
+      RECALL["active recall - spaced repetition"]
+      BOARD["dashboard board + /api/state"]
+    end
 
-Finishing a day is the single trigger for everything downstream:
+    PLAN[["plan.json - 525 units, bundled"]] --> SEL
+    KV[("KV - progress, streak, recall, pace")] <--> SEL
+    KV <--> RECALL
+
+    CRON["Cron - 07:30 and 21:30 IST"] -.-> SEL
+    SEL -->|chat.postMessage| SLACK["Slack DM"]
+    WH <--> SLACK
+    IN <--> SLACK
+
+    BRIEF -->|on done| SLACK
+    BRIEF --> VAULT["Notes vault - public git repo"]
+    BRIEF --> REPOS["Per-phase note repos"]
+    BOARD -->|self-updating| WEB["Public board"]
+    SEL -->|README progress block| GH["GitHub README - git push on each done"]
+```
+
+## The daily loop
 
 ```mermaid
 sequenceDiagram
-  participant You
-  participant W as Worker
-  participant M as Anthropic API
-  participant GH as GitHub (track repo)
-  You->>W: /done  (or dashboard ✓ I studied it)
-  W->>M: write the deep-dive note
-  M-->>W: note text
-  W->>GH: commit week-NN/day-NNN-slug.md
-  W->>GH: rewrite that repo's README index
-  W-->>You: recap in Telegram
+    autonumber
+    participant C as Cron
+    participant B as Bot
+    participant M as Me (Slack)
+
+    C->>B: 07:30 IST
+    B->>M: Today's assignment (concept, video, code)
+    Note over M: I study (light pace: ~25-min minimum)
+    M->>B: done
+    B->>M: A ~25-min study brief (Claude)
+    B->>B: save note to vault, push progress board
+    B->>B: schedule an active-recall question
+    C->>B: 21:30 IST
+    B->>M: Evening check (if I went quiet)
+    Note over B,M: Days later - recall a past topic, graded
 ```
 
-Each note is routed to the right repo by week (`1–12 → computer-vision`,
-`13–30 → data-engineering`, `31–45 → data-science-ml`, `46–60 → deep-learning-ai`,
-`61–75 → linux-systems`), lands in that day's folder as `notes.md` next to my
-code, and carries the topic,
-the day's work, a mastery check, and a model-written deep dive. All GitHub
-commits are made with a personal access token and are authored under my own
-account.
+## Scheduling model (no dates, just a pointer)
 
----
+The plan advances by a **pointer**, not a calendar — so it can't fall "behind schedule," only wait for me:
 
-## The schedule (day-of-week + pointer)
+- **Weekdays** serve the oldest pending *theory*; **Saturday** clears any missed weekday theory then the build; **Sunday** serves anything still owed before a consolidation.
+- Missed a Friday topic? It **cascades** into Saturday; the build slides to Sunday. **Nothing is lost.**
+- `partial` carries the leftover over; `pause` freezes everything; a rest day (`off`) keeps the streak safe.
+- `status` shows how many topics I owe — a backlog count, never date-drift guilt.
 
-The plan is 525 ordered units served by **day of week**, never by calendar
-date. A pointer walks the queue; finishing a day advances it, missing one
-doesn't.
+## Active recall (spaced repetition)
 
-- **Weekdays → theory.** Builds and consolidations never appear on a weekday.
-- **Saturday → the week's build** — unless weekday theory was missed, in which
-  case the missed topic comes first and the build slides to Sunday.
-- **Sunday → consolidation** — or any still-unfinished theory/build first.
-- **Build-gating:** a week's build unlocks only once that week's theory is done.
+Consuming a tutorial isn't learning; *retrieving* it later is. On every completion the agent generates one recall question about the topic and resurfaces it at widening intervals — **1 → 3 → 7 → 16 → 35 days**:
 
-Miss a day and nothing is lost — the backlog **cascades forward** into the next
-available slots. **Partial** carries the leftover over; `/status` shows how many
-earlier topics you still owe; `/catchup` serves them oldest-first.
+```mermaid
+flowchart LR
+    DONE["finish a topic"] --> GEN["Claude writes 1 recall question"]
+    GEN --> Q1["due in 1 day"]
+    Q1 -->|correct| Q3["+3d"] -->|correct| Q7["+7d"] -->|correct| Q16["+16d"] -->|correct| RET["retired"]
+    Q1 -->|wrong| RESET["reset to 1d"]
+```
 
----
+I type `recall`, answer in my own words, and the model grades it (correct / partial / incorrect) and reschedules accordingly. Mornings nudge me when one is due; `status` shows what's in rotation.
 
-## Telegram commands
+## Adaptive pacing
+
+Two paces, defaulting to **light** so the daily bar is always reachable:
+
+- **`pace light`** (default) — a ~25-minute *minimum* on theory days (video + extra practice optional), and heavy builds/consolidations spread **one block per day** via `partial`. Sustainable beats heroic.
+- **`pace normal`** — the full daily target when I have the time and momentum.
+
+## Learning in public
+
+- On each `done`, the agent rewrites a `<!-- PROGRESS -->` block in this README (bar + streak + phase board) and **git-pushes it** — the [Live progress](#-live-progress) section above stays current automatically.
+- Study briefs are saved to a **public notes vault** and per-phase note repositories, auto-committed.
+- A **self-updating web dashboard** shows progress, streaks, and per-day notes; a passwordless `login` link signs me in.
+
+## Commands
+
+Sent as plain words in the Slack DM (Slack intercepts a leading `/`, so commands are typed **without** it):
 
 | Command | Does |
 |---|---|
-| `/today` | Show today's assignment |
-| `/done` | Mark done → study brief → note pushed to GitHub |
-| `/partial` | Did part of it — the leftover carries over |
-| `/skip` | Skip today |
-| `/more` | Serve the next unit — get ahead |
-| `/catchup` | Start the oldest topic you owe |
-| `/summary` | Re-send the last study brief |
-| `/status` | Progress + any catch-up backlog |
-| `/off` | Log an honest day off (keeps the streak honest) |
-| `/pause` · `/resume` | Silence / restore the daily messages |
-| `/help` | Show the command list |
+| `today` | The current assignment |
+| `done` · `partial` · `skip` | Complete / part-do / skip today |
+| `more` · `catchup` | Get ahead / clear backlog |
+| `recall` | Active-recall question on a past topic |
+| `pace light` \| `normal` | Smaller daily chunks vs full targets |
+| `on` · `off` | Check in / log a rest day (streak-safe) |
+| `login` | One-tap dashboard sign-in link |
+| `status` | Progress, backlog, recall due |
+| `summary` · `recap` | Re-send / rewrite a brief from my real work |
+| `pause` · `resume` · `help` | Freeze / resume / command list |
 
-Any **non-command message** is treated as a question and answered in context.
+Anything else is answered as a free-form question by the model, grounded in where I am in the roadmap.
 
----
+## The intelligence layer
 
-## The dashboard
+Claude is used where it genuinely teaches or checks — everything structural (selection, scheduling, streaks) is deterministic code:
 
-A **public** single page (synthwave theme, rendered client-side from
-`/api/state`) — built for anyone visiting to see the work at a glance:
+| Job | What the model does |
+|---|---|
+| **Study brief** | Writes a ~25-min first-principles brief on the day's topic. |
+| **Active recall** | Generates one retention question per topic and grades my answer. |
+| **Recap rewrite** | Regrounds a day's note in my *actual* work (my notes or a repo URL). |
+| **Free Q&A** | Answers any question, connected to my current topic. |
 
-- Hero **% complete**, **honest streak**, current week, domains, builds.
-- A **75-week board** heatmap of every day, colored by type; click a finished
-  cell to reread its brief.
-- The full **roadmap browser**, **projects** (the 74 builds, with owner-attached
-  repo/demo links), and a **presence heatmap**.
-- An **owner mode** (passwordless): sign in via a one-tap Telegram `/login` link
-  (or a short cross-device code), then attach project links and hit
-  **✓ I studied it** to check in. Everything else is read-only for visitors.
+## State model
 
-Reads are public; **writes** (`/api/checkin`, `/api/project`, `/api/auth`)
-require an HMAC device token minted by Telegram `/login` and signed with
-`STUDY_UI_KEY` — the old passphrase login is disabled.
+Progress lives in a single KV object — completions, partials, streak/presence, `recall` queue, `pace`, pause state, project links. The 525-unit plan is bundled read-only, so the bot is fully curriculum-agnostic (week/unit counts derive from the plan, nothing is hardcoded).
 
----
+## Tech stack
 
-## Repository layout
+**Cloudflare Workers** (edge) · **Workers KV** (state) · **Cron Triggers** (07:30 / 21:30 IST) · **Slack** (Events API + Web API + Block Kit) · **Claude** (briefs, recall, Q&A) · **GitHub API** (auto-committed notes + progress board) · vanilla JS, zero build step.
 
-```
-study-agent/
-├── plan.json               # the 525-unit roadmap (source of truth for content)
-├── generate_plan_v2.py     # regenerates plan.json (75 weeks, 5 tracks)
-├── daily-plan.md           # human-readable roadmap
-├── cloud/                  # ← the live deployment
-│   ├── worker.js           #   backend: webhook + cron + dashboard API + notes push
-│   ├── page.js             #   the dashboard (one HTML/CSS/JS string)
-│   └── wrangler.jsonc      #   Worker manifest: KV binding, crons, vars
-├── study_agent.py          # the retired local (systemd) bot — kept as fallback
-└── study-agent.service     # its systemd unit (now disabled)
-```
+## Setup
+
+> This repo runs my own bot against my own Slack + roadmap. High level to run your own:
+
+1. `wrangler kv namespace create STUDY`; generate a `plan.json` curriculum.
+2. Create a Slack app (Events API DM + interactivity); set `SLACK_BOT_TOKEN` + `SLACK_SIGNING_SECRET`.
+3. Set `ANTHROPIC_API_KEY` and a `GH_PAT` for progress pushes.
+4. `wrangler deploy` — the single Worker serves the bot, the board, and the morning/evening cron.
 
 ---
 
-## Deploy from scratch
-
-From `cloud/` with `wrangler` authenticated (`npx wrangler login`):
-
-```bash
-# 1. create the KV namespace; put the printed id into wrangler.jsonc
-npx wrangler kv namespace create STUDY
-
-# 2. set the secrets (values never echoed)
-printf '%s' "<bot-token>"              | npx wrangler secret put STUDY_BOT_TOKEN
-printf '%s' "<numeric-chatid>"         | npx wrangler secret put STUDY_CHAT_ID
-printf '%s' "<anthropic-key>"          | npx wrangler secret put ANTHROPIC_API_KEY
-printf '%s' "$(openssl rand -hex 24)"  | npx wrangler secret put TG_SECRET
-printf '%s' "$(openssl rand -hex 24)"  | npx wrangler secret put STUDY_UI_KEY  # signs owner device tokens
-printf '%s' "<github-pat>"             | npx wrangler secret put GH_PAT   # notes + board
-
-# 3. seed the initial state, then deploy (bundles ../plan.json + page.js)
-npx wrangler kv key put state \
-  '{"done":{},"partials":{},"paused":false,"skipped_today":null,"last_done":null}' \
-  --namespace-id <KV_ID> --remote
-npx wrangler deploy
-
-# 4. point Telegram's webhook at the Worker (secret_token must equal TG_SECRET)
-curl -X POST "https://api.telegram.org/bot<token>/setWebhook" \
-  -H 'content-type: application/json' \
-  -d '{"url":"https://study-agent.jayanthapalla.workers.dev/tg",
-       "secret_token":"<TG_SECRET>",
-       "allowed_updates":["message","callback_query"]}'
-```
-
-**Vars** (`wrangler.jsonc`) point the notes push at the five repos:
-`NOTES_REPO_CV`, `NOTES_REPO_DE`, `NOTES_REPO_ML`, `NOTES_REPO_AI`,
-`NOTES_REPO_LINUX`, plus `REPO` for this README's progress board.
-
-**Operations:** `npx wrangler tail` for live logs, `npx wrangler deploy` to
-redeploy, `npx wrangler kv key get/put state --remote` to inspect or edit
-progress.
-
----
-
-## Security model
-
-- **Webhook** — rejects any request without the exact `TG_SECRET` header (403),
-  and ignores any chat that isn't `STUDY_CHAT_ID`.
-- **Dashboard** — reads are public and data-only; **all writes** require an HMAC
-  device token minted by a one-tap Telegram `/login` and signed with
-  `STUDY_UI_KEY` (invalid token → 401 after a deliberate delay).
-- **Page** — a strict Content-Security-Policy blocks external/cross-origin
-  requests.
-- **Secrets** — never in the repo or bundle; stored encrypted in Cloudflare and
-  injected at runtime. `.env` and deploy notes are gitignored.
-
----
-
-## Cost
-
-The Workers and KV free tiers comfortably cover a personal bot; cron and the
-isolate runtime are free at this volume. The only metered dependency is the
-model API (billed per token, and cached so re-reads are free); Telegram and
-GitHub are free.
+*Learning in public — the plan, the notes, and the progress are all out here on purpose.*
