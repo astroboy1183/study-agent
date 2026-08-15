@@ -673,27 +673,33 @@ function updateScrollCues(){
 }
 window.addEventListener("resize", updateScrollCues);
 
-/* four-track overview */
+/* eight-phase overview (strict basics -> advanced) */
 var TRACK_META={
-  "Computer Vision":{c:"var(--cv)",repo:"computer-vision"},
+  "Foundations":{c:"#2dd4bf",repo:"foundations"},
+  "Math Foundations":{c:"var(--amber)",repo:"math-foundations"},
   "Data Engineering":{c:"var(--blue)",repo:"data-engineering"},
   "Data Science & ML":{c:"var(--green)",repo:"data-science-ml"},
-  "Deep Learning & AI":{c:"var(--pink)",repo:"deep-learning-ai"},
-  "Linux & Systems":{c:"var(--violet)",repo:"linux-systems"}
+  "Deep Learning":{c:"#a78bfa",repo:"deep-learning"},
+  "Computer Vision":{c:"var(--cv)",repo:"computer-vision"},
+  "AI & LLMs":{c:"var(--pink)",repo:"ai-llm-engineering"},
+  "Systems & DevOps":{c:"var(--violet)",repo:"devops-cloud"}
 };
 // Recruiter-friendly DISPLAY names for the tracks (internal keys/content unchanged).
 var TRACK_LABEL={
-  "Computer Vision":"Computer Vision",
+  "Foundations":"Foundations",
+  "Math Foundations":"Math Foundations",
   "Data Engineering":"Data Engineering",
   "Data Science & ML":"Data Science & ML",
-  "Deep Learning & AI":"AI & LLM Engineering",
-  "Linux & Systems":"DevOps & Cloud Infrastructure"
+  "Deep Learning":"Deep Learning",
+  "Computer Vision":"Computer Vision",
+  "AI & LLMs":"AI & LLM Engineering",
+  "Systems & DevOps":"DevOps & Cloud Infrastructure"
 };
 function trackLabel(n){ return TRACK_LABEL[n]||n; }
 // filter state + helpers (roadmap + projects)
 var rmFilter="all", projFilter="all";
-var TRACK_ORDER=["Computer Vision","Data Engineering","Data Science & ML","Deep Learning & AI","Linux & Systems"];
-function weekTrack(w){ if(w<=12)return "Computer Vision"; if(w<=30)return "Data Engineering"; if(w<=45)return "Data Science & ML"; if(w<=60)return "Deep Learning & AI"; return "Linux & Systems"; }
+var TRACK_ORDER=["Foundations","Math Foundations","Data Engineering","Data Science & ML","Deep Learning","Computer Vision","AI & LLMs","Systems & DevOps"];
+function weekTrack(w){ if(w<=5)return "Foundations"; if(w<=8)return "Math Foundations"; if(w<=24)return "Data Engineering"; if(w<=36)return "Data Science & ML"; if(w<=39)return "Deep Learning"; if(w<=51)return "Computer Vision"; if(w<=63)return "AI & LLMs"; return "Systems & DevOps"; }
 function trackFilterOpts(extra){
   return [{key:"all",label:"All"}].concat(extra||[]).concat(TRACK_ORDER.map(function(t){ return {key:t,label:trackLabel(t)}; }));
 }
@@ -710,11 +716,14 @@ function phaseSlug(n){ return "phase-"+n.toLowerCase().replace(/[^a-z0-9]+/g,"-"
 // recruiter-facing tech stack: chips grouped by domain, coloured per track,
 // highlighted once shipped with. Reads as a clean, categorised skill set.
 var SKILL_GROUPS=[
-  {track:"Computer Vision",    label:"Computer Vision"},
-  {track:"Data Engineering",   label:"Data Engineering"},
-  {track:"Data Science & ML",  label:"Data Science & ML"},
-  {track:"Deep Learning & AI", label:"AI & LLMs"},
-  {track:"Linux & Systems",    label:"Systems · Infra · DevOps"}
+  {track:"Foundations",       label:"Foundations"},
+  {track:"Math Foundations",  label:"Math Foundations"},
+  {track:"Data Engineering",  label:"Data Engineering"},
+  {track:"Data Science & ML", label:"Data Science & ML"},
+  {track:"Deep Learning",     label:"Deep Learning"},
+  {track:"Computer Vision",   label:"Computer Vision"},
+  {track:"AI & LLMs",         label:"AI & LLMs"},
+  {track:"Systems & DevOps",  label:"Systems · Infra · DevOps"}
 ];
 function renderLearned(s){
   var c=$("learned"); if(!c) return; c.replaceChildren();
@@ -813,7 +822,7 @@ function goToPhase(name){
 }
 
 /* roadmap browser */
-var PHASE_COLOR={"Computer Vision":"var(--cv)","Data Engineering":"var(--blue)","Data Science & ML":"var(--green)","Deep Learning & AI":"var(--pink)","Linux & Systems":"var(--violet)"};
+var PHASE_COLOR={"Foundations":"#2dd4bf","Math Foundations":"var(--amber)","Data Engineering":"var(--blue)","Data Science & ML":"var(--green)","Deep Learning":"#a78bfa","Computer Vision":"var(--cv)","AI & LLMs":"var(--pink)","Systems & DevOps":"var(--violet)"};
 function renderRoadmap(s){
   var rm=$("roadmap"); if(!rm) return; rm.replaceChildren();
   filterChips($("rm-filter"), trackFilterOpts([{key:"core",label:"⚡ Core path"}]), rmFilter, function(k){ rmFilter=k; renderRoadmap(s); });

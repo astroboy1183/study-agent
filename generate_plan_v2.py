@@ -2354,8 +2354,52 @@ for wi, wk in enumerate(WEEKS, start=1):
     units.append({"week": wi, "dow": 6, "type": "consolidate", "title": c["title"],
                   "text": c["text"], "mastery": c["mastery"], "id": uid})
 
-# Computer Vision is now weeks 1-12 of the main plan (see CV_WEEKS above),
-# so the old separate 16-session priority sequence is retired.
+# ---- STRICT basics -> advanced reorder (applied post-assembly) -------------
+# The weeks above are authored per-domain; this permutation re-sequences them
+# into one strict beginner->advanced hierarchy: foundations & math first,
+# Computer Vision moved to AFTER deep-learning foundations, advanced
+# systems/DevOps last. Values are the ORIGINAL week numbers, in the new order.
+NEW_ORDER = [
+    61, 62, 63, 13, 14,                                   # Foundations (CLI, shell, Python)
+    31, 32, 33,                                           # Math Foundations
+    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,  # Data Engineering
+    34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,       # Data Science & ML
+    46, 47, 48,                                           # Deep Learning
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,                # Computer Vision (now after DL)
+    49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,       # AI & LLMs
+    64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75,       # Systems & DevOps
+]
+NEW_PHASES = [
+    ("Foundations", 5), ("Math Foundations", 3), ("Data Engineering", 16),
+    ("Data Science & ML", 12), ("Deep Learning", 3), ("Computer Vision", 12),
+    ("AI & LLMs", 12), ("Systems & DevOps", 12),
+]
+assert sorted(NEW_ORDER) == list(range(1, len(WEEKS) + 1)), "NEW_ORDER must be a permutation of 1..N"
+_pos_phase = []
+for _name, _cnt in NEW_PHASES:
+    _pos_phase += [_name] * _cnt
+assert len(_pos_phase) == len(WEEKS), "phase counts must sum to N"
+
+_wm_by_old = {w["n"]: w for w in weeks_meta}
+_units_by_old = {}
+for _u in units:
+    _units_by_old.setdefault(_u["week"], []).append(_u)
+
+weeks_meta = []
+units = []
+_uid = 0
+for _newpos, _old in enumerate(NEW_ORDER, start=1):
+    _w = _wm_by_old[_old]
+    weeks_meta.append({"n": _newpos, "title": _w["title"],
+                       "phase": _pos_phase[_newpos - 1], "core": _w["core"]})
+    for _u in sorted(_units_by_old[_old], key=lambda x: x["dow"]):
+        _uid += 1
+        _u = dict(_u)
+        _u["week"] = _newpos
+        _u["id"] = _uid
+        units.append(_u)
+
+# CV is folded into the DL->CV progression above; old priority sequence retired.
 priority = []
 
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "plan_v2.json")

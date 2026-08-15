@@ -428,12 +428,17 @@ async function regenerateNote(env, state, u, input) {
 // Each of the 4 tracks (DE / ML / AI / Linux) has its own public GitHub repo.
 // On /done, the day's rich note is committed there and the repo's README index
 // is regenerated. Never throws — a failed push just keeps the note in KV.
+// Strict basics -> advanced: 8 phases. Notes map to the 5 existing per-domain
+// repos (some phases share one) until dedicated repos exist.
 const TRACK_BOUNDS = [
-  { name: "Computer Vision", lo: 1, hi: 12, envKey: "NOTES_REPO_CV" },
-  { name: "Data Engineering", lo: 13, hi: 30, envKey: "NOTES_REPO_DE" },
-  { name: "Data Science & ML", lo: 31, hi: 45, envKey: "NOTES_REPO_ML" },
-  { name: "Deep Learning & AI", lo: 46, hi: 60, envKey: "NOTES_REPO_AI" },
-  { name: "Linux & Systems", lo: 61, hi: 75, envKey: "NOTES_REPO_LINUX" },
+  { name: "Foundations", lo: 1, hi: 5, envKey: "NOTES_REPO_LINUX" },
+  { name: "Math Foundations", lo: 6, hi: 8, envKey: "NOTES_REPO_ML" },
+  { name: "Data Engineering", lo: 9, hi: 24, envKey: "NOTES_REPO_DE" },
+  { name: "Data Science & ML", lo: 25, hi: 36, envKey: "NOTES_REPO_ML" },
+  { name: "Deep Learning", lo: 37, hi: 39, envKey: "NOTES_REPO_AI" },
+  { name: "Computer Vision", lo: 40, hi: 51, envKey: "NOTES_REPO_CV" },
+  { name: "AI & LLMs", lo: 52, hi: 63, envKey: "NOTES_REPO_AI" },
+  { name: "Systems & DevOps", lo: 64, hi: 75, envKey: "NOTES_REPO_LINUX" },
 ];
 const DASHBOARD_URL = "https://study-agent.jayanthapalla.workers.dev";
 function phaseName(week) {
