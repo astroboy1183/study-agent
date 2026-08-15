@@ -100,26 +100,90 @@ function stripMd(text) {
     .replace(/^\s{0,3}>\s?/gm, "");
 }
 
+// ------------------------------------------------------------------ slack ---
+// Proactive messages go to the DM channel captured on the user's first message
+// (KV `slack_dm_channel`), or an explicit SLACK_CHANNEL override.
+async function slackChannel(env) {
+  return env.SLACK_CHANNEL || (await env.STUDY.get("slack_dm_channel"));
+}
+
+// Telegram-flavoured markdown → Slack mrkdwn. Single *bold* / _italic_ / `code`
+// already match; only links, **double-bold**, and # headings differ.
+function toSlackMrkdwn(s) {
+  return String(s ?? "")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, "<$2|$1>") // [t](url) → <url|t>
+    .replace(/\*\*(.+?)\*\*/g, "*$1*") // **bold** → *bold*
+    .replace(/^\s{0,3}#{1,6}\s+(.+)$/gm, "*$1*"); // # Heading → *Heading*
+}
+
+// Slack DMs have no inline callback buttons, so fold Telegram button rows into
+// text: url buttons become links; tap-to-act buttons become a "Reply: /cmd" hint
+// (every such action already has an equivalent slash command).
+function buttonsToText(buttons) {
+  if (!buttons) return "";
+  const CMD = { done: "/done", partial: "/partial", skip: "/skip", "checkin:on": "/on", "checkin:off": "/off" };
+  const links = [];
+  const cmds = [];
+  for (const row of buttons) {
+    for (const btn of row) {
+      if (btn.url) links.push(`<${btn.url}|${btn.text}>`);
+      else if (btn.callback_data) {
+        const key = btn.callback_data.startsWith("checkin:") ? btn.callback_data : btn.callback_data.split(":")[0];
+        if (CMD[key]) cmds.push(CMD[key]);
+      }
+    }
+  }
+  let out = "";
+  if (links.length) out += "\n" + links.join("   ");
+  if (cmds.length) out += `\n_Reply: ${[...new Set(cmds)].join(" · ")}_`;
+  return out;
+}
+
 async function send(env, text, { buttons = null, markdown = true } = {}) {
-  // Split into <=3800-char chunks; buttons attach to the last chunk only.
-  // On a Markdown parse error, retry that chunk as plain text.
-  const chunks = text.match(new RegExp(`[\\s\\S]{1,${TG_CHUNK}}`, "g")) || [""];
-  let result = {};
-  for (let i = 0; i < chunks.length; i++) {
-    const params = {
-      chat_id: env.STUDY_CHAT_ID,
-      text: chunks[i],
-      disable_web_page_preview: true,
-    };
-    if (markdown) params.parse_mode = "Markdown";
-    if (buttons && i === chunks.length - 1) params.reply_markup = { inline_keyboard: buttons };
-    result = await tg(env, "sendMessage", params);
-    if (markdown && !result.ok) {
-      delete params.parse_mode;
-      result = await tg(env, "sendMessage", params);
+  const channel = await slackChannel(env);
+  if (!channel) {
+    console.log("[slack] no target channel yet — DM the bot once to capture it");
+    return { ok: false };
+  }
+  let body = (markdown ? toSlackMrkdwn(text) : text) + buttonsToText(buttons);
+  // Slack accepts up to 40k chars per message; chunk anyway for readability.
+  const chunks = body.match(new RegExp(`[\\s\\S]{1,${TG_CHUNK}}`, "g")) || [""];
+  let result = { ok: false };
+  for (const chunk of chunks) {
+    try {
+      const r = await fetch("https://slack.com/api/chat.postMessage", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          authorization: `Bearer ${env.SLACK_BOT_TOKEN}`,
+        },
+        body: JSON.stringify({ channel, text: chunk, mrkdwn: true, unfurl_links: false, unfurl_media: false }),
+      });
+      result = await r.json();
+      if (!result.ok) console.error(`[slack] send failed: ${JSON.stringify(result)}`);
+    } catch (e) {
+      console.error(`[slack] send error: ${e}`);
+      result = { ok: false };
     }
   }
   return result;
+}
+
+// Verify Slack's v0 request signature (HMAC-SHA256 over `v0:ts:rawBody`).
+async function verifySlack(env, ts, rawBody, sig) {
+  if (!env.SLACK_SIGNING_SECRET || !ts || !sig) return false;
+  if (Math.abs(Math.floor(Date.now() / 1000) - Number(ts)) > 300) return false; // replay window
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(env.SLACK_SIGNING_SECRET),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`v0:${ts}:${rawBody}`));
+  const hex = [...new Uint8Array(mac)].map((x) => x.toString(16).padStart(2, "0")).join("");
+  const want = `v0=${hex}`;
+  if (want.length !== sig.length) return false;
+  let out = 0;
+  for (let k = 0; k < want.length; k++) out |= want.charCodeAt(k) ^ sig.charCodeAt(k);
+  return out === 0;
 }
 
 // ---------------------------------------------------------------- model ---
@@ -735,7 +799,7 @@ async function morning(env, state, dow) {
     return;
   }
   const kind = dow >= 5 ? "weekend" : "weekday";
-  let foot = "\n\n_Tap ✅ On it below · finished: /done · part of it: /partial · another: /more_";
+  let foot = "\n\n_Finished: /done · part of it: /partial · another: /more_";
   const back = backlogOf(state).length;
   if (back >= 2) foot += `\n📌 You owe ${back} earlier topic(s) — /catchup to clear them.`;
   const g = buildGate(state);
@@ -816,7 +880,6 @@ async function answerQuery(env, state, text) {
     await send(env, "Answering questions needs `ANTHROPIC_API_KEY` set as a Worker secret.");
     return;
   }
-  await tg(env, "sendChatAction", { chat_id: env.STUDY_CHAT_ID, action: "typing" });
   const histRaw = await env.STUDY.get("qa");
   const hist = histRaw ? JSON.parse(histRaw) : [];
   const convo = hist.map((h) => `${h.role.toUpperCase()}: ${h.text}`).join("\n");
@@ -841,6 +904,7 @@ const COMMANDS = [
   ["partial", "Did part of it — carries over"],
   ["more", "Do the next unit now (get ahead)"],
   ["catchup", "Clear your backlog"],
+  ["on", "Check in — studying today (streak-safe)"],
   ["off", "Log a rest day (streak-safe)"],
   ["skip", "Skip today (no evening nag)"],
   ["summary", "Re-send the last study brief"],
@@ -875,6 +939,8 @@ async function handleMessage(env, state, text) {
     if (u) await doSkip(env, state, u.id);
   } else if (low.startsWith("/off")) {
     await doCheckin(env, state, "off");
+  } else if (low.startsWith("/on")) {
+    await doCheckin(env, state, "on");
   } else if (low.startsWith("/more")) {
     const p = pending(state);
     if (p.length) await serveUnit(env, p[0], dow, "🔁 *Next up* — get ahead or catch up:");
@@ -1430,15 +1496,19 @@ export default {
       return new Response("ok"); // ack fast; work continues in the background
     }
 
-    // Slack Events API — URL-verification handshake now; full event routing is
-    // wired once the Slack app exists and its secrets are set (migration off Telegram).
+    // Slack Events API — inbound DMs (message.im) + URL-verification handshake.
     if (path === "/slack/events" && request.method === "POST") {
       const raw = await request.text();
       let payload;
       try { payload = JSON.parse(raw); } catch { return new Response("bad request", { status: 400 }); }
       if (payload.type === "url_verification")
         return new Response(JSON.stringify({ challenge: payload.challenge }), { headers: { "content-type": "application/json" } });
-      return new Response(""); // ack other events (handled after migration)
+      const ts = request.headers.get("x-slack-request-timestamp");
+      const sig = request.headers.get("x-slack-signature");
+      if (!(await verifySlack(env, ts, raw, sig))) return new Response("forbidden", { status: 403 });
+      if (payload.type === "event_callback" && payload.event)
+        ctx.waitUntil(processSlackEvent(env, payload.event, payload.event_id));
+      return new Response(""); // ack fast; Slack retries on any non-200
     }
 
     // Dashboard shell (public; data is gated below)
@@ -1614,5 +1684,29 @@ async function processUpdate(env, update) {
     }
   } catch (e) {
     console.error(`[update] ${e && e.stack ? e.stack : e}`);
+  }
+}
+
+// Inbound Slack DM → the same command dispatch as Telegram used.
+async function processSlackEvent(env, event, eventId) {
+  try {
+    if (!event || event.type !== "message") return; // messages only
+    if (event.subtype || event.bot_id) return; // ignore edits/joins and the bot's own posts
+    if (event.channel_type !== "im") return; // DMs only
+    // Slack retries redeliver the same event_id — process each once.
+    if (eventId) {
+      if (await env.STUDY.get("slackevt:" + eventId)) return;
+      await env.STUDY.put("slackevt:" + eventId, "1", { expirationTtl: 600 });
+    }
+    // Capture the DM channel (+ user) once so cron sends have a target.
+    if (event.channel && (await env.STUDY.get("slack_dm_channel")) !== event.channel) {
+      await env.STUDY.put("slack_dm_channel", event.channel);
+      if (event.user) await env.STUDY.put("slack_user_id", event.user);
+    }
+    const text = (event.text || "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+    const state = await loadState(env);
+    await handleMessage(env, state, text);
+  } catch (e) {
+    console.error(`[slack event] ${e && e.stack ? e.stack : e}`);
   }
 }

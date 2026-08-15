@@ -1,5 +1,5 @@
 {
-  // study-agent — Telegram webhook + dashboard + cron sends, all on one Worker.
+  // study-agent — Slack DM bot + dashboard + cron sends, all on one Worker.
   // Deploy:  cd cloud && npx wrangler deploy
   // The plan (../plan.json) is bundled at build time; mutable state lives in KV.
   "name": "study-agent",
@@ -28,6 +28,7 @@
     "NOTES_REPO_DEVOPS": "astroboy1183/devops-cloud"
   },
   "observability": { "enabled": true }
-  // Secrets (wrangler secret put): STUDY_BOT_TOKEN, STUDY_CHAT_ID,
-  // ANTHROPIC_API_KEY, TG_SECRET, STUDY_UI_KEY. Optional: GH_PAT, VAULT_REPO.
+  // Secrets (wrangler secret put): SLACK_BOT_TOKEN, SLACK_SIGNING_SECRET,
+  // ANTHROPIC_API_KEY, STUDY_UI_KEY. Optional: GH_PAT, VAULT_REPO, SLACK_CHANNEL.
+  // (Telegram retired — the DM channel is captured on first message into KV.)
 }
